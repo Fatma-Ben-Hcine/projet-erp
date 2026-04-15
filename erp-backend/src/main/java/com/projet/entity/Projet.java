@@ -12,6 +12,7 @@ import java.util.List;
 import com.projet.entity.Client;
 import com.projet.entity.TravaillerProjet;
 import com.projet.entity.Employe;
+import com.projet.enums.StatutProjet;
 
 @Entity
 @Table(name = "projets")
@@ -40,6 +41,10 @@ public class Projet {
 
     @Column(nullable = false)
     private Integer progression;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private StatutProjet statut = StatutProjet.NOUVEAU;
 
     // Relations avec les employés via TravaillerProjet
     @OneToMany(mappedBy = "projet", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)

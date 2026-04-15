@@ -1,0 +1,54 @@
+/* You can add global styles to this file, and also import other style files */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background-color: #f3f4f6;
+  transition: background-color 0.3s ease;
+}
+
+body.dark {
+  background-color: #111827 !important;
+}
+
+body.dark .layout {
+  background-color: #111827 !important;
+}
+
+body.dark .main-content {
+  background-color: transparent !important;
+}
+
+body.dark .page-title,
+body.dark h1 {
+  color: #f9fafb !important;
+}
+
+body.dark .page-subtitle,
+body.dark p {
+  color: #9ca3af !important;
+}
+
+body.dark .section-title,
+body.dark h2 {
+  color: #f9fafb !important;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.honeycomb-bg {
+  background-color: #f9fafb;
+  background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+.dark .honeycomb-bg {
+  background-color: #111827;
+  background-image: radial-gradient(#374151 1px, transparent 1px);
+}

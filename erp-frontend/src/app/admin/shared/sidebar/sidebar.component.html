@@ -1,0 +1,96 @@
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <h2 class="sidebar-title">ERP System</h2>
+    <p class="sidebar-subtitle">Administrateur</p>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a routerLink="/admin/dashboard" routerLinkActive="active" class="nav-item">
+      <span class="material-icons">home</span>
+      Accueil
+    </a>
+    <!-- Projects Dropdown -->
+    <div class="nav-dropdown">
+      <div class="dropdown-toggle" (click)="toggleDropdown('projects')" [class.open]="projectsOpen">
+        <span class="material-icons">folder_kanban</span>
+        <span class="nav-label">Projets</span>
+        <span class="material-icons dropdown-arrow">{{ projectsOpen ? 'expand_less' : 'expand_more' }}</span>
+      </div>
+      <div class="dropdown-menu" *ngIf="projectsOpen">
+        <a routerLink="/admin/projects/dashboard" routerLinkActive="active" class="dropdown-item">
+          <span class="material-icons">dashboard</span>
+          Dashboard
+        </a>
+        <a routerLink="/admin/projects/ressources" routerLinkActive="active" class="dropdown-item">
+          <span class="material-icons">people</span>
+          Ressources
+        </a>
+        <a routerLink="/admin/projets/board" routerLinkActive="active" class="dropdown-item">
+          <span class="material-icons">view_kanban</span>
+          Board
+        </a>
+      </div>
+    </div>
+
+    <!-- RH Dropdown -->
+    <div class="nav-dropdown">
+      <div class="dropdown-toggle" (click)="toggleDropdown('rh')" [class.open]="rhOpen">
+        <span class="material-icons">group</span>
+        <span class="nav-label">RH</span>
+        <span class="material-icons dropdown-arrow">{{ rhOpen ? 'expand_less' : 'expand_more' }}</span>
+      </div>
+      <div class="dropdown-menu" *ngIf="rhOpen">
+        <a routerLink="/admin/rh/dashboard" routerLinkActive="active" class="dropdown-item">
+          <span class="material-icons">dashboard</span>
+          Dashboard
+        </a>
+        <a routerLink="/admin/rh/utilisateurs" routerLinkActive="active" class="dropdown-item">
+          <span class="material-icons">manage_accounts</span>
+          Gestion utilisateurs
+        </a>
+        <a routerLink="/admin/rh/conges" routerLinkActive="active" class="dropdown-item">
+          <span class="material-icons">event_busy</span>
+          Congés
+        </a>
+        <a routerLink="/admin/rh/heures-sup" routerLinkActive="active" class="dropdown-item">
+          <span class="material-icons">timer</span>
+          Heures supplémentaires
+        </a>
+      </div>
+    </div>
+
+    <!-- Clients Dropdown -->
+    <div class="nav-dropdown">
+      <div class="dropdown-toggle" (click)="toggleDropdown('clients')" [class.open]="clientsOpen">
+        <span class="material-icons">business_center</span>
+        <span class="nav-label">Clients</span>
+        <span class="material-icons dropdown-arrow">{{ clientsOpen ? 'expand_less' : 'expand_more' }}</span>
+      </div>
+      <div class="dropdown-menu" *ngIf="clientsOpen">
+        <a routerLink="/admin/clients/gestion" routerLinkActive="active" class="dropdown-item">
+          <span class="material-icons">business</span>
+          Gestion clients
+        </a>
+        <a routerLink="/admin/clients/contrats" routerLinkActive="active" class="dropdown-item">
+          <span class="material-icons">description</span>
+          Gestion contrats
+        </a>
+      </div>
+    </div>
+    <a routerLink="/admin/profile" routerLinkActive="active" class="nav-item">
+      <span class="material-icons">person</span>
+      Profile
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <button class="nav-item dark-toggle" (click)="toggleDarkMode()">
+      <span class="material-icons">{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</span>
+      {{ isDarkMode ? 'Mode Clair' : 'Mode Sombre' }}
+    </button>
+    <button class="nav-item logout-btn" (click)="logout()">
+      <span class="material-icons">logout</span>
+      Déconnexion
+    </button>
+  </div>
+</aside>

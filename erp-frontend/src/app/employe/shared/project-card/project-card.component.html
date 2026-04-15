@@ -1,0 +1,58 @@
+<div class="project-card" [ngClass]="borderColor">
+
+  <div class="card-header">
+    <span class="project-name">{{ project.name }}</span>
+    <span class="project-deadline">
+      — {{ project.deadline | date:'dd/MM/yyyy' }}
+    </span>
+  </div>
+
+  <p class="project-description">{{ project.description }}</p>
+
+  <div class="card-meta">
+    <span class="meta-label">Jours restants:</span>
+    <span class="meta-value" [class.text-red]="daysRemaining < 0">
+      {{ daysRemaining }} jour{{ daysRemaining !== 1 ? 's' : '' }} restant{{ daysRemaining !== 1 ? 's' : '' }}
+    </span>
+  </div>
+
+  <div class="progress-section">
+    <div class="progress-header">
+      <span class="progress-label">Progression</span>
+      <span class="progress-value">{{ project.progress }}%</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" [style.width.%]="project.progress"></div>
+    </div>
+  </div>
+
+  <div class="card-actions">
+    <!-- Start button: only for new projects + project manager -->
+    <button
+      *ngIf="project.status === 'new' && isProjectManager"
+      class="btn btn-start"
+      (click)="start.emit(project.id)">
+      <span class="material-icons">play_circle</span>
+      Start
+    </button>
+
+    <!-- Deposit button: for in-progress, late, completed -->
+    <button
+      *ngIf="project.status === 'in-progress' ||
+             project.status === 'late' ||
+             project.status === 'completed'"
+      class="btn btn-deposit"
+      (click)="deposit.emit(project.id)">
+      <span class="material-icons">check_circle</span>
+      Dépôt
+    </button>
+
+    <!-- View details: always visible -->
+    <button
+      class="btn btn-details"
+      (click)="viewDetails.emit(project.id)">
+      <span class="material-icons">visibility</span>
+      Voir détails
+    </button>
+  </div>
+</div>

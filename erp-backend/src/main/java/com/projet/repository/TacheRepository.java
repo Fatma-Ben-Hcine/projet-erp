@@ -26,4 +26,6 @@ public interface TacheRepository extends JpaRepository<Tache, Long> {
     List<Tache> findByEmployeId(@Param("employeId") Long employeId);
     
     boolean existsByIdAndActiviteId(Long id, Long activiteId);
+    
+    void deleteByActiviteId(Long activiteId);
 }

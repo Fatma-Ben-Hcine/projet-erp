@@ -7,17 +7,27 @@ import com.projet.entity.TravaillerProjet;
 import com.projet.entity.Employe;
 import com.projet.entity.Client;
 import com.projet.entity.Utilisateur;
+import com.projet.entity.Activite;
+import com.projet.entity.Tache;
+import com.projet.entity.TravaillerActivite;
+import com.projet.entity.TravaillerTache;
 import com.projet.enums.Role;
+import com.projet.enums.StatutProjet;
 import com.projet.repository.ProjetRepository;
 import com.projet.repository.TravaillerProjetRepository;
 import com.projet.repository.ClientRepository;
 import com.projet.repository.UtilisateurRepository;
+import com.projet.repository.ActiviteRepository;
+import com.projet.repository.TacheRepository;
+import com.projet.repository.TravaillerActiviteRepository;
+import com.projet.repository.TravaillerTacheRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,6 +40,10 @@ public class ProjetService {
     private final TravaillerProjetRepository travaillerProjetRepository;
     private final UtilisateurRepository utilisateurRepository;
     private final ClientRepository clientRepository;
+    private final ActiviteRepository activiteRepository;
+    private final TacheRepository tacheRepository;
+    private final TravaillerActiviteRepository travaillerActiviteRepository;
+    private final TravaillerTacheRepository travaillerTacheRepository;
 
     public List<ProjetResponse> getAllProjets() {
         return projetRepository.findAll()
@@ -190,6 +204,57 @@ public class ProjetService {
             projet.setChefProjet(chefProjet);
         }
 
+        // Gérer les employés - supprimer les anciennes relations et créer les nouvelles
+        if (request.getEmployeIds() != null) {
+            log.info("Mise à jour des employés pour le projet {}: {} employés", id, request.getEmployeIds().size());
+            
+            // Récupérer et supprimer manuellement toutes les relations existantes
+            List<TravaillerProjet> anciennesRelations = travaillerProjetRepository.findByProjetId(id);
+            if (!anciennesRelations.isEmpty()) {
+                log.info("Suppression de {} anciennes relations employé-projet pour le projet {}", anciennesRelations.size(), id);
+                for (TravaillerProjet relation : anciennesRelations) {
+                    log.debug("Suppression de la relation: projet_id={}, employe_id={}", 
+                        relation.getProjet().getId(), relation.getEmploye().getId());
+                    travaillerProjetRepository.delete(relation);
+                }
+                // Forcer la synchronisation avec la base de données
+                travaillerProjetRepository.flush();
+                log.info("Toutes les anciennes relations ont été supprimées avec succès");
+            }
+            
+            // Créer les nouvelles relations
+            if (!request.getEmployeIds().isEmpty()) {
+                List<TravaillerProjet> nouvellesRelations = new ArrayList<>();
+                for (Long employeId : request.getEmployeIds()) {
+                    log.info("Recherche employé avec ID: {}", employeId);
+                    Utilisateur utilisateur = utilisateurRepository.findById(employeId)
+                            .orElseThrow(() -> new RuntimeException(
+                                    "Employé non trouvé avec id: " + employeId
+                            ));
+                    
+                    // Vérifier que l'utilisateur est bien un Employe
+                    if (!(utilisateur instanceof Employe)) {
+                        throw new RuntimeException(
+                                "L'utilisateur avec id=" + employeId + " n'est pas un employé"
+                        );
+                    }
+                    
+                    Employe employe = (Employe) utilisateur;
+                    TravaillerProjet tp = new TravaillerProjet();
+                    tp.setProjet(projet);
+                    tp.setEmploye(employe);
+                    tp.setStatut("ASSIGNÉ");
+                    nouvellesRelations.add(tp);
+                    log.debug("Création de la relation: projet_id={}, employe_id={}", id, employeId);
+                }
+                
+                travaillerProjetRepository.saveAll(nouvellesRelations);
+                log.info("Créé {} nouvelles relations employé-projet", nouvellesRelations.size());
+            } else {
+                log.info("Aucun employé à assigner au projet {}", id);
+            }
+        }
+
         Projet updated = projetRepository.save(projet);
         log.info("Projet mis à jour: {}", updated.getId());
         return mapToResponse(updated);
@@ -199,8 +264,63 @@ public class ProjetService {
     public void deleteProjet(Long id) {
         Projet projet = projetRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Projet non trouvé avec l'id: " + id));
-        projetRepository.delete(projet);
-        log.info("Projet supprimé: {}", id);
+        
+        log.info("Début de la suppression complète du projet {} et de toutes ses relations", id);
+        
+        try {
+            // 1. Récupérer toutes les activités du projet
+            List<Activite> activites = activiteRepository.findByProjetId(id);
+            log.info("Trouvé {} activités pour le projet {}", activites.size(), id);
+            
+            for (Activite activite : activites) {
+                // 2. Récupérer toutes les tâches de chaque activité
+                List<Tache> taches = tacheRepository.findByActiviteId(activite.getId());
+                log.info("Activité {}: {} tâches à supprimer", activite.getId(), taches.size());
+                
+                for (Tache tache : taches) {
+                    // 3. Supprimer les assignements de tâches (travailler_tache)
+                    List<TravaillerTache> travaillerTaches = travaillerTacheRepository.findByTacheId(tache.getId());
+                    if (!travaillerTaches.isEmpty()) {
+                        log.debug("Suppression de {} assignements pour la tâche {}", travaillerTaches.size(), tache.getId());
+                        travaillerTacheRepository.deleteAll(travaillerTaches);
+                    }
+                }
+                
+                // 4. Supprimer les tâches
+                if (!taches.isEmpty()) {
+                    log.debug("Suppression de {} tâches pour l'activité {}", taches.size(), activite.getId());
+                    tacheRepository.deleteByActiviteId(activite.getId());
+                }
+                
+                // 5. Supprimer les assignements d'activités (travailler_activite)
+                List<TravaillerActivite> travaillerActivites = travaillerActiviteRepository.findByActiviteId(activite.getId());
+                if (!travaillerActivites.isEmpty()) {
+                    log.debug("Suppression de {} assignements pour l'activité {}", travaillerActivites.size(), activite.getId());
+                    travaillerActiviteRepository.deleteByActiviteId(activite.getId());
+                }
+            }
+            
+            // 6. Supprimer les activités
+            if (!activites.isEmpty()) {
+                log.info("Suppression de {} activités pour le projet {}", activites.size(), id);
+                activiteRepository.deleteByProjetId(id);
+            }
+            
+            // 7. Supprimer les assignements du projet (travailler_projet)
+            List<TravaillerProjet> travaillerProjets = travaillerProjetRepository.findByProjetId(id);
+            if (!travaillerProjets.isEmpty()) {
+                log.info("Suppression de {} relations employé-projet", travaillerProjets.size());
+                travaillerProjetRepository.deleteAll(travaillerProjets);
+            }
+            
+            // 8. Supprimer le projet lui-même
+            projetRepository.delete(projet);
+            log.info("Projet {} supprimé avec succès (toutes les relations nettoyées)", id);
+            
+        } catch (Exception e) {
+            log.error("Erreur lors de la suppression du projet {}: {}", id, e.getMessage(), e);
+            throw new RuntimeException("Erreur lors de la suppression du projet: " + e.getMessage());
+        }
     }
 
     private void validateDates(LocalDate dateDebut, LocalDate dateLimite) {
@@ -218,7 +338,7 @@ public class ProjetService {
         response.setDateDebut(projet.getDateDebut());
         response.setDateLimite(projet.getDateLimite());
         response.setProgression(projet.getProgression());
-        response.setStatut(determinerStatut(projet));
+        response.setStatut(projet.getStatut() != null ? projet.getStatut().name() : determinerStatut(projet));
         response.setJoursRestants(calculerJoursRestants(projet));
         
         // Mapper le client
@@ -270,6 +390,16 @@ public class ProjetService {
         } else {
             return "En cours";
         }
+    }
+
+    @Transactional
+    public ProjetResponse updateProjetStatut(Long id, StatutProjet statut) {
+        log.info("Mise à jour du statut du projet {} à {}", id, statut);
+        Projet projet = projetRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Projet non trouvé avec l'id: " + id));
+        projet.setStatut(statut);
+        projet = projetRepository.save(projet);
+        return mapToResponse(projet);
     }
 
     private Integer calculerJoursRestants(Projet projet) {

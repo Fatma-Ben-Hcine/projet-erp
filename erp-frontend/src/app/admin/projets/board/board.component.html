@@ -1,0 +1,591 @@
+<div class="layout" style="position: relative; z-index: 1;">
+  <!-- Hexagon background pattern -->
+  <div style="position: fixed; inset: 0; opacity: 0.1;
+         pointer-events: none; z-index: 0; color: #92400e;">
+    <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id="hexagons-admin" x="0" y="0"
+               width="100" height="87" patternUnits="userSpaceOnUse">
+          <polygon points="50,0 93.3,25 93.3,62 50,87 6.7,62 6.7,25"
+                 fill="none" stroke="currentColor" stroke-width="0.8" />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#hexagons-admin)" />
+    </svg>
+  </div>
+
+  <app-admin-sidebar></app-admin-sidebar>
+
+  <main class="main-content" style="background: transparent !important;">
+    <!-- En-tête -->
+    <div class="page-header">
+      <div class="header-content">
+        <div class="header-text">
+          <h1 class="page-title">Board Projets</h1>
+          <p class="page-subtitle">Gérez vos projets en mode Kanban ou Calendrier</p>
+        </div>
+        <div class="header-actions">
+          <div class="view-toggle">
+            <button 
+              class="view-btn" 
+              [class.active]="currentView === 'kanban'"
+              (click)="toggleView('kanban')">
+              Kanban
+            </button>
+            <button 
+              class="view-btn" 
+              [class.active]="currentView === 'calendar'"
+              (click)="toggleView('calendar')">
+              Calendrier
+            </button>
+          </div>
+          <button class="btn-primary" (click)="openCreateModal()">
+            <span class="material-icons">add</span>
+             Nouveau Projet
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>Chargement des projets...</p>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="errorMessage" class="error-message">
+      <span class="material-icons">error</span>
+      {{ errorMessage }}
+    </div>
+
+    <!-- Vue Kanban -->
+    <div *ngIf="currentView === 'kanban' && !isLoading" class="kanban-view">
+      <div class="kanban-columns">
+        <!-- Colonne Nouveau Projet -->
+        <div class="kanban-column">
+          <div class="column-header" style="border-left-color: #3b82f6;">
+            <span class="status-icon">?</span>
+            <span class="status-text">Nouveau Projet</span>
+            <span class="status-count">{{ nouveauxProjets.length }}</span>
+          </div>
+          <div class="column-content">
+            <div *ngFor="let projet of nouveauxProjets" class="project-card" [style.border-left-color]="getStatutColor(projet.statut!)">
+              <div class="card-header">
+                <h3 class="project-title">{{ projet.nom }}</h3>
+                <p class="project-deadline">- {{ formatDate(projet.dateLimite) }}</p>
+              </div>
+              <p class="project-description">{{ projet.description }}</p>
+              <div class="project-client" *ngIf="projet.client">
+                <span class="material-icons">business</span>
+                {{ projet.client.nom }} {{ projet.client.prenom }}
+              </div>
+              <div class="project-budget">
+                <span class="material-icons">payments</span>
+                {{ projet.budget }} TND
+              </div>
+              <div class="project-days">
+                <span class="material-icons">schedule</span>
+                {{ projet.joursRestants }} jours restants
+              </div>
+              <div class="project-progress">
+                <div class="progress-bar">
+                  <div class="progress-fill" [style.width.%]="projet.progression"></div>
+                </div>
+                <span class="progress-text">{{ projet.progression }}%</span>
+              </div>
+              <div class="card-actions">
+                <button class="action-btn view-btn" title="Voir le projet" (click)="viewProjet(projet)">
+                  <span class="material-icons">visibility</span>
+                </button>
+                <button class="action-btn edit-btn" title="Modifier le projet" (click)="editProjet(projet)">
+                  <span class="material-icons">edit</span>
+                </button>
+                <button class="action-btn delete-btn" title="Supprimer le projet" (click)="confirmDelete(projet)">
+                  <span class="material-icons">delete</span>
+                </button>
+              </div>
+              <div class="status-actions">
+                <button 
+                  *ngIf="getNextStatutButton(projet.statut!)"
+                  class="status-btn"
+                  [style.background-color]="getNextStatutButton(projet.statut!)!.color"
+                  (click)="getNextStatutButton(projet.statut!)!.text === 'Start' ? openStartProjectModal(projet) : updateStatut(projet, getNextStatutButton(projet.statut!)!.action)">
+                  {{ getNextStatutButton(projet.statut!)!.text }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Colonne En Cours -->
+        <div class="kanban-column">
+          <div class="column-header" style="border-left-color: #eab308;">
+            <span class="status-icon">🟡</span>
+            <span class="status-text">En Cours</span>
+            <span class="status-count">{{ projetsEnCours.length }}</span>
+          </div>
+          <div class="column-content">
+            <div *ngFor="let projet of projetsEnCours" class="project-card" [style.border-left-color]="getStatutColor(projet.statut!)">
+              <div class="card-header">
+                <h3 class="project-title">{{ projet.nom }}</h3>
+                <p class="project-deadline">— {{ formatDate(projet.dateLimite) }}</p>
+              </div>
+              <p class="project-description">{{ projet.description }}</p>
+              <div class="project-client" *ngIf="projet.client">
+                <span class="material-icons">business</span>
+                {{ projet.client.nom }} {{ projet.client.prenom }}
+              </div>
+              <div class="project-budget">
+                <span class="material-icons">payments</span>
+                {{ projet.budget }} TND
+              </div>
+              <div class="project-days">
+                <span class="material-icons">schedule</span>
+                {{ projet.joursRestants }} jours restants
+              </div>
+              <div class="project-progress">
+                <div class="progress-bar">
+                  <div class="progress-fill" [style.width.%]="projet.progression"></div>
+                </div>
+                <span class="progress-text">{{ projet.progression }}%</span>
+              </div>
+              <div class="card-actions">
+                <button class="action-btn view-btn" title="Voir le projet" (click)="viewProjet(projet)">
+                  <span class="material-icons">visibility</span>
+                </button>
+                <button class="action-btn edit-btn" title="Modifier le projet" (click)="editProjet(projet)">
+                  <span class="material-icons">edit</span>
+                </button>
+                <button class="action-btn delete-btn" title="Supprimer le projet" (click)="confirmDelete(projet)">
+                  <span class="material-icons">delete</span>
+                </button>
+              </div>
+              <div class="status-actions">
+                <button 
+                  *ngIf="getNextStatutButton(projet.statut!)"
+                  class="status-btn"
+                  [style.background-color]="getNextStatutButton(projet.statut!)!.color"
+                  (click)="updateStatut(projet, getNextStatutButton(projet.statut!)!.action)">
+                  {{ getNextStatutButton(projet.statut!)!.text }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Colonne Terminé -->
+        <div class="kanban-column">
+          <div class="column-header" style="border-left-color: #22c55e;">
+            <span class="status-icon">🟢</span>
+            <span class="status-text">Terminé</span>
+            <span class="status-count">{{ projetsTermines.length }}</span>
+          </div>
+          <div class="column-content">
+            <div *ngFor="let projet of projetsTermines" class="project-card" [style.border-left-color]="getStatutColor(projet.statut!)">
+              <div class="card-header">
+                <h3 class="project-title">{{ projet.nom }}</h3>
+                <p class="project-deadline">— {{ formatDate(projet.dateLimite) }}</p>
+              </div>
+              <p class="project-description">{{ projet.description }}</p>
+              <div class="project-client" *ngIf="projet.client">
+                <span class="material-icons">business</span>
+                {{ projet.client.nom }} {{ projet.client.prenom }}
+              </div>
+              <div class="project-budget">
+                <span class="material-icons">payments</span>
+                {{ projet.budget }} TND
+              </div>
+              <div class="project-days">
+                <span class="material-icons">schedule</span>
+                {{ projet.joursRestants }} jours restants
+              </div>
+              <div class="project-progress">
+                <div class="progress-bar">
+                  <div class="progress-fill" [style.width.%]="projet.progression"></div>
+                </div>
+                <span class="progress-text">{{ projet.progression }}%</span>
+              </div>
+              <div class="card-actions">
+                <button class="action-btn view-btn" title="Voir le projet" (click)="viewProjet(projet)">
+                  <span class="material-icons">visibility</span>
+                </button>
+                <button class="action-btn edit-btn" title="Modifier le projet" (click)="editProjet(projet)">
+                  <span class="material-icons">edit</span>
+                </button>
+                <button class="action-btn delete-btn" title="Supprimer le projet" (click)="confirmDelete(projet)">
+                  <span class="material-icons">delete</span>
+                </button>
+              </div>
+              <div class="status-actions">
+                <button 
+                  *ngIf="getNextStatutButton(projet.statut!)"
+                  class="status-btn"
+                  [style.background-color]="getNextStatutButton(projet.statut!)!.color"
+                  (click)="updateStatut(projet, getNextStatutButton(projet.statut!)!.action)">
+                  {{ getNextStatutButton(projet.statut!)!.text }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Colonne En Retard -->
+        <div class="kanban-column">
+          <div class="column-header" style="border-left-color: #ef4444;">
+            <span class="status-icon">🔴</span>
+            <span class="status-text">En Retard</span>
+            <span class="status-count">{{ projetsEnRetard.length }}</span>
+          </div>
+          <div class="column-content">
+            <div *ngFor="let projet of projetsEnRetard" class="project-card" [style.border-left-color]="getStatutColor(projet.statut!)">
+              <div class="card-header">
+                <h3 class="project-title">{{ projet.nom }}</h3>
+                <p class="project-deadline">— {{ formatDate(projet.dateLimite) }}</p>
+              </div>
+              <p class="project-description">{{ projet.description }}</p>
+              <div class="project-client" *ngIf="projet.client">
+                <span class="material-icons">business</span>
+                {{ projet.client.nom }} {{ projet.client.prenom }}
+              </div>
+              <div class="project-budget">
+                <span class="material-icons">payments</span>
+                {{ projet.budget }} TND
+              </div>
+              <div class="project-days">
+                <span class="material-icons">schedule</span>
+                {{ projet.joursRestants }} jours restants
+              </div>
+              <div class="project-progress">
+                <div class="progress-bar">
+                  <div class="progress-fill" [style.width.%]="projet.progression"></div>
+                </div>
+                <span class="progress-text">{{ projet.progression }}%</span>
+              </div>
+              <div class="card-actions">
+                <button class="action-btn view-btn" title="Voir le projet" (click)="viewProjet(projet)">
+                  <span class="material-icons">visibility</span>
+                </button>
+                <button class="action-btn edit-btn" title="Modifier le projet" (click)="editProjet(projet)">
+                  <span class="material-icons">edit</span>
+                </button>
+                <button class="action-btn delete-btn" title="Supprimer le projet" (click)="confirmDelete(projet)">
+                  <span class="material-icons">delete</span>
+                </button>
+              </div>
+              <div class="status-actions">
+                <button 
+                  *ngIf="getNextStatutButton(projet.statut!)"
+                  class="status-btn"
+                  [style.background-color]="getNextStatutButton(projet.statut!)!.color"
+                  (click)="updateStatut(projet, getNextStatutButton(projet.statut!)!.action)">
+                  {{ getNextStatutButton(projet.statut!)!.text }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vue Calendrier (placeholder) -->
+    <div *ngIf="currentView === 'calendar' && !isLoading" class="calendar-view">
+      <div class="calendar-placeholder">
+        <span class="material-icons">calendar_month</span>
+        <h3>Vue Calendrier</h3>
+        <p>La vue calendrier sera implémentée prochainement</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal de détails du projet -->
+  <div *ngIf="selectedProjet" class="modal-overlay" (click)="fermerDetails()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Détails du Projet</h2>
+        <button class="close-btn" (click)="fermerDetails()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Section 1 - Informations générales -->
+        <div class="form-section" style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+          <h3>Informations générales</h3>
+          <div class="info-row">
+            <strong>Nom du Projet:</strong> {{ selectedProjet.nom }}
+          </div>
+          <div class="info-row">
+            <strong>Description:</strong> {{ selectedProjet.description || 'Aucune description' }}
+          </div>
+          <div class="info-row">
+            <strong>Client:</strong> {{ selectedProjet.client?.nom }} {{ selectedProjet.client?.prenom }}
+            <span style="margin-left: 20px;">
+              <strong>Budget:</strong> {{ selectedProjet.budget }} TND
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="statut-badge" [style.background-color]="getStatutColor(selectedProjet.statut!)">
+              {{ selectedProjet.statut }}
+            </span>
+            <span style="margin-left: 15px;">
+              <strong>Date limite:</strong> {{ formatDate(selectedProjet.dateLimite) }}
+            </span>
+            <span style="margin-left: 15px;">
+              <strong>Progression:</strong> 
+              <div style="display: inline-block; width: 100px; height: 8px; background-color: #e9ecef; border-radius: 4px; margin-left: 5px; vertical-align: middle;">
+                <div style="width: {{ selectedProjet.progression }}%; height: 100%; background-color: #28a745; border-radius: 4px;"></div>
+              </div>
+              <span style="margin-left: 5px;">{{ selectedProjet.progression }}%</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Section 2 - Équipe du projet -->
+        <div class="form-section">
+          <h3>
+            <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">people</span>
+            Équipe du projet
+          </h3>
+          <div class="team-list">
+            <div *ngFor="let employe of selectedProjet.employes" class="team-member">
+              <div class="member-avatar">
+                {{ employe.prenom[0] }}{{ employe.nom[0] }}
+              </div>
+              <div class="member-info">
+                <div class="member-name">{{ employe.nom }} {{ employe.prenom }}</div>
+                <div class="member-role">{{ employe.poste }}</div>
+                <div *ngIf="selectedProjet.chefDeProjet?.id === employe.id" class="chef-badge">
+                  Chef de Projet
+                </div>
+              </div>
+            </div>
+            <div *ngIf="!selectedProjet.employes || selectedProjet.employes.length === 0" class="no-team">
+              Aucun employé assigné à ce projet
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" style="width: 100%;" (click)="fermerDetails()">
+          Fermer
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de création -->
+  <div *ngIf="showModal" class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ isEditMode ? 'Modifier le Projet' : 'Créer un Projet' }}</h2>
+        <button class="close-btn" (click)="closeModal()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <form [formGroup]="createForm" class="modal-body">
+        <!-- Section 1 - Informations générales -->
+        <div class="form-section">
+          <h3>Informations générales</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="nom">Nom du Projet *</label>
+              <input id="nom" formControlName="nom" type="text" class="form-control" />
+              <div *ngIf="createForm.get('nom')?.invalid && createForm.get('nom')?.touched" class="error-text">
+                Le nom du projet est obligatoire
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group full-width">
+              <label for="description">Description</label>
+              <textarea id="description" formControlName="description" class="form-control" rows="3"></textarea>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="clientId">Client *</label>
+              <select id="clientId" formControlName="clientId" class="form-control">
+                <option value="">Sélectionner un client</option>
+                <option *ngFor="let client of clients" [value]="client.id">
+                  {{ client.nom }} {{ client.prenom }}
+                </option>
+              </select>
+              <div *ngIf="createForm.get('clientId')?.invalid && createForm.get('clientId')?.touched" class="error-text">
+                Le client est obligatoire
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="budget">Budget TND *</label>
+              <input id="budget" formControlName="budget" type="number" class="form-control" min="0" />
+              <div *ngIf="createForm.get('budget')?.invalid && createForm.get('budget')?.touched" class="error-text">
+                Le budget doit être positif
+              </div>
+            </div>
+          </div>
+
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="dateDebut">Date Debut *</label>
+              <input id="dateDebut" formControlName="dateDebut" type="date" class="form-control" />
+              <div *ngIf="createForm.get('dateDebut')?.invalid && createForm.get('dateDebut')?.touched" class="error-text">
+                La date est obligatoire
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="dateLimite">Date limite *</label>
+              <input id="dateLimite" formControlName="dateLimite" type="date" class="form-control" />
+              <div *ngIf="createForm.get('dateLimite')?.invalid && createForm.get('dateLimite')?.touched" class="error-text">
+                La date limite est obligatoire
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2 - Équipe -->
+        <div class="form-section">
+          <h3>Équipe</h3>
+          <div class="form-group">
+              <label>Assigner des employés</label>
+            <div class="employees-list">
+              <div *ngFor="let employe of employes" class="employee-item">
+                <label class="checkbox-label">
+                  <input 
+                    type="checkbox" 
+                    [value]="employe.id"
+                    [checked]="selectedEmployes.includes(employe.id)"
+                    (change)="onEmployeToggle(employe.id, $event)"
+                  />
+                  <div class="employee-content">
+                    <span class="employee-name">{{ employe.prenom }} {{ employe.nom }}</span>
+                    <div class="employee-details">
+                      <span class="employee-role">{{ employe.poste }}</span>
+                      <span class="competences-separator" *ngIf="employe.competences && employe.competences.trim().length > 0">·</span>
+                      <span class="employee-competences" *ngIf="employe.competences && employe.competences.trim().length > 0">
+                        <span class="competence-badge" *ngFor="let comp of employe.competences.split(',')">
+                          {{ comp.trim() }}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+              <label for="chefDeProjetId">Chef de Projet *</label>
+              <select id="chefDeProjetId" formControlName="chefDeProjetId" class="form-control">
+                <option value="">Sélectionner un chef de projet</option>
+                <ng-container *ngFor="let emp of employesSelectionnes">
+                  <option [value]="emp.id">
+                    {{ emp.prenom }} {{ emp.nom }}
+                  </option>
+                </ng-container>
+              </select>
+              <div *ngIf="createForm.get('chefDeProjetId')?.invalid && createForm.get('chefDeProjetId')?.touched" class="error-text">
+                Le chef de projet est obligatoire
+              </div>
+              <p class="help-text">Le chef de projet doit être parmi les employés assignés au projet</p>
+          </div>
+        </div>
+
+        <!-- Section 3 - Activités -->
+        <div class="form-section">
+          <h3>Activités (optionnel)</h3>
+          <div class="activities-container">
+            <div *ngFor="let activite of activites; let i = index" class="activity-item">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Nom de l'activité</label>
+                  <input type="text" [(ngModel)]="activite.nom" class="form-control" />
+                </div>
+                <div class="form-group">
+                  <label>Description de l'activité</label>
+                  <input type="text" [(ngModel)]="activite.description" class="form-control" />
+                </div>
+                <div class="form-group">
+                  <label>&nbsp;</label>
+                  <button type='button' class='btn-danger' (click)='removeActivite(i)'>
+                    <span class='material-icons'>delete</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <button type="button" class="btn-secondary" (click)="addActivite()">
+              <span class="material-icons">add</span>
+              Ajouter une activité
+            </button>
+          </div>
+          <p class="info-text">
+            Ajoutez des activités pour démarrer le projet directement en 'En cours'. 
+            Sans activités, le projet restera en 'Nouveau Projet'.
+          </p>
+        </div>
+
+        <!-- Erreurs -->
+        <div *ngIf="errorMessage" class="error-message">
+          <span class="material-icons">error</span>
+          {{ errorMessage }}
+        </div>
+      </form>
+
+      <div class="modal-footer">
+            <button type='button' class='btn-secondary' (click)='closeModal()'>Annuler</button>
+            <button type='button' class='btn-primary' (click)='saveProjet()' 
+                    [disabled]="createForm.invalid || selectedEmployes.length === 0">
+              {{ isEditMode ? 'Enregistrer les modifications' : 'Créer le Projet' }}
+            </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de confirmation de suppression -->
+  <div *ngIf="showDeleteModal" class="modal-overlay" (click)="cancelDelete()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Confirmer la suppression</h2>
+        <button class="close-btn" (click)="cancelDelete()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="delete-warning">
+          <span class="material-icons warning-icon">warning</span>
+          <div class="warning-content">
+            <p>Êtes-vous sûr de vouloir supprimer le projet suivant ?</p>
+            <div class="project-info">
+              <strong>{{ projetASupprimer?.nom }}</strong>
+              <p *ngIf="projetASupprimer">{{ projetASupprimer.description }}</p>
+            </div>
+            <p class="warning-text">Cette action est irréversible.</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="cancelDelete()">
+          Annuler
+        </button>
+        <button type="button" class="btn-danger" (click)="deleteProjet()">
+          <span class="material-icons">delete</span>
+          Supprimer
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de démarrage de projet -->
+<app-start-project-modal
+  [projet]="projetToStart"
+  [isVisible]="showStartProjectModal"
+  (closeModal)="closeStartProjectModal()"
+  (projectStarted)="onProjectStarted()">
+</app-start-project-modal>

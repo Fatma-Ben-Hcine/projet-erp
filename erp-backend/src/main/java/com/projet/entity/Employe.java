@@ -3,6 +3,7 @@ package com.projet.entity;
 import com.projet.enums.Role;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
+
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.CascadeType;
 import lombok.Data;
@@ -12,6 +13,10 @@ import lombok.Builder;
 
 import java.util.List;
 import java.util.ArrayList;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.experimental.SuperBuilder;
+
 
 @Entity
 @DiscriminatorValue("EMPLOYE")
@@ -19,6 +24,7 @@ import java.util.ArrayList;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
 public class Employe extends Utilisateur {
+
 
     // Relation avec TravaillerActivite
     @OneToMany(mappedBy = "employe", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -54,4 +60,5 @@ public class Employe extends Utilisateur {
         travaillerTaches.remove(travaillerTache);
         travaillerTache.setEmploye(null);
     }
+
 }

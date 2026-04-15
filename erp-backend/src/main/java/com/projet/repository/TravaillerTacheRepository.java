@@ -32,4 +32,6 @@ public interface TravaillerTacheRepository extends JpaRepository<TravaillerTache
     long countCompletedTasksByTacheId(@Param("tacheId") Long tacheId);
     
     void deleteByEmployeIdAndTacheId(Long employeId, Long tacheId);
+    
+    void deleteByTacheId(Long tacheId);
 }

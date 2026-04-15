@@ -26,4 +26,6 @@ public interface ActiviteRepository extends JpaRepository<Activite, Long> {
     List<Activite> findByEmployeId(@Param("employeId") Long employeId);
     
     boolean existsByIdAndProjetId(Long id, Long projetId);
+    
+    void deleteByProjetId(Long projetId);
 }

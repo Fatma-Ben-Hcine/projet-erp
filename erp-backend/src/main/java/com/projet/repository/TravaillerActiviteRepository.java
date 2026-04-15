@@ -29,4 +29,6 @@ public interface TravaillerActiviteRepository extends JpaRepository<TravaillerAc
     Double getAverageProgressionByActiviteId(@Param("activiteId") Long activiteId);
     
     void deleteByEmployeIdAndActiviteId(Long employeId, Long activiteId);
+    
+    void deleteByActiviteId(Long activiteId);
 }

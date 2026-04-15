@@ -1,0 +1,201 @@
+<div class="modal-overlay" *ngIf="isVisible" (click)="close()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="modal-header">
+      <h2 class="modal-title">Démarrer le Projet</h2>
+      <button class="close-btn" (click)="close()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <!-- BODY -->
+    <div class="modal-body">
+
+      <!-- Infos générales -->
+      <section class="section-info">
+        <div class="info-grid">
+          <div><label>NOM DU PROJET</label><p>{{projet?.nom}}</p></div>
+          <div><label>DESCRIPTION</label><p>{{projet?.description}}</p></div>
+          <div><label>CLIENT</label><p>{{projet?.client?.prenom}} {{projet?.client?.nom}}</p></div>
+          <div><label>STATUT</label><span class="badge">{{projet?.statut}}</span></div>
+          <div><label>PROGRESSION</label><p>{{projet?.progression}}%</p></div>
+          <div><label>ÉCHÉANCE</label><p>{{projet?.dateLimite | date:'dd/MM/yyyy'}}</p></div>
+        </div>
+      </section>
+
+      <!-- Équipe assignée -->
+      <section class="section-equipe">
+        <h3>Équipe assignée</h3>
+        <div class="equipe-badges" *ngIf="employesDisponibles.length > 0">
+          <span class="badge-emp" 
+                *ngFor="let emp of employesDisponibles"
+                [class.chef]="isChef(emp.id)">
+            {{emp.prenom}} {{emp.nom}}
+            <span *ngIf="isChef(emp.id)">(Chef de projet)</span>
+          </span>
+        </div>
+      </section>
+
+      <!-- FORMULAIRE ACTIVITÉS -->
+      <section class="section-activites">
+        <h3>Diviser en Activités</h3>
+        <p>Définissez les activités principales. Chaque activité peut être divisée en tâches.</p>
+
+        <form [formGroup]="form">
+          <div formArrayName="activites">
+
+            <div *ngFor="let act of activites.controls; let i = index"
+                 [formGroupName]="i"
+                 class="activite-block">
+
+              <div class="activite-header">
+                <span>Activité {{i+1}}</span>
+                <button type="button" (click)="removeActivite(i)" 
+                        *ngIf="activites.length > 1">×</button>
+              </div>
+
+              <!-- Nom activité -->
+              <div class="form-group">
+                <label>Nom de l'activité *</label>
+                <input type="text" formControlName="nom"
+                       placeholder="Ex: Phase de conception">
+              </div>
+
+              <!-- Description activité -->
+              <div class="form-group">
+                <label>Description</label>
+                <textarea formControlName="description"
+                          placeholder="Décrivez cette activité..."></textarea>
+              </div>
+
+              <!-- Dates activité -->
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Date début</label>
+                  <input type="date" formControlName="dateDebut">
+                </div>
+                <div class="form-group">
+                  <label>Date fin</label>
+                  <input type="date" formControlName="dateFin">
+                </div>
+              </div>
+
+              <!-- Employés activité -->
+              <div class="assign-section">
+                <label>Assigner des employés à cette activité</label>
+                <p class="hint">Seuls les employés affectés au projet sont disponibles</p>
+                <div class="employes-list">
+                  <label class="emp-check" *ngFor="let emp of employesDisponibles">
+                    <input type="checkbox"
+                           [checked]="isActiviteEmployeChecked(i, emp.id)"
+                           (change)="onActiviteEmployeToggle(i, emp.id, $event)">
+                    {{emp.prenom}} {{emp.nom}}
+                    <span *ngIf="isChef(emp.id)">(Chef de projet)</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- ===== TÂCHES ===== -->
+              <div class="taches-section">
+                <div class="taches-header">
+                  <span>Tâches de l'activité</span>
+                  <button type="button" class="btn-add-tache"
+                          (click)="addTache(i)">
+                    + Ajouter une tâche
+                  </button>
+                </div>
+
+                <!-- État vide -->
+                <div class="no-taches" *ngIf="getTaches(i).length === 0">
+                  <p>Aucune tâche pour cette activité</p>
+                  <span>Cliquez sur "Ajouter une tâche" pour commencer</span>
+                </div>
+
+                <!-- FormArray tâches - IMBRIQUÉ dans [formGroupName]="i" -->
+                <div formArrayName="taches">
+                  <div *ngFor="let t of getTaches(i).controls; let j = index"
+                       [formGroupName]="j"
+                       class="tache-block">
+
+                    <div class="tache-header">
+                      <span>Tâche {{j+1}}</span>
+                      <button type="button" (click)="removeTache(i, j)">×</button>
+                    </div>
+
+                    <div class="form-group">
+                      <label>Nom de la tâche *</label>
+                      <input type="text" formControlName="nom"
+                             placeholder="Ex: Rédiger le cahier des charges">
+                    </div>
+
+                    <div class="form-group">
+                      <label>Description</label>
+                      <textarea formControlName="description"
+                                placeholder="Décrivez cette tâche..."></textarea>
+                    </div>
+
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label>Date début</label>
+                        <input type="date" formControlName="dateDebut">
+                      </div>
+                      <div class="form-group">
+                        <label>Date fin</label>
+                        <input type="date" formControlName="dateFin">
+                      </div>
+                    </div>
+
+                    <!-- Employés tâche -->
+                    <div class="assign-section">
+                      <label>Assigner des employés à cette tâche</label>
+                      <div class="employes-list">
+                        <label class="emp-check" *ngFor="let emp of getEmployesDisponiblesPourTache(i)">
+                          <input type="checkbox"
+                                 [checked]="isTacheEmployeChecked(i, j, emp.id)"
+                                 (change)="onTacheEmployeToggle(i, j, emp.id, $event)">
+                          {{emp.prenom}} {{emp.nom}}
+                          <span *ngIf="isChef(emp.id)">(Chef de projet)</span>
+                        </label>
+                        <!-- Message si aucun employé n'est assigné à l'activité -->
+                        <div *ngIf="getEmployesDisponiblesPourTache(i).length === 0" class="no-employes-message">
+                          <p>Aucun employé assigné à cette activité</p>
+                          <small>Veuillez d'abord assigner des employés à l'activité ci-dessus</small>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+                <!-- fin formArrayName="taches" -->
+
+              </div>
+              <!-- fin taches-section -->
+
+            </div>
+            <!-- fin [formGroupName]="i" -->
+
+          </div>
+          <!-- fin formArrayName="activites" -->
+        </form>
+
+        <!-- Bouton ajouter activité -->
+        <button type="button" class="btn-add-activite" (click)="addActivite()">
+          + Ajouter une activité
+        </button>
+
+      </section>
+    </div>
+    <!-- fin modal-body -->
+
+    <!-- FOOTER -->
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="close()">Annuler</button>
+      <button class="btn-submit" 
+              [disabled]="form.invalid"
+              (click)="onSubmit()">
+        Démarrer le Projet
+      </button>
+    </div>
+
+  </div>
+</div>

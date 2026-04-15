@@ -20,7 +20,7 @@ public class ChefProjet extends Employe {
 
     public ChefProjet() {
         super();
-        setRole(Role.ROLE_CHEF_PROJET);
+        setRole(Role.ROLE_ADMIN);
     }
 
     @OneToMany(mappedBy = "chefProjet", fetch = FetchType.LAZY)

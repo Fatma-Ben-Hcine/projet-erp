@@ -2,6 +2,7 @@ package com.projet.controller;
 
 import com.projet.dto.ProjetRequest;
 import com.projet.dto.ProjetResponse;
+import com.projet.enums.StatutProjet;
 import com.projet.service.ProjetService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin/projets")
@@ -73,6 +75,21 @@ public class ProjetController {
         try {
             projetService.deleteProjet(id);
             return ResponseEntity.ok("Projet supprimé avec succès");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PatchMapping("/{id}/statut")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<?> updateProjetStatut(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> request) {
+        try {
+            String statutValue = request.get("statut");
+            StatutProjet statut = StatutProjet.valueOf(statutValue.toUpperCase());
+            ProjetResponse response = projetService.updateProjetStatut(id, statut);
+            return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

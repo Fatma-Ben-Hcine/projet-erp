@@ -1,0 +1,178 @@
+<div class="layout" style="position: relative; z-index: 1;">
+  <!-- Hexagon background pattern -->
+  <div style="position: fixed; inset: 0; opacity: 0.1;
+            pointer-events: none; z-index: 0; color: #92400e;">
+    <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id="hexagons-employe" x="0" y="0"
+               width="100" height="87" patternUnits="userSpaceOnUse">
+          <polygon points="50,0 93.3,25 93.3,62 50,87 6.7,62 6.7,25"
+                 fill="none" stroke="currentColor" stroke-width="0.8" />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#hexagons-employe)" />
+    </svg>
+  </div>
+
+  <app-employe-sidebar></app-employe-sidebar>
+
+  <main class="main-content" style="background: transparent !important;">
+
+    <!-- Header -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Mes Projets</h1>
+        <p class="page-subtitle">Bienvenue {{ userName }}, voici vos projets affectés</p>
+      </div>
+      <div class="view-toggle">
+        <button
+          class="toggle-btn"
+          [class.active]="view === 'kanban'"
+          (click)="view = 'kanban'">
+          <span class="material-icons">view_kanban</span>
+          Kanban
+        </button>
+        <button
+          class="toggle-btn"
+          [class.active]="view === 'calendar'"
+          (click)="view = 'calendar'">
+          <span class="material-icons">calendar_month</span>
+          Calendrier
+        </button>
+      </div>
+    </div>
+
+    <!-- Kanban View -->
+    <div *ngIf="view === 'kanban'" class="kanban-board">
+      <app-kanban-column
+        title="Nouveau Projet"
+        dotColor="#3b82f6"
+        [projects]="newProjects"
+        [currentUserId]="currentUserId"
+        (viewDetails)="handleViewDetails($event)"
+        (deposit)="handleDeposit($event)"
+        (start)="handleStart($event)">
+      </app-kanban-column>
+
+      <app-kanban-column
+        title="En Cours"
+        dotColor="#f59e0b"
+        [projects]="inProgressProjects"
+        [currentUserId]="currentUserId"
+        (viewDetails)="handleViewDetails($event)"
+        (deposit)="handleDeposit($event)"
+        (start)="handleStart($event)">
+      </app-kanban-column>
+
+      <app-kanban-column
+        title="Terminé"
+        dotColor="#10b981"
+        [projects]="completedProjects"
+        [currentUserId]="currentUserId"
+        (viewDetails)="handleViewDetails($event)"
+        (deposit)="handleDeposit($event)"
+        (start)="handleStart($event)">
+      </app-kanban-column>
+
+      <app-kanban-column
+        title="En Retard"
+        dotColor="#ef4444"
+        [projects]="lateProjects"
+        [currentUserId]="currentUserId"
+        (viewDetails)="handleViewDetails($event)"
+        (deposit)="handleDeposit($event)"
+        (start)="handleStart($event)">
+      </app-kanban-column>
+    </div>
+
+    <!-- Calendar View Placeholder -->
+    <div *ngIf="view === 'calendar'" class="calendar-placeholder">
+      <span class="material-icons calendar-icon">calendar_month</span>
+      <p>Vue Calendrier — à implémenter</p>
+      <small>Affichage des dates de début/fin, activités, deadlines</small>
+    </div>
+
+  </main>
+</div>
+
+<!-- Details Modal -->
+<div *ngIf="showDetailsModal && selectedProject" class="modal-overlay" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <h2>Détails du Projet</h2>
+      <button class="modal-close" (click)="closeModal()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="modal-body">
+
+      <!-- General Info -->
+      <div class="modal-section">
+        <h3>Informations générales</h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Nom du Projet</label>
+            <p>{{ selectedProject.name }}</p>
+          </div>
+          <div class="info-item">
+            <label>Description</label>
+            <p>{{ selectedProject.description }}</p>
+          </div>
+          <div class="info-item">
+            <label>Client</label>
+            <p>{{ getClientName(selectedProject.clientId) }}</p>
+          </div>
+          <div class="info-row">
+            <div class="info-item">
+              <label>Statut</label>
+              <span class="badge" [ngClass]="getStatusClass(selectedProject.status)">
+                {{ getStatusLabel(selectedProject.status) }}
+              </span>
+            </div>
+            <div class="info-item">
+              <label>Progression</label>
+              <p>{{ selectedProject.progress }}%</p>
+            </div>
+            <div class="info-item">
+              <label>Échéance</label>
+              <p>{{ selectedProject.deadline | date:'dd/MM/yyyy' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Team -->
+      <div class="modal-section">
+        <h3>Équipe assignée</h3>
+        <div class="team-list">
+          <span
+            *ngFor="let empId of selectedProject.assignedEmployees"
+            class="team-badge"
+            [class.is-manager]="selectedProject.projectManager === empId">
+            {{ getEmployeeName(empId) }}
+            <span *ngIf="selectedProject.projectManager === empId"> (Chef de projet)</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Activities -->
+      <div *ngIf="selectedProject.activities && selectedProject.activities.length > 0"
+           class="modal-section">
+        <h3>Activités et Tâches</h3>
+        <div *ngFor="let activity of selectedProject.activities" class="activity-card">
+          <h4>{{ activity.name }}</h4>
+          <p>{{ activity.description }}</p>
+          <div *ngIf="activity.tasks && activity.tasks.length > 0" class="task-list">
+            <div *ngFor="let task of activity.tasks" class="task-item">
+              <p class="task-name">{{ task.name }}</p>
+              <p class="task-desc">{{ task.description }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

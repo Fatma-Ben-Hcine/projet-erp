@@ -1,0 +1,153 @@
+<div class="layout" style="position: relative; z-index: 1;">
+
+  <!-- Hexagon background -->
+  <div style="position: fixed; inset: 0; opacity: 0.04;
+              pointer-events: none; z-index: 0; color: #92400e;">
+    <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id="hexagons-profile" x="0" y="0"
+                 width="100" height="87" patternUnits="userSpaceOnUse">
+          <polygon points="50,0 93.3,25 93.3,62 50,87 6.7,62 6.7,25"
+                   fill="none" stroke="currentColor" stroke-width="0.8" />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#hexagons-profile)" />
+    </svg>
+  </div>
+
+  <!-- Show admin sidebar if user is admin -->
+  <app-admin-sidebar *ngIf="isAdmin"></app-admin-sidebar>
+
+  <!-- Show employee sidebar if user is employee -->
+  <app-employe-sidebar *ngIf="!isAdmin"></app-employe-sidebar>
+
+  <!-- Main content -->
+  <main class="main-content">
+
+    <!-- Loading state -->
+    <div *ngIf="isLoading" class="loading-container">
+      <span class="material-icons loading-icon">hourglass_empty</span>
+      <p>Chargement du profil...</p>
+    </div>
+
+    <!-- Error state -->
+    <div *ngIf="!isLoading && errorMessage && !profile" class="error-container">
+      <span class="material-icons">error</span>
+      <p>{{ errorMessage }}</p>
+    </div>
+
+    <!-- Profile content -->
+    <div *ngIf="!isLoading && profile" class="profile-content">
+
+      <!-- Back button -->
+      <div class="back-bar">
+        <a [routerLink]="getBackLink()"
+           class="back-btn"
+           [ngClass]="{'back-btn-dark': isDarkMode}">
+          <span class="material-icons">arrow_back</span>
+          Retour
+        </a>
+      </div>
+
+      <!-- Profile Card -->
+      <div class="profile-card" [ngClass]="{'profile-card-dark': isDarkMode}">
+
+        <!-- Top section: Avatar + Name + Role -->
+        <div class="profile-top">
+
+          <!-- Avatar -->
+          <div class="avatar-container">
+            <div class="avatar">
+              <img
+                *ngIf="hasPhoto()"
+                [src]="getPhotoUrl()"
+                alt="Photo de profil"
+                class="avatar-img" />
+              <span *ngIf="!hasPhoto()" class="avatar-initials">
+                {{ getInitials() }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Name and role -->
+          <div class="profile-identity">
+            <h1 class="profile-name">
+              {{ profile.prenom }} {{ profile.nom }}
+            </h1>
+            <span class="role-badge" [ngClass]="getRoleBadgeClass(profile.role)">
+              {{ getRoleLabel(profile.role) }}
+            </span>
+            <p class="profile-poste">{{ profile.poste }}</p>
+          </div>
+        </div>
+
+        <!-- Error message -->
+        <div *ngIf="errorMessage" class="error-msg">
+          <span class="material-icons">error</span>
+          {{ errorMessage }}
+        </div>
+
+        <!-- Divider -->
+        <div class="divider"></div>
+
+        <!-- Info Grid -->
+        <div class="info-grid">
+
+          <div class="info-item" [ngClass]="{'info-item-dark': isDarkMode}">
+            <div class="info-icon-wrapper icon-blue">
+              <span class="material-icons">email</span>
+            </div>
+            <div class="info-text">
+              <label>Email</label>
+              <p>{{ profile.email }}</p>
+            </div>
+          </div>
+
+          <div class="info-item" [ngClass]="{'info-item-dark': isDarkMode}">
+            <div class="info-icon-wrapper icon-green">
+              <span class="material-icons">badge</span>
+            </div>
+            <div class="info-text">
+              <label>CIN</label>
+              <p>{{ profile.CIN }}</p>
+            </div>
+          </div>
+
+          <div class="info-item" [ngClass]="{'info-item-dark': isDarkMode}">
+            <div class="info-icon-wrapper icon-yellow">
+              <span class="material-icons">phone</span>
+            </div>
+            <div class="info-text">
+              <label>Numéro de téléphone</label>
+              <p>{{ profile.numeroTel }}</p>
+            </div>
+          </div>
+
+          <div class="info-item" [ngClass]="{'info-item-dark': isDarkMode}">
+            <div class="info-icon-wrapper icon-purple">
+              <span class="material-icons">work</span>
+            </div>
+            <div class="info-text">
+              <label>Poste</label>
+              <p>{{ profile.poste }}</p>
+            </div>
+          </div>
+
+          <div class="info-item full-width"
+               [ngClass]="{'info-item-dark': isDarkMode}">
+            <div class="info-icon-wrapper icon-orange">
+              <span class="material-icons">psychology</span>
+            </div>
+            <div class="info-text">
+              <label>Compétences</label>
+              <p>{{ profile.competences || 'Aucune compétence renseignée' }}</p>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+</div>
