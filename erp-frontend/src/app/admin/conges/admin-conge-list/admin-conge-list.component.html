@@ -1,0 +1,190 @@
+<div class="layout" style="position: relative; z-index: 1;">
+  <!-- Hexagon background pattern -->
+  <div style="position: fixed; inset: 0; opacity: 0.1;
+            pointer-events: none; z-index: 0; color: #92400e;">
+    <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id="hexagons-admin-conges" x="0" y="0"
+               width="100" height="87" patternUnits="userSpaceOnUse">
+          <polygon points="50,0 93.3,25 93.3,62 50,87 6.7,62 6.7,25"
+                 fill="none" stroke="currentColor" stroke-width="0.8" />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#hexagons-admin-conges)" />
+    </svg>
+  </div>
+
+  <app-admin-sidebar></app-admin-sidebar>
+
+  <main class="main-content" style="background: transparent !important;">
+    <!-- Messages -->
+    <div *ngIf="errorMessage" class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-md">
+      {{ errorMessage }}
+      <button (click)="clearMessages()" class="float-right text-red-500 hover:text-red-700">&times;</button>
+    </div>
+    
+    <div *ngIf="successMessage" class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-md">
+      {{ successMessage }}
+      <button (click)="clearMessages()" class="float-right text-green-500 hover:text-green-700">&times;</button>
+    </div>
+
+    <div class="page-header">
+      <h1 class="page-title">Gestion des Congés</h1>
+      <p class="page-subtitle">Validez ou refusez les demandes de congé des employés</p>
+    </div>
+
+    <!-- Statistics Cards -->
+    <section class="section">
+      <h2 class="section-title">Statistiques</h2>
+      <div class="stats-grid stats-grid-4">
+        <div class="stat-card">
+          <div class="stat-card-content">
+            <div class="stat-card-text">
+              <p class="stat-card-title">Total</p>
+              <p class="stat-card-value">{{ getStats().total }}</p>
+            </div>
+            <div class="stat-card-icon icon-info">
+              <span class="material-icons">event</span>
+            </div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-content">
+            <div class="stat-card-text">
+              <p class="stat-card-title">En Attente</p>
+              <p class="stat-card-value">{{ getStats().enAttente }}</p>
+            </div>
+            <div class="stat-card-icon icon-warning">
+              <span class="material-icons">hourglass_empty</span>
+            </div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-content">
+            <div class="stat-card-text">
+              <p class="stat-card-title">Validés</p>
+              <p class="stat-card-value">{{ getStats().valides }}</p>
+            </div>
+            <div class="stat-card-icon icon-success">
+              <span class="material-icons">check_circle</span>
+            </div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-content">
+            <div class="stat-card-text">
+              <p class="stat-card-title">Refusés</p>
+              <p class="stat-card-value">{{ getStats().refuses }}</p>
+            </div>
+            <div class="stat-card-icon icon-danger">
+              <span class="material-icons">cancel</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filter Bar -->
+    <section class="section">
+      <div class="filter-bar">
+        <div class="filter-group">
+          <label for="statutFilter" class="filter-label">Filtrer par statut:</label>
+          <select 
+            id="statutFilter" 
+            [(ngModel)]="selectedFilter" 
+            (ngModelChange)="onFilterChange()"
+            class="filter-select">
+            <option *ngFor="let filter of statutFilters" [value]="filter.value">
+              {{ filter.label }}
+            </option>
+          </select>
+        </div>
+        <div class="filter-info">
+          <span>{{ filteredConges.length }} congé(s) trouvé(s)</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Conges Table -->
+    <section class="section">
+      <h2 class="section-title">Liste des congés</h2>
+      
+      <div *ngIf="isLoading" class="flex justify-center py-8">
+        <app-loading-spinner message="Chargement des congés..."></app-loading-spinner>
+      </div>
+
+      <div *ngIf="!isLoading && filteredConges.length === 0" class="text-center py-8 text-gray-500">
+        <span class="material-icons text-4xl mb-4">event_busy</span>
+        <p>Aucun congé trouvé</p>
+      </div>
+
+      <div *ngIf="!isLoading && filteredConges.length > 0" class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Employé</th>
+              <th>Type</th>
+              <th>Date Début</th>
+              <th>Date Fin</th>
+              <th>Durée</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let conge of filteredConges">
+              <td>
+                <div class="employee-info">
+                  <span class="font-medium">{{ getEmployeeName(conge) }}</span>
+                  
+                </div>
+              </td>
+              <td>
+                <span class="font-medium">{{ getTypeCongeLabel(conge.typeConge) }}</span>
+              </td>
+              <td>{{ conge.dateDebut | date:'dd/MM/yyyy' }}</td>
+              <td>{{ conge.dateFin | date:'dd/MM/yyyy' }}</td>
+              <td>{{ calculateDuration(conge.dateDebut, conge.dateFin) }} jours</td>
+              <td>
+                <span class="badge badge-{{ getStatutCongeColor(conge.statut) }}">
+                  {{ getStatutCongeLabel(conge.statut) }}
+                </span>
+              </td>
+              <td>
+                <div class="action-buttons">
+                  <button 
+                    *ngIf="canValidate(conge)"
+                    (click)="validateConge(conge)"
+                    class="btn-icon btn-validate"
+                    title="Valider">
+                    <span class="material-icons">check</span>
+                  </button>
+                  <button 
+                    *ngIf="canRefuse(conge)"
+                    (click)="refuseConge(conge)"
+                    class="btn-icon btn-refuse"
+                    title="Refuser">
+                    <span class="material-icons">close</span>
+                  </button>
+                  <span 
+                    *ngIf="!canValidate(conge) && !canRefuse(conge)"
+                    class="text-gray-400 text-sm">
+                    Traité
+                  </span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Confirmation Dialog -->
+  <app-confirm-dialog
+    [isVisible]="showConfirmDialog"
+    [data]="confirmDialogData"
+    (confirm)="onConfirmAction()"
+    (cancel)="onCancelAction()">
+  </app-confirm-dialog>
+</div>

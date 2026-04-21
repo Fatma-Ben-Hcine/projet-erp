@@ -1,5 +1,6 @@
 package com.projet.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.projet.enums.Role;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
@@ -28,11 +29,13 @@ public class Employe extends Utilisateur {
 
     // Relation avec TravaillerActivite
     @OneToMany(mappedBy = "employe", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties("employe")
     @Builder.Default
     private List<TravaillerActivite> travaillerActivites = new ArrayList<>();
 
     // Relation avec TravaillerTache
     @OneToMany(mappedBy = "employe", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties("employe")
     @Builder.Default
     private List<TravaillerTache> travaillerTaches = new ArrayList<>();
 

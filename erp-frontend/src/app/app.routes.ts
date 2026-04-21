@@ -14,6 +14,11 @@ import { ClientManagementComponent } from './admin/clients/client-management/cli
 import { ContratManagementComponent } from './admin/contrats/contrat-management/contrat-management.component';
 import { ProjetsBoardComponent } from './admin/projets/board/board.component';
 
+// Conge module imports
+import { CongeListComponent } from './employe/conges/conge-list/conge-list.component';
+import { CongeFormComponent } from './employe/conges/conge-form/conge-form.component';
+import { AdminCongeListComponent } from './admin/conges/admin-conge-list/admin-conge-list.component';
+
 export const routes: Routes = [
   {
     path: '',
@@ -82,6 +87,30 @@ export const routes: Routes = [
     component: ProfileComponent,
     canActivate: [AuthGuard, EmployeGuard],
     title: 'Profil Employé'
+  },
+  {
+    path: 'employe/conges',
+    component: CongeListComponent,
+    canActivate: [AuthGuard, EmployeGuard],
+    title: 'Mes Congés'
+  },
+  {
+    path: 'employe/conges/nouveau',
+    component: CongeFormComponent,
+    canActivate: [AuthGuard, EmployeGuard],
+    title: 'Nouvelle Demande de Congé'
+  },
+  {
+    path: 'employe/conges/modifier/:id',
+    component: CongeFormComponent,
+    canActivate: [AuthGuard, EmployeGuard],
+    title: 'Modifier Demande de Congé'
+  },
+  {
+    path: 'admin/conges',
+    component: AdminCongeListComponent,
+    canActivate: [AuthGuard, AdminGuard],
+    title: 'Gestion des Congés'
   },
   {
     path: '**',
