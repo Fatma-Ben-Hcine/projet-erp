@@ -25,12 +25,7 @@ public interface TravaillerTacheRepository extends JpaRepository<TravaillerTache
     @Query("SELECT COUNT(tt) FROM TravaillerTache tt WHERE tt.tache.id = :tacheId")
     long countByTacheId(@Param("tacheId") Long tacheId);
     
-    @Query("SELECT COUNT(tt) FROM TravaillerTache tt WHERE tt.employe.id = :employeId AND tt.statut = 'TERMINE'")
-    long countCompletedTasksByEmployeId(@Param("employeId") Long employeId);
-    
-    @Query("SELECT COUNT(tt) FROM TravaillerTache tt WHERE tt.tache.id = :tacheId AND tt.statut = 'TERMINE'")
-    long countCompletedTasksByTacheId(@Param("tacheId") Long tacheId);
-    
+        
     void deleteByEmployeIdAndTacheId(Long employeId, Long tacheId);
     
     void deleteByTacheId(Long tacheId);

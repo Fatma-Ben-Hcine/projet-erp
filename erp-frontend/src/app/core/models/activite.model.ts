@@ -4,6 +4,7 @@ export interface ActiviteRequest {
   dateDebut?: string;
   dateFin?: string;
   projetId: number;
+  estDeposé?: boolean;
 }
 
 export interface ActiviteResponse {
@@ -28,6 +29,7 @@ export interface TacheRequest {
   dateDebut?: string;
   dateFin?: string;
   activiteId: number;
+  estDeposé?: boolean;
 }
 
 export interface TacheResponse {

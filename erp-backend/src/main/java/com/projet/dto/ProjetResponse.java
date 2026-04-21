@@ -15,6 +15,7 @@ public class ProjetResponse {
     private LocalDate dateLimite;
     private Integer progression;
     private String statut;
+    private boolean estDeposé;
     private Integer joursRestants;
     
     // Informations sur le client

@@ -24,6 +24,7 @@ public class ActiviteResponse {
     private List<EmployeActiviteInfo> employeActivites;
     private Integer progressionMoyenne;
     private Integer nombreEmployesAssignes;
+    private boolean estDeposé;
 
     @Data
     @NoArgsConstructor
@@ -52,7 +53,6 @@ public class ActiviteResponse {
         private Long employeId;
         private String employeNom;
         private String employePrenom;
-        private StatutActivite statut;
         private Integer progression;
         private LocalDate dateDebut;
         private LocalDate dateFin;

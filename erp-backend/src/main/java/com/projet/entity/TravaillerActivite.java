@@ -5,8 +5,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
-import com.projet.enums.StatutActivite;
-
 @Entity
 @Table(name = "travailler_activite")
 @Data
@@ -16,10 +14,6 @@ public class TravaillerActivite {
 
     @EmbeddedId
     private TravaillerActiviteId id;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private StatutActivite statut = StatutActivite.EN_COURS;
 
     @Column(nullable = false)
     private Integer progression = 0;
@@ -47,11 +41,10 @@ public class TravaillerActivite {
         this.dateDebut = java.time.LocalDate.now();
     }
 
-    public TravaillerActivite(Employe employe, Activite activite, StatutActivite statut, Integer progression) {
+    public TravaillerActivite(Employe employe, Activite activite, Integer progression) {
         this.employe = employe;
         this.activite = activite;
         this.id = new TravaillerActiviteId(employe.getId(), activite.getId());
-        this.statut = statut;
         this.progression = progression;
         this.dateDebut = java.time.LocalDate.now();
     }

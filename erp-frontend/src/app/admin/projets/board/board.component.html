@@ -582,6 +582,14 @@
   </div>
 </div>
 
+<!-- Dépôt Modal -->
+<app-depot-modal 
+  [isVisible]="showDepotModal" 
+  [projet]="projetPourDepot"
+  (closed)="closeDepotModal()"
+  (depotSubmitted)="onDepotSubmitted($event)">
+</app-depot-modal>
+
 <!-- Modal de démarrage de projet -->
 <app-start-project-modal
   [projet]="projetToStart"

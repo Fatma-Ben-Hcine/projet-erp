@@ -30,6 +30,8 @@ public class TacheRequest {
     @Positive(message = "L'ID de l'activité doit être positif")
     private Long activiteId;
 
+    private boolean estDeposé = false; // Valeur par défaut pour les nouvelles tâches
+
     private List<Long> employeIds;
     
     private List<EmployeTacheRequest> employeTaches;
@@ -39,7 +41,6 @@ public class TacheRequest {
     @AllArgsConstructor
     public static class EmployeTacheRequest {
         private Long employeId;
-        private StatutTache statut = StatutTache.A_FAIRE;
         private LocalDate dateDebut;
         private LocalDate dateFinReelle;
     }

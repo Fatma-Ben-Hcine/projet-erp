@@ -5,8 +5,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
-import com.projet.enums.StatutTache;
-
 @Entity
 @Table(name = "travailler_tache")
 @Data
@@ -16,10 +14,6 @@ public class TravaillerTache {
 
     @EmbeddedId
     private TravaillerTacheId id;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private StatutTache statut = StatutTache.A_FAIRE;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("employeId")
@@ -41,14 +35,6 @@ public class TravaillerTache {
         this.employe = employe;
         this.tache = tache;
         this.id = new TravaillerTacheId(employe.getId(), tache.getId());
-        this.dateDebut = java.time.LocalDate.now();
-    }
-
-    public TravaillerTache(Employe employe, Tache tache, StatutTache statut) {
-        this.employe = employe;
-        this.tache = tache;
-        this.id = new TravaillerTacheId(employe.getId(), tache.getId());
-        this.statut = statut;
         this.dateDebut = java.time.LocalDate.now();
     }
 }

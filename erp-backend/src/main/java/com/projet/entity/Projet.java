@@ -46,6 +46,9 @@ public class Projet {
     @Column(nullable = false)
     private StatutProjet statut = StatutProjet.NOUVEAU;
 
+    @Column(name = "est_depose", nullable = false)
+    private boolean estDeposé = false;
+
     // Relations avec les employés via TravaillerProjet
     @OneToMany(mappedBy = "projet", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TravaillerProjet> travaillerProjets;

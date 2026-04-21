@@ -13,6 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.time.format.DateTimeFormatter;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 @Service
 @RequiredArgsConstructor
@@ -54,6 +57,9 @@ public class ActiviteService {
         Projet projet = projetRepository.findById(request.getProjetId())
                 .orElseThrow(() -> new RuntimeException("Projet non trouvé avec ID: " + request.getProjetId()));
 
+        // Valider les dates par rapport au projet
+        validateActivityDates(request, projet);
+
         // Créer l'activité
         Activite activite = new Activite();
         activite.setNom(request.getNom());
@@ -61,6 +67,7 @@ public class ActiviteService {
         activite.setDateDebut(request.getDateDebut());
         activite.setDateFin(request.getDateFin());
         activite.setProjet(projet);
+        activite.setEstDeposé(request.isEstDeposé());
 
         Activite savedActivite = activiteRepository.save(activite);
 
@@ -68,7 +75,7 @@ public class ActiviteService {
         if (request.getEmployeActivites() != null && !request.getEmployeActivites().isEmpty()) {
             for (ActiviteRequest.EmployeActiviteRequest empAct : request.getEmployeActivites()) {
                 assignEmployeToActivite(savedActivite.getId(), empAct.getEmployeId(), 
-                    empAct.getStatut(), empAct.getProgression());
+                    empAct.getProgression());
             }
         }
 
@@ -82,11 +89,19 @@ public class ActiviteService {
         Activite activite = activiteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Activité non trouvée avec ID: " + id));
 
+        // Récupérer le projet pour la validation
+        Projet projet = projetRepository.findById(request.getProjetId())
+                .orElseThrow(() -> new RuntimeException("Projet non trouvé avec ID: " + request.getProjetId()));
+
+        // Valider les dates par rapport au projet
+        validateActivityDates(request, projet);
+
         // Mettre à jour les champs
         activite.setNom(request.getNom());
         activite.setDescription(request.getDescription());
         activite.setDateDebut(request.getDateDebut());
         activite.setDateFin(request.getDateFin());
+        activite.setEstDeposé(request.isEstDeposé());
 
         // Mettre à jour le projet si nécessaire
         if (!activite.getProjet().getId().equals(request.getProjetId())) {
@@ -118,9 +133,9 @@ public class ActiviteService {
     }
 
     // Gestion des employés
-    public void assignEmployeToActivite(Long activiteId, Long employeId, StatutActivite statut, Integer progression) {
-        log.info("Assignation de l'employé {} à l'activité {} avec statut {} et progression {}", 
-                employeId, activiteId, statut, progression);
+    public void assignEmployeToActivite(Long activiteId, Long employeId, Integer progression) {
+        log.info("Assignation de l'employé {} à l'activité {} avec progression {}", 
+                employeId, activiteId, progression);
 
         Activite activite = activiteRepository.findById(activiteId)
                 .orElseThrow(() -> new RuntimeException("Activité non trouvée avec ID: " + activiteId));
@@ -135,10 +150,9 @@ public class ActiviteService {
         TravaillerActivite travaillerActivite;
         if (existing.isPresent()) {
             travaillerActivite = existing.get();
-            travaillerActivite.setStatut(statut);
             travaillerActivite.setProgression(progression);
         } else {
-            travaillerActivite = new TravaillerActivite(employe, activite, statut, progression);
+            travaillerActivite = new TravaillerActivite(employe, activite, progression);
         }
 
         travaillerActiviteRepository.save(travaillerActivite);
@@ -168,13 +182,6 @@ public class ActiviteService {
                 .orElseThrow(() -> new RuntimeException("Assignation non trouvée"));
 
         travaillerActivite.setProgression(progression);
-        
-        // Mettre à jour le statut automatiquement si progression = 100%
-        if (progression >= 100) {
-            travaillerActivite.setStatut(StatutActivite.TERMINE);
-        } else if (progression > 0) {
-            travaillerActivite.setStatut(StatutActivite.EN_COURS);
-        }
 
         travaillerActiviteRepository.save(travaillerActivite);
         log.info("Progression mise à jour avec succès");
@@ -188,6 +195,7 @@ public class ActiviteService {
         response.setDescription(activite.getDescription());
         response.setDateDebut(activite.getDateDebut());
         response.setDateFin(activite.getDateFin());
+        response.setEstDeposé(activite.isEstDeposé());
 
         // Info projet
         ActiviteResponse.ProjetInfo projetInfo = new ActiviteResponse.ProjetInfo();
@@ -219,7 +227,6 @@ public class ActiviteService {
                     info.setEmployeId(ta.getEmploye().getId());
                     info.setEmployeNom(ta.getEmploye().getNom());
                     info.setEmployePrenom(ta.getEmploye().getPrenom());
-                    info.setStatut(ta.getStatut());
                     info.setProgression(ta.getProgression());
                     info.setDateDebut(ta.getDateDebut());
                     info.setDateFin(ta.getDateFin());
@@ -236,5 +243,37 @@ public class ActiviteService {
         response.setNombreEmployesAssignes(employeActivites.size());
 
         return response;
+    }
+
+    private void validateActivityDates(ActiviteRequest request, Projet projet) {
+        // Validation: activity.startDate >= project.startDate
+        if (request.getDateDebut().isBefore(projet.getDateDebut())) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                String.format("La date de début de l'activité (%s) doit être supérieure ou égale à la date de début du projet (%s)",
+                    request.getDateDebut().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                    projet.getDateDebut().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+            );
+        }
+
+        // Validation: activity.endDate <= project.endDate
+        if (request.getDateFin() != null && request.getDateFin().isAfter(projet.getDateLimite())) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                String.format("La date de fin de l'activité (%s) doit être inférieure ou égale à la date de fin du projet (%s)",
+                    request.getDateFin().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                    projet.getDateLimite().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+            );
+        }
+
+        // Validation: activity.startDate < activity.endDate
+        if (request.getDateFin() != null && request.getDateDebut().isAfter(request.getDateFin())) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                String.format("La date de début de l'activité (%s) doit être antérieure à la date de fin (%s)",
+                    request.getDateDebut().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                    request.getDateFin().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+            );
+        }
     }
 }

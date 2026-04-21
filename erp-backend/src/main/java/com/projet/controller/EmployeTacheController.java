@@ -99,13 +99,7 @@ public class EmployeTacheController {
         log.info("POST /api/employe/taches/{}/employes/{} - Assignation d'employé à la tâche", tacheId, employeId);
         
         try {
-            StatutTache statut = StatutTache.EN_COURS;
-            
-            if (requestBody.containsKey("statut")) {
-                statut = StatutTache.valueOf((String) requestBody.get("statut"));
-            }
-            
-            tacheService.assignEmployeToTache(tacheId, employeId, statut);
+            tacheService.assignEmployeToTache(tacheId, employeId);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             log.error("Erreur lors de l'assignation de l'employé: {}", e.getMessage());

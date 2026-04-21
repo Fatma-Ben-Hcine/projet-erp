@@ -106,13 +106,7 @@ public class TacheController {
         log.info("POST /api/admin/taches/{}/employes/{} - Assignation d'employé à la tâche", tacheId, employeId);
         
         try {
-            StatutTache statut = StatutTache.A_FAIRE;
-            
-            if (requestBody.containsKey("statut")) {
-                statut = StatutTache.valueOf((String) requestBody.get("statut"));
-            }
-            
-            tacheService.assignEmployeToTache(tacheId, employeId, statut);
+            tacheService.assignEmployeToTache(tacheId, employeId);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             log.error("Erreur lors de l'assignation de l'employé: {}", e.getMessage());
@@ -135,28 +129,7 @@ public class TacheController {
         }
     }
 
-    @PutMapping("/{tacheId}/employes/{employeId}/statut")
-    public ResponseEntity<Void> updateEmployeTacheStatut(
-            @PathVariable Long tacheId,
-            @PathVariable Long employeId,
-            @RequestBody Map<String, String> requestBody) {
-        log.info("PUT /api/admin/taches/{}/employes/{}/statut - Mise à jour du statut", tacheId, employeId);
-        
-        try {
-            String statutStr = requestBody.get("statut");
-            if (statutStr == null) {
-                return ResponseEntity.badRequest().build();
-            }
-            
-            StatutTache statut = StatutTache.valueOf(statutStr);
-            tacheService.updateEmployeTacheStatut(tacheId, employeId, statut);
-            return ResponseEntity.ok().build();
-        } catch (Exception e) {
-            log.error("Erreur lors de la mise à jour du statut: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
-        }
-    }
-
+    
     // Statistiques
     @GetMapping("/activite/{activiteId}/count")
     public ResponseEntity<Map<String, Long>> getTachesCountByActivite(@PathVariable Long activiteId) {

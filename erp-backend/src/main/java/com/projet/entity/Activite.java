@@ -31,6 +31,9 @@ public class Activite {
     @Column(name = "date_fin")
     private LocalDate dateFin;
 
+    @Column(name = "est_depose", nullable = false)
+    private boolean estDeposé = false;
+
     // Relation ManyToOne avec Projet
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "projet_id", nullable = false)

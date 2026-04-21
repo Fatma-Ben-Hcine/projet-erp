@@ -32,6 +32,8 @@ public class ProjetRequest {
     @Max(value = 100, message = "La progression ne peut dépasser 100")
     private Integer progression = 0; // Valeur par défaut pour les nouveaux projets
 
+    private boolean estDeposé = false; // Valeur par défaut pour les nouveaux projets
+
     private List<Long> employeIds;
     private Long chefDeProjetId;
     private Long clientId;

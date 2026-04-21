@@ -30,6 +30,8 @@ public class ActiviteRequest {
     @Positive(message = "L'ID du projet doit être positif")
     private Long projetId;
 
+    private boolean estDeposé = false; // Valeur par défaut pour les nouvelles activités
+
     private List<Long> employeIds;
     
     private List<EmployeActiviteRequest> employeActivites;
@@ -39,7 +41,6 @@ public class ActiviteRequest {
     @AllArgsConstructor
     public static class EmployeActiviteRequest {
         private Long employeId;
-        private StatutActivite statut = StatutActivite.EN_COURS;
         private Integer progression = 0;
         private LocalDate dateDebut;
         private LocalDate dateFin;

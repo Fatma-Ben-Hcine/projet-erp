@@ -27,9 +27,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 @Service
 @RequiredArgsConstructor
@@ -81,6 +84,7 @@ public class ProjetService {
             projet.setDateDebut(request.getDateDebut());
             projet.setDateLimite(request.getDateLimite());
             projet.setProgression(request.getProgression());
+            projet.setEstDeposé(request.isEstDeposé());
 
             // Gérer le client
             if (request.getClientId() != null) {
@@ -139,7 +143,6 @@ public class ProjetService {
                             TravaillerProjet tp = new TravaillerProjet();
                             tp.setProjet(saved);
                             tp.setEmploye(employe);
-                            tp.setStatut("ASSIGNÉ");
                             return tp;
                         })
                         .collect(Collectors.toList());
@@ -170,6 +173,7 @@ public class ProjetService {
         projet.setDateDebut(request.getDateDebut());
         projet.setDateLimite(request.getDateLimite());
         projet.setProgression(request.getProgression());
+        projet.setEstDeposé(request.isEstDeposé());
 
         // Gérer le client
         if (request.getClientId() != null) {
@@ -243,7 +247,6 @@ public class ProjetService {
                     TravaillerProjet tp = new TravaillerProjet();
                     tp.setProjet(projet);
                     tp.setEmploye(employe);
-                    tp.setStatut("ASSIGNÉ");
                     nouvellesRelations.add(tp);
                     log.debug("Création de la relation: projet_id={}, employe_id={}", id, employeId);
                 }
@@ -324,8 +327,22 @@ public class ProjetService {
     }
 
     private void validateDates(LocalDate dateDebut, LocalDate dateLimite) {
+        // Vérifier que la date de début n'est pas antérieure à aujourd'hui
+        if (dateDebut.isBefore(LocalDate.now())) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "La date du projet ne peut pas être antérieure à la date d'aujourd'hui (" 
+                + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                + "). Veuillez saisir une date valide."
+            );
+        }
+        
+        // Vérifier que la date de début n'est pas postérieure à la date limite
         if (dateDebut.isAfter(dateLimite)) {
-            throw new RuntimeException("La date de début ne peut être postérieure à la date limite");
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "La date de début ne peut être postérieure à la date limite"
+            );
         }
     }
 
@@ -339,6 +356,7 @@ public class ProjetService {
         response.setDateLimite(projet.getDateLimite());
         response.setProgression(projet.getProgression());
         response.setStatut(projet.getStatut() != null ? projet.getStatut().name() : determinerStatut(projet));
+        response.setEstDeposé(projet.isEstDeposé());
         response.setJoursRestants(calculerJoursRestants(projet));
         
         // Mapper le client

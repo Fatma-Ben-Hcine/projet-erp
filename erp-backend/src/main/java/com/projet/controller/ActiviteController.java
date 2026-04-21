@@ -99,17 +99,13 @@ public class ActiviteController {
         log.info("POST /api/admin/activites/{}/employes/{} - Assignation d'employé à l'activité", activiteId, employeId);
         
         try {
-            StatutActivite statut = StatutActivite.EN_COURS;
             Integer progression = 0;
             
-            if (requestBody.containsKey("statut")) {
-                statut = StatutActivite.valueOf((String) requestBody.get("statut"));
-            }
             if (requestBody.containsKey("progression")) {
                 progression = (Integer) requestBody.get("progression");
             }
             
-            activiteService.assignEmployeToActivite(activiteId, employeId, statut, progression);
+            activiteService.assignEmployeToActivite(activiteId, employeId, progression);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             log.error("Erreur lors de l'assignation de l'employé: {}", e.getMessage());
@@ -164,9 +160,7 @@ public class ActiviteController {
             Map<String, Object> response = Map.of(
                 "progressionMoyenne", activite.getProgressionMoyenne(),
                 "nombreEmployesAssignes", activite.getNombreEmployesAssignes(),
-                "nombreEmployesTermines", activite.getEmployeActivites().stream()
-                    .mapToInt(emp -> emp.getStatut() == StatutActivite.TERMINE ? 1 : 0)
-                    .sum()
+                "nombreEmployesTermines", 0
             );
             
             return ResponseEntity.ok(response);

@@ -4,16 +4,17 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } 
 import { RouterModule } from '@angular/router';
 import { ProjetService } from '../../../core/services/projet.service';
 import { ClientService } from '../../../core/services/client.service';
-import { UtilisateurService } from '../../../core/services/utilisateur.service';
+import { UtilisateurService } from'../../../core/services/utilisateur.service';
 import { ProjetRequest, ProjetResponse, StatutProjet, ClientResponse, EmployeResponse, ActiviteRequest } from '../../../core/models/projet.model';
 import { UtilisateurResponse } from '../../../core/models/utilisateur.model';
 import { AdminSidebarComponent } from '../../shared/sidebar/sidebar.component';
 import { StartProjectModalComponent } from '../start-project-modal/start-project-modal.component';
+import { DepotModalComponent } from '../depot-modal/depot-modal.component';
 
 @Component({
   selector: 'app-projets-board',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, AdminSidebarComponent, StartProjectModalComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, AdminSidebarComponent, StartProjectModalComponent, DepotModalComponent],
   templateUrl: './board.component.html',
   styleUrl: './board.component.css'
 })
@@ -30,6 +31,8 @@ export class ProjetsBoardComponent implements OnInit {
   projetEnCoursId: number | null = null;
   showDeleteModal = false;
   projetASupprimer: ProjetResponse | null = null;
+  showDepotModal = false;
+  projetPourDepot: ProjetResponse | null = null;
 
   // Form groups
   createForm!: FormGroup;
@@ -262,14 +265,26 @@ export class ProjetsBoardComponent implements OnInit {
       this.projetService.update(this.projetEnCoursId, payload).subscribe({
         next: () => { this.loadProjets(); this.closeModal(); },
         error: (err) => {
-          this.errorMessage = err.error?.message || 'Erreur lors de la modification';
+          if (err.status === 400 && err.error?.message) {
+            this.errorMessage = err.error.message;
+          } else if (typeof err.error === 'string' && err.error.length > 0) {
+            this.errorMessage = err.error;
+          } else {
+            this.errorMessage = 'Erreur lors de la modification du projet. Veuillez réessayer.';
+          }
         }
       });
     } else {
       this.projetService.create(payload).subscribe({
         next: () => { this.loadProjets(); this.closeModal(); },
         error: (err) => {
-          this.errorMessage = err.error?.message || 'Erreur lors de la création';
+          if (err.status === 400 && err.error?.message) {
+            this.errorMessage = err.error.message;
+          } else if (typeof err.error === 'string' && err.error.length > 0) {
+            this.errorMessage = err.error;
+          } else {
+            this.errorMessage = 'Erreur lors de la création du projet. Veuillez réessayer.';
+          }
         }
       });
     }
@@ -280,19 +295,17 @@ export class ProjetsBoardComponent implements OnInit {
       next: () => {
         this.loadProjets();
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Erreur lors de la mise à jour du statut:', err);
       }
     });
   }
 
-  // Ouvre la boîte de confirmation
   confirmDelete(projet: ProjetResponse): void {
     this.projetASupprimer = projet;
     this.showDeleteModal = true;
   }
 
-  // Exécute la suppression après confirmation
   deleteProjet(): void {
     if (!this.projetASupprimer) return;
     this.projetService.delete(this.projetASupprimer.id).subscribe({
@@ -301,14 +314,13 @@ export class ProjetsBoardComponent implements OnInit {
         this.showDeleteModal = false;
         this.projetASupprimer = null;
       },
-      error: (err) => {
+      error: (err: any) => {
         this.errorMessage = err.error?.message || 'Erreur lors de la suppression';
         this.showDeleteModal = false;
       }
     });
   }
 
-  // Annule la suppression
   cancelDelete(): void {
     this.showDeleteModal = false;
     this.projetASupprimer = null;
@@ -353,16 +365,13 @@ export class ProjetsBoardComponent implements OnInit {
   }
 
   viewProjet(projet: ProjetResponse): void {
-    console.log('Chargement des détails du projet:', projet.id);
     this.projetService.getById(projet.id).subscribe({
       next: (details) => {
         console.log('Détails complets reçus:', JSON.stringify(details, null, 2));
         this.selectedProjet = details;
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Erreur lors du chargement des détails:', err);
-        // En cas d'erreur, utiliser l'objet de la liste comme fallback
-        this.selectedProjet = projet;
       }
     });
   }
@@ -385,15 +394,13 @@ export class ProjetsBoardComponent implements OnInit {
           dateLimite: details.dateLimite,
           clientId: details.client?.id,
           chefDeProjetId: details.chefDeProjet?.id,
-          progression: details.progression || 0
+          progression: details.progression
         });
 
         // Pré-cocher les employés assignés
-        this.selectedEmployes = details.employes
-          ? details.employes.map(e => e.id)
-          : [];
+        this.selectedEmployes = details.employes?.map(e => e.id) || [];
       },
-      error: (err) => console.error('Erreur chargement projet:', err)
+      error: (err: any) => console.error('Erreur chargement projet:', err)
     });
   }
 
@@ -401,7 +408,6 @@ export class ProjetsBoardComponent implements OnInit {
     this.selectedProjet = null;
   }
 
-  // Méthodes pour la modale de démarrage de projet
   openStartProjectModal(projet: ProjetResponse): void {
     console.log('Ouverture modale pour le projet:', projet.id);
     // Faire un appel API pour récupérer les détails complets du projet avec les employés
@@ -411,7 +417,7 @@ export class ProjetsBoardComponent implements OnInit {
         this.projetToStart = details;
         this.showStartProjectModal = true;
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Erreur lors du chargement des détails du projet:', err);
         // En cas d'erreur, utiliser l'objet de base quand même
         this.projetToStart = projet;
@@ -435,17 +441,38 @@ export class ProjetsBoardComponent implements OnInit {
           this.loadProjets();
           this.closeStartProjectModal();
         },
-        error: (err) => {
+        error: (err: any) => {
           console.error('Erreur lors de la mise à jour du statut du projet:', err);
           // Même en cas d'erreur, recharger les projets
           this.loadProjets();
           this.closeStartProjectModal();
         }
       });
+    }
+  }
+
+  openDepotModal(projet: ProjetResponse): void {
+    this.projetPourDepot = projet;
+    this.showDepotModal = true;
+  }
+
+  closeDepotModal(): void {
+    this.showDepotModal = false;
+    this.projetPourDepot = null;
+  }
+
+  onDepotSubmitted(depotData: { type: 'lien' | 'fichier', value: string | File }): void {
+    this.closeDepotModal();
+    // Logique pour traiter le dépôt
+    console.log('Dépôt soumis:', depotData);
+    // Ici vous pouvez ajouter la logique pour envoyer les données au backend
+    // Par exemple, appeler un service ou émettre un événement
+    if (depotData.type === 'lien') {
+      console.log('Lien de dépôt:', depotData.value);
+      // TODO: Appeler le service pour sauvegarder le lien
     } else {
-      // Fallback si pas de projetToStart
-      this.loadProjets();
-      this.closeStartProjectModal();
+      console.log('Fichier de dépôt:', depotData.value);
+      // TODO: Appeler le service pour uploader le fichier
     }
   }
 }

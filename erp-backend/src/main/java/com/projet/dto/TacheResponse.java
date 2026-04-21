@@ -23,6 +23,7 @@ public class TacheResponse {
     private Integer progression;
     private Integer nombreEmployesAssignes;
     private Integer nombreEmployesTermines;
+    private boolean estDeposé;
 
     @Data
     @NoArgsConstructor
@@ -40,7 +41,6 @@ public class TacheResponse {
         private Long employeId;
         private String employeNom;
         private String employePrenom;
-        private StatutTache statut;
         private LocalDate dateDebut;
         private LocalDate dateFinReelle;
     }

@@ -41,8 +41,14 @@
         <h3>Diviser en Activités</h3>
         <p>Définissez les activités principales. Chaque activité peut être divisée en tâches.</p>
 
-        <form [formGroup]="form">
-          <div formArrayName="activites">
+        <form [formGroup]="form" (ngSubmit)="onSubmit()">
+          <!-- Message d'erreur global -->
+          <div *ngIf="errorMessage" class="error-message">
+            <span class="material-icons">error</span>
+            {{ errorMessage }}
+          </div>
+
+          <div *ngIf="form" formArrayName="activites">
 
             <div *ngFor="let act of activites.controls; let i = index"
                  [formGroupName]="i"
@@ -72,11 +78,32 @@
               <div class="form-row">
                 <div class="form-group">
                   <label>Date début</label>
-                  <input type="date" formControlName="dateDebut">
+                  <input type="date" 
+                         formControlName="dateDebut"
+                         [min]="getActivityMinDate()"
+                         [max]="getActivityMaxDate()">
+                  <div *ngIf="activites.at(i).errors?.['activityStartBeforeProject']" 
+                       class="error-message">
+                    <span class="material-icons">error</span>
+                    {{ getActivityErrorMessage(i, 'activityStartBeforeProject') }}
+                  </div>
+                  <div *ngIf="activites.at(i).errors?.['activityStartAfterEnd']" 
+                       class="error-message">
+                    <span class="material-icons">error</span>
+                    {{ getActivityErrorMessage(i, 'activityStartAfterEnd') }}
+                  </div>
                 </div>
                 <div class="form-group">
                   <label>Date fin</label>
-                  <input type="date" formControlName="dateFin">
+                  <input type="date" 
+                         formControlName="dateFin"
+                         [min]="getActivityMinDate()"
+                         [max]="getActivityMaxDate()">
+                  <div *ngIf="activites.at(i).errors?.['activityEndAfterProject']" 
+                       class="error-message">
+                    <span class="material-icons">error</span>
+                    {{ getActivityErrorMessage(i, 'activityEndAfterProject') }}
+                  </div>
                 </div>
               </div>
 
@@ -137,11 +164,32 @@
                     <div class="form-row">
                       <div class="form-group">
                         <label>Date début</label>
-                        <input type="date" formControlName="dateDebut">
+                        <input type="date" 
+                               formControlName="dateDebut"
+                               [min]="getTaskMinDate(i)"
+                               [max]="getTaskMaxDate(i)">
+                        <div *ngIf="getTaches(i).at(j).errors?.['taskStartBeforeActivity']" 
+                             class="error-message">
+                          <span class="material-icons">error</span>
+                          {{ getTaskErrorMessage(i, j, 'taskStartBeforeActivity') }}
+                        </div>
+                        <div *ngIf="getTaches(i).at(j).errors?.['taskStartAfterEnd']" 
+                             class="error-message">
+                          <span class="material-icons">error</span>
+                          {{ getTaskErrorMessage(i, j, 'taskStartAfterEnd') }}
+                        </div>
                       </div>
                       <div class="form-group">
                         <label>Date fin</label>
-                        <input type="date" formControlName="dateFin">
+                        <input type="date" 
+                               formControlName="dateFin"
+                               [min]="getTaskMinDate(i)"
+                               [max]="getTaskMaxDate(i)">
+                        <div *ngIf="getTaches(i).at(j).errors?.['taskEndAfterActivity']" 
+                             class="error-message">
+                          <span class="material-icons">error</span>
+                          {{ getTaskErrorMessage(i, j, 'taskEndAfterActivity') }}
+                        </div>
                       </div>
                     </div>
 

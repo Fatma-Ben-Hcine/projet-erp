@@ -24,12 +24,8 @@ public class TravaillerProjet {
     @JoinColumn(name = "employe_id", nullable = false)
     private Employe employe;
 
-    @Column(nullable = false)
-    private String statut;
-
-    public TravaillerProjet(Projet projet, Employe employe, String statut) {
+    public TravaillerProjet(Projet projet, Employe employe) {
         this.projet = projet;
         this.employe = employe;
-        this.statut = statut;
     }
 }
