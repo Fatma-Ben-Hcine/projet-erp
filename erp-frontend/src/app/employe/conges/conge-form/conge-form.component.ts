@@ -21,6 +21,11 @@ export class CongeFormComponent implements OnInit {
   congeId: number | null = null;
   errorMessage = '';
   successMessage = '';
+  soldeRestant: number = 21;
+  soldeTotal: number = 21;
+  employeId: number | null = null;
+  soldeDisponiblePourModification: number = 21;
+  dureeCongeActuel: number = 0;
 
   typeCongeOptions = [
     { value: TypeConge.ANNUEL, label: 'Congé Annuel' },
@@ -43,12 +48,35 @@ export class CongeFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.loadSolde();
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.isEditMode = true;
       this.congeId = parseInt(id, 10);
       this.loadConge();
     }
+  }
+
+  loadSolde(): void {
+    this.congeService.getMesConges().subscribe({
+      next: (conges) => {
+        if (conges.length > 0 && conges[0].employeId) {
+          this.employeId = conges[0].employeId;
+          this.congeService.getSoldeRestant(this.employeId).subscribe({
+            next: (solde) => {
+              this.soldeRestant = solde.soldeRestant;
+              this.soldeTotal = solde.soldeTotal;
+            },
+            error: (error) => {
+              console.error('Error loading solde:', error);
+            }
+          });
+        }
+      },
+      error: (error) => {
+        console.error('Error loading conges for solde:', error);
+      }
+    });
   }
 
   private createForm(): FormGroup {
@@ -96,6 +124,12 @@ export class CongeFormComponent implements OnInit {
             dateDebut: conge.dateDebut,
             dateFin: conge.dateFin
           });
+
+          // Calculer la durée du congé actuel
+          this.dureeCongeActuel = this.congeService.calculateDuration(conge.dateDebut, conge.dateFin);
+
+          // Calculer le solde disponible pour la modification
+          this.soldeDisponiblePourModification = this.soldeRestant + this.dureeCongeActuel;
         } else {
           this.errorMessage = 'Congé non trouvé';
         }
@@ -136,7 +170,11 @@ export class CongeFormComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error updating conge:', error);
-          this.errorMessage = 'Erreur lors de la modification du congé';
+          if (error.error && error.error.includes('Solde insuffisant')) {
+            this.errorMessage = error.error;
+          } else {
+            this.errorMessage = 'Erreur lors de la modification du congé';
+          }
           this.isLoading = false;
         }
       });
@@ -151,7 +189,11 @@ export class CongeFormComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error creating conge:', error);
-          this.errorMessage = 'Erreur lors de la création de la demande de congé';
+          if (error.error && error.error.includes('Solde insuffisant')) {
+            this.errorMessage = error.error;
+          } else {
+            this.errorMessage = 'Erreur lors de la création de la demande de congé';
+          }
           this.isLoading = false;
         }
       });

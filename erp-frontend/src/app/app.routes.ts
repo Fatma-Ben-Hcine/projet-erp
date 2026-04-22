@@ -19,6 +19,10 @@ import { CongeListComponent } from './employe/conges/conge-list/conge-list.compo
 import { CongeFormComponent } from './employe/conges/conge-form/conge-form.component';
 import { AdminCongeListComponent } from './admin/conges/admin-conge-list/admin-conge-list.component';
 
+// Heures Supplementaires module imports
+import { HeuresSupplementairesListComponent } from './admin/heures-supplementaires/heures-supplementaires-list/heures-supplementaires-list.component';
+import { HeuresSupplementaireFormComponent } from './admin/heures-supplementaires/heures-supplementaire-form/heures-supplementaire-form.component';
+
 export const routes: Routes = [
   {
     path: '',
@@ -111,6 +115,24 @@ export const routes: Routes = [
     component: AdminCongeListComponent,
     canActivate: [AuthGuard, AdminGuard],
     title: 'Gestion des Congés'
+  },
+  {
+    path: 'admin/heures-supplementaires',
+    component: HeuresSupplementairesListComponent,
+    canActivate: [AuthGuard, AdminGuard],
+    title: 'Gestion des Heures Supplémentaires'
+  },
+  {
+    path: 'admin/heures-supplementaires/new',
+    component: HeuresSupplementaireFormComponent,
+    canActivate: [AuthGuard, AdminGuard],
+    title: 'Ajouter une Heure Supplémentaire'
+  },
+  {
+    path: 'admin/heures-supplementaires/edit/:id',
+    component: HeuresSupplementaireFormComponent,
+    canActivate: [AuthGuard, AdminGuard],
+    title: 'Modifier une Heure Supplémentaire'
   },
   {
     path: '**',

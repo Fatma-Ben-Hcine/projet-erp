@@ -39,6 +39,12 @@ public class Employe extends Utilisateur {
     @Builder.Default
     private List<TravaillerTache> travaillerTaches = new ArrayList<>();
 
+    // Relation avec HeureSupplementaire
+    @OneToMany(mappedBy = "employe", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties("employe")
+    @Builder.Default
+    private List<HeureSupplementaire> heuresSupplementaires = new ArrayList<>();
+
     public Employe() {
         super();
         setRole(Role.ROLE_EMPLOYE);

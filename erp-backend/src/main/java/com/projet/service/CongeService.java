@@ -11,7 +11,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,6 +30,17 @@ public class CongeService {
         Employe employe = employeRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Employé non trouvé avec l'email: " + email));
 
+        // Calculer la durée du congé
+        int duree = (int) ChronoUnit.DAYS.between(congeDTO.getDateDebut(), congeDTO.getDateFin()) + 1;
+
+        // Vérifier le solde restant
+        int soldeRestant = getSoldeRestant(employe.getId());
+        if (duree > soldeRestant) {
+            throw new RuntimeException(
+                "Solde insuffisant. Solde restant: " + soldeRestant + " jours."
+            );
+        }
+
         Conge conge = congeMapper.toEntity(congeDTO);
         conge.setEmploye(employe);
         conge.setStatut(StatutConge.EN_ATTENTE);
@@ -38,20 +52,38 @@ public class CongeService {
     public CongeDTO modifierConge(Long congeId, CongeDTO congeDTO, String email) {
         Conge existingConge = congeRepository.findById(congeId)
                 .orElseThrow(() -> new RuntimeException("Congé non trouvé avec l'ID: " + congeId));
-        
+
         // Vérifier que le congé appartient à l'employé connecté
         if (!existingConge.getEmploye().getEmail().equals(email)) {
             throw new RuntimeException("Vous n'êtes pas autorisé à modifier ce congé");
         }
-        
-        if (existingConge.getStatut() != StatutConge.EN_ATTENTE) {
-            throw new RuntimeException("Modification impossible : la demande n'est plus en attente");
+
+        // Calculer la nouvelle durée du congé
+        int nouvelleDuree = (int) ChronoUnit.DAYS.between(congeDTO.getDateDebut(), congeDTO.getDateFin()) + 1;
+
+        // Obtenir le total des jours déjà pris par cet employé
+        int totalJoursPris = getTotalJoursPris(existingConge.getEmploye().getId());
+
+        // Soustraire les jours du congé actuel s'il est déjà validé (pour éviter le double comptage)
+        int joursDejaComptes = 0;
+        if (existingConge.getStatut() == StatutConge.VALIDE) {
+            joursDejaComptes = (int) ChronoUnit.DAYS.between(existingConge.getDateDebut(), existingConge.getDateFin()) + 1;
         }
-        
+
+        // Calculer le solde disponible pour cette modification
+        int soldeDisponible = 21 - (totalJoursPris - joursDejaComptes);
+
+        // Vérifier si la nouvelle durée dépasse le solde disponible
+        if (nouvelleDuree > soldeDisponible) {
+            throw new RuntimeException(
+                "Solde insuffisant. Solde disponible pour cette modification : " + soldeDisponible + " jours."
+            );
+        }
+
         existingConge.setTypeConge(congeDTO.getTypeConge());
         existingConge.setDateDebut(congeDTO.getDateDebut());
         existingConge.setDateFin(congeDTO.getDateFin());
-        
+
         Conge saved = congeRepository.save(existingConge);
         return congeMapper.toDTO(saved);
     }
@@ -112,5 +144,28 @@ public class CongeService {
         return conges.stream()
                 .map(congeMapper::toDTO)
                 .collect(Collectors.toList());
+    }
+
+    public int getSoldeRestant(Long employeId) {
+        int joursPris = getTotalJoursPris(employeId);
+        return 21 - joursPris;
+    }
+
+    private int getTotalJoursPris(Long employeId) {
+        List<Conge> valideConges = congeRepository.findValideCongesByEmployeId(employeId);
+        return valideConges.stream()
+                .mapToInt(c -> (int) ChronoUnit.DAYS.between(c.getDateDebut(), c.getDateFin()) + 1)
+                .sum();
+    }
+
+    public Map<String, Integer> getSoldeDetails(Long employeId) {
+        int joursPris = getTotalJoursPris(employeId);
+        int soldeTotal = 21;
+        int soldeRestant = soldeTotal - joursPris;
+        Map<String, Integer> details = new HashMap<>();
+        details.put("soldeTotal", soldeTotal);
+        details.put("joursPris", joursPris);
+        details.put("soldeRestant", soldeRestant);
+        return details;
     }
 }

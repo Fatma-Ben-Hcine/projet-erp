@@ -47,6 +47,10 @@ export class CongeService {
     return this.http.put<Conge>(`${this.apiUrl}/${id}/refuser`, {});
   }
 
+  getSoldeRestant(employeId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/solde/${employeId}`);
+  }
+
   // Helper methods
   getTypeCongeLabel(type: TypeConge): string {
     const labels = {

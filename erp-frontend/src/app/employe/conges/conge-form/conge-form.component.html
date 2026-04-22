@@ -39,6 +39,20 @@
       </p>
     </div>
 
+    <!-- Solde de congés -->
+    <div class="alert alert-info mb-4">
+      <span *ngIf="!isEditMode">Votre solde de congés : <strong>{{ soldeRestant }} jours restants</strong> sur {{ soldeTotal }} jours au total</span>
+      <span *ngIf="isEditMode">Solde disponible pour cette modification : <strong>{{ soldeDisponiblePourModification }} jours</strong></span>
+    </div>
+
+    <div *ngIf="!isEditMode && soldeRestant === 0" class="alert alert-danger mb-4">
+      Vous n'avez plus de jours de congé disponibles.
+    </div>
+
+    <div *ngIf="isEditMode && duration > soldeDisponiblePourModification" class="alert alert-danger mb-4">
+      Nombre de jours demandé dépasse votre solde disponible ({{ soldeDisponiblePourModification }} jours max).
+    </div>
+
     <section class="section">
       <div class="form-container">
         <div *ngIf="isLoading" class="flex justify-center py-8">
@@ -111,7 +125,7 @@
               <span class="material-icons mr-2">arrow_back</span>
               Annuler
             </button>
-            <button type="submit" class="btn-primary" [disabled]="congeForm.invalid || isLoading">
+            <button type="submit" class="btn-primary" [disabled]="congeForm.invalid || isLoading || (!isEditMode && soldeRestant === 0) || (isEditMode && duration > soldeDisponiblePourModification)">
               <span class="material-icons mr-2">
                 <span *ngIf="isEditMode">save</span>
                 <span *ngIf="!isEditMode">send</span>

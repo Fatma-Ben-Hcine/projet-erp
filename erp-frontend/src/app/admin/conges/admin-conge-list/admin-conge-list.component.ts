@@ -31,6 +31,7 @@ export class AdminCongeListComponent implements OnInit {
   congeToValidate: Conge | null = null;
   congeToRefuse: Conge | null = null;
   actionType: 'validate' | 'refuse' | null = null;
+  soldes: Map<number, any> = new Map();
 
   statutFilters = [
     { value: 'Tous', label: 'Tous' },
@@ -52,6 +53,7 @@ export class AdminCongeListComponent implements OnInit {
       next: (conges) => {
         this.conges = conges;
         this.applyFilter();
+        this.loadSoldes();
         this.isLoading = false;
       },
       error: (error) => {
@@ -60,6 +62,29 @@ export class AdminCongeListComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  loadSoldes(): void {
+    const uniqueEmployeIds = [...new Set(this.conges.map(c => c.employeId))];
+    uniqueEmployeIds.forEach(employeId => {
+      if (employeId) {
+        this.congeService.getSoldeRestant(employeId).subscribe({
+          next: (solde) => {
+            this.soldes.set(employeId, solde);
+          },
+          error: (error) => {
+            console.error('Error loading solde for employe', employeId, error);
+          }
+        });
+      }
+    });
+  }
+
+  getSolde(employeId: number | undefined): any {
+    if (!employeId) {
+      return { soldeTotal: 21, joursPris: 0, soldeRestant: 21 };
+    }
+    return this.soldes.get(employeId) || { soldeTotal: 21, joursPris: 0, soldeRestant: 21 };
   }
 
   applyFilter(): void {
