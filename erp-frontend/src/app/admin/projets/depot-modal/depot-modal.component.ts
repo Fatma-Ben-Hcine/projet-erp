@@ -147,6 +147,27 @@ export class DepotModalComponent {
   downloadFile(depotId: number, filename: string): void {
     this.projetService.downloadDepotFile(depotId, filename).subscribe({
       next: (blob: Blob) => {
+        console.log('=== DEBUG DOWNLOAD ===');
+        console.log('Blob size:', blob.size, 'octets');
+        console.log('Blob type:', blob.type);
+        console.log('Filename:', filename);
+        console.log('=====================');
+
+        if (blob.size === 0) {
+          console.error('Erreur: Blob vide reçu');
+          return;
+        }
+
+        // Vérifier si le blob contient du HTML (erreur backend) au lieu du fichier binaire
+        if (blob.type.includes('text/html') || blob.size < 1000) {
+          console.warn('Attention: Blob suspect - possible erreur HTML du backend');
+          blob.text().then(text => {
+            console.error('Contenu du blob (possiblement erreur):', text.substring(0, 500));
+          });
+          alert('Erreur lors du téléchargement: le fichier n\'a pas pu être récupéré correctement du serveur.');
+          return;
+        }
+
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -154,7 +175,10 @@ export class DepotModalComponent {
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
+        // Retarder la révocation de l'URL pour éviter la corruption sur certains navigateurs
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url);
+        }, 100);
       },
       error: (err) => {
         console.error('Erreur lors du téléchargement du fichier:', err);

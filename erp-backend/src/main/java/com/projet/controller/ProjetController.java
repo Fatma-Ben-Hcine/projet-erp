@@ -120,7 +120,7 @@ public class ProjetController {
         }
     }
 
-    @PatchMapping("/{id}/depot")
+    @PatchMapping(value = "/{id}/depot", consumes = "multipart/form-data")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<?> deposerProjet(
             @PathVariable Long id,
@@ -129,6 +129,14 @@ public class ProjetController {
             @RequestPart(value = "nomFichier", required = false) String nomFichier,
             @RequestPart(value = "file", required = false) MultipartFile file) {
         try {
+            System.out.println("=== DEBUG DEPOT REQUEST ===");
+            System.out.println("ID Projet: " + id);
+            System.out.println("Type: " + type);
+            System.out.println("Lien: " + lien);
+            System.out.println("NomFichier: " + nomFichier);
+            System.out.println("File: " + (file != null ? file.getOriginalFilename() + " (" + file.getSize() + " bytes)" : "null"));
+            System.out.println("===========================");
+
             DepotRequest depotRequest = new DepotRequest();
             depotRequest.setType(type);
             depotRequest.setLien(lien);
@@ -138,8 +146,12 @@ public class ProjetController {
             ProjetResponse response = projetService.deposerProjet(id, depotRequest, file);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
+            System.err.println("Erreur RuntimeException: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (IOException e) {
+            System.err.println("Erreur IOException: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.internalServerError().body("Erreur lors du stockage du fichier: " + e.getMessage());
         }
     }
