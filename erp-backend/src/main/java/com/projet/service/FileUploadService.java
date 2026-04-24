@@ -30,7 +30,9 @@ public class FileUploadService {
     }
 
     private static final List<String> ALLOWED_EXTENSIONS = Arrays.asList("jpg", "jpeg", "png", "webp");
+    private static final List<String> DEPOT_ALLOWED_EXTENSIONS = Arrays.asList("pdf", "docx", "zip", "png", "jpg", "jpeg");
     private static final long MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+    private static final long MAX_DEPOT_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
     public String uploadPhoto(MultipartFile file) throws IOException {
         // 1. Create upload directory using absolute path
@@ -104,5 +106,58 @@ public class FileUploadService {
 
     public String getPhotoUploadDir() {
         return uploadDir;
+    }
+
+    public String uploadDepotFile(MultipartFile file) throws IOException {
+        String baseDir = System.getProperty("user.dir");
+        Path uploadPath = Paths.get(baseDir, "uploads", "depots");
+
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+
+        String originalFilename = file.getOriginalFilename();
+        String extension = "";
+        if (originalFilename != null && originalFilename.contains(".")) {
+            extension = originalFilename
+                .substring(originalFilename.lastIndexOf("."))
+                .toLowerCase()
+                .replaceAll("[^.a-zA-Z0-9]", "");
+        }
+
+        String cleanFilename = UUID.randomUUID().toString() + extension;
+        Path targetPath = uploadPath.resolve(cleanFilename);
+        Files.copy(
+            file.getInputStream(),
+            targetPath,
+            StandardCopyOption.REPLACE_EXISTING
+        );
+
+        System.out.println("=== DEPOT FILE SAVED ===");
+        System.out.println("Directory : " + uploadPath.toAbsolutePath());
+        System.out.println("Filename  : " + cleanFilename);
+        System.out.println("Full path : " + targetPath.toAbsolutePath());
+        System.out.println("Exists    : " + Files.exists(targetPath));
+        System.out.println("========================");
+
+        return targetPath.toAbsolutePath().toString();
+    }
+
+    public boolean isValidDepotFile(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            return false;
+        }
+
+        if (file.getSize() > MAX_DEPOT_FILE_SIZE) {
+            return false;
+        }
+
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null) {
+            return false;
+        }
+
+        String fileExtension = getFileExtension(originalFilename);
+        return DEPOT_ALLOWED_EXTENSIONS.contains(fileExtension.toLowerCase());
     }
 }

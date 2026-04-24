@@ -1,5 +1,6 @@
 package com.projet.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import java.time.LocalDate;
 import java.math.BigDecimal;
@@ -15,15 +16,19 @@ public class ProjetResponse {
     private LocalDate dateLimite;
     private Integer progression;
     private String statut;
+    @JsonProperty("estDepose")
     private boolean estDeposé;
     private Integer joursRestants;
-    
+
+    // Liste des dépôts du projet
+    private List<DepotResponse> depots;
+
     // Informations sur le client
     private ClientInfo client;
-    
+
     // Informations sur le chef de projet
     private EmployeInfo chefDeProjet;
-    
+
     // Liste des employés assignés au projet
     private List<EmployeInfo> employes;
     

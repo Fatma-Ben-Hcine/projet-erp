@@ -54,6 +54,10 @@ export class ProjetsBoardComponent implements OnInit {
   showStartProjectModal = false;
   projetToStart: ProjetResponse | null = null;
 
+  // Modal de dépôt
+  depotModalMode: 'create' | 'view' = 'create';
+  depotModalDepots: any[] = [];
+
   isDarkMode = false;
   private observer: MutationObserver | null = null;
 
@@ -358,7 +362,7 @@ export class ProjetsBoardComponent implements OnInit {
       case StatutProjet.EN_COURS:
         return { text: 'Dépôt', color: '#eab308', action: StatutProjet.TERMINE };
       case StatutProjet.TERMINE:
-        return { text: 'Archiver', color: '#6b7280', action: 'ARCHIVE' };
+        return { text: 'Dépôt', color: '#6b7280', action: 'DEPOT_VIEW' };
       default:
         return null;
     }
@@ -453,6 +457,8 @@ export class ProjetsBoardComponent implements OnInit {
 
   openDepotModal(projet: ProjetResponse): void {
     this.projetPourDepot = projet;
+    this.depotModalMode = projet.statut === 'TERMINE' ? 'view' : 'create';
+    this.depotModalDepots = projet.depots || [];
     this.showDepotModal = true;
   }
 
@@ -462,17 +468,19 @@ export class ProjetsBoardComponent implements OnInit {
   }
 
   onDepotSubmitted(depotData: { type: 'lien' | 'fichier', value: string | File }): void {
-    this.closeDepotModal();
-    // Logique pour traiter le dépôt
-    console.log('Dépôt soumis:', depotData);
-    // Ici vous pouvez ajouter la logique pour envoyer les données au backend
-    // Par exemple, appeler un service ou émettre un événement
-    if (depotData.type === 'lien') {
-      console.log('Lien de dépôt:', depotData.value);
-      // TODO: Appeler le service pour sauvegarder le lien
-    } else {
-      console.log('Fichier de dépôt:', depotData.value);
-      // TODO: Appeler le service pour uploader le fichier
-    }
+    if (!this.projetPourDepot) return;
+
+    // Appeler l'API pour déposer le projet
+    this.projetService.deposerProjet(this.projetPourDepot.id, depotData).subscribe({
+      next: () => {
+        console.log('Projet déposé avec succès');
+        this.closeDepotModal();
+        this.loadProjets();
+      },
+      error: (err: any) => {
+        console.error('Erreur lors du dépôt du projet:', err);
+        this.errorMessage = err.error?.message || 'Erreur lors du dépôt du projet';
+      }
+    });
   }
 }

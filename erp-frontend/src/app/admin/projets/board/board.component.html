@@ -162,11 +162,11 @@
                 </button>
               </div>
               <div class="status-actions">
-                <button 
+                <button
                   *ngIf="getNextStatutButton(projet.statut!)"
                   class="status-btn"
                   [style.background-color]="getNextStatutButton(projet.statut!)!.color"
-                  (click)="updateStatut(projet, getNextStatutButton(projet.statut!)!.action)">
+                  (click)="getNextStatutButton(projet.statut!)!.text === 'Dépôt' ? openDepotModal(projet) : updateStatut(projet, getNextStatutButton(projet.statut!)!.action)">
                   {{ getNextStatutButton(projet.statut!)!.text }}
                 </button>
               </div>
@@ -218,11 +218,11 @@
                 </button>
               </div>
               <div class="status-actions">
-                <button 
+                <button
                   *ngIf="getNextStatutButton(projet.statut!)"
                   class="status-btn"
                   [style.background-color]="getNextStatutButton(projet.statut!)!.color"
-                  (click)="updateStatut(projet, getNextStatutButton(projet.statut!)!.action)">
+                  (click)="getNextStatutButton(projet.statut!)!.action === 'DEPOT_VIEW' ? openDepotModal(projet) : updateStatut(projet, getNextStatutButton(projet.statut!)!.action)">
                   {{ getNextStatutButton(projet.statut!)!.text }}
                 </button>
               </div>
@@ -583,9 +583,11 @@
 </div>
 
 <!-- Dépôt Modal -->
-<app-depot-modal 
-  [isVisible]="showDepotModal" 
+<app-depot-modal
+  [isVisible]="showDepotModal"
   [projet]="projetPourDepot"
+  [mode]="depotModalMode"
+  [depotsExistant]="depotModalDepots"
   (closed)="closeDepotModal()"
   (depotSubmitted)="onDepotSubmitted($event)">
 </app-depot-modal>
