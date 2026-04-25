@@ -13,6 +13,8 @@ import { UserManagementComponent } from './admin/rh/user-management/user-managem
 import { ClientManagementComponent } from './admin/clients/client-management/client-management.component';
 import { ContratManagementComponent } from './admin/contrats/contrat-management/contrat-management.component';
 import { ProjetsBoardComponent } from './admin/projets/board/board.component';
+import { ProjetDetailComponent } from './admin/projets/projet-detail/projet-detail.component';
+import { ProjetDepotComponent } from './admin/projets/projet-depot/projet-depot.component';
 
 // Conge module imports
 import { CongeListComponent } from './employe/conges/conge-list/conge-list.component';
@@ -79,6 +81,18 @@ export const routes: Routes = [
     component: ProjetsBoardComponent,
     canActivate: [AuthGuard, AdminGuard],
     title: 'Board Projets'
+  },
+  {
+    path: 'admin/projets/:id',
+    component: ProjetDetailComponent,
+    canActivate: [AuthGuard, AdminGuard],
+    title: 'Détail Projet'
+  },
+  {
+    path: 'admin/projets/:id/depot',
+    component: ProjetDepotComponent,
+    canActivate: [AuthGuard, AdminGuard],
+    title: 'Dépôt Projet'
   },
   {
     path: 'employe/dashboard',

@@ -69,4 +69,19 @@ export class TacheService {
   getTermineesByEmploye(employeId: number): Observable<{ count: number }> {
     return this.http.get<{ count: number }>(`${this.baseUrl}/employe/${employeId}/terminees/count`);
   }
+
+  // Dépôt de tâche
+  deposerTache(id: number, depotData: { type: 'lien' | 'fichier', value: string | File }): Observable<TacheResponse> {
+    const formData = new FormData();
+    formData.append('type', depotData.type);
+
+    if (depotData.type === 'lien') {
+      formData.append('lien', depotData.value as string);
+    } else if (depotData.type === 'fichier') {
+      formData.append('file', depotData.value as File);
+      formData.append('nomFichier', (depotData.value as File).name);
+    }
+
+    return this.http.patch<TacheResponse>(`${this.baseUrl}/${id}/depot`, formData);
+  }
 }

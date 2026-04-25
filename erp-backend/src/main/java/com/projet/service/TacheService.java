@@ -2,6 +2,7 @@ package com.projet.service;
 
 import com.projet.dto.TacheRequest;
 import com.projet.dto.TacheResponse;
+import com.projet.dto.DepotRequest;
 import com.projet.entity.*;
 import com.projet.enums.StatutTache;
 import com.projet.repository.*;
@@ -9,11 +10,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.time.format.DateTimeFormatter;
+import java.io.IOException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
@@ -27,6 +30,8 @@ public class TacheService {
     private final ActiviteRepository activiteRepository;
     private final EmployeRepository employeRepository;
     private final TravaillerTacheRepository travaillerTacheRepository;
+    private final DepotRepository depotRepository;
+    private final FileUploadService fileUploadService;
 
     // CRUD de base
     public List<TacheResponse> getAllTaches() {
@@ -224,6 +229,24 @@ public class TacheService {
         // Calculer la progression (par défaut 0)
         response.setProgression(0);
 
+        // Mapper les dépôts
+        List<Depot> depots = depotRepository.findByTacheId(tache.getId());
+        if (depots != null && !depots.isEmpty()) {
+            List<com.projet.dto.DepotResponse> depotsResponse = depots.stream()
+                    .map(depot -> {
+                        com.projet.dto.DepotResponse depotResponse = new com.projet.dto.DepotResponse();
+                        depotResponse.setId(depot.getId());
+                        depotResponse.setType(depot.getType());
+                        depotResponse.setLien(depot.getLien());
+                        depotResponse.setNomFichier(depot.getNomFichier());
+                        depotResponse.setCheminFichier(depot.getCheminFichier());
+                        depotResponse.setDateDepot(depot.getDateDepot());
+                        return depotResponse;
+                    })
+                    .collect(Collectors.toList());
+            response.setDepots(depotsResponse);
+        }
+
         return response;
     }
 
@@ -257,5 +280,46 @@ public class TacheService {
                     request.getDateFin().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
             );
         }
+    }
+
+    @Transactional
+    public TacheResponse deposerTache(Long id, DepotRequest depotRequest, MultipartFile file) throws IOException {
+        log.info("Dépôt de la tâche {}", id);
+        Tache tache = tacheRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tâche non trouvée avec l'id: " + id));
+        tache.setEstDeposé(true);
+        tache = tacheRepository.save(tache);
+
+        // Créer et sauvegarder le dépôt
+        Depot depot = new Depot();
+        depot.setType(depotRequest.getType());
+        depot.setLien(depotRequest.getLien());
+        depot.setNomFichier(depotRequest.getNomFichier());
+
+        // Si c'est un fichier, le stocker physiquement
+        if ("fichier".equals(depotRequest.getType()) && file != null && !file.isEmpty()) {
+            String filePath = fileUploadService.uploadDepotFile(file);
+            depot.setCheminFichier(filePath);
+        } else {
+            depot.setCheminFichier(depotRequest.getCheminFichier());
+        }
+
+        depot.setDateDepot(java.time.LocalDateTime.now());
+        depot.setTache(tache);
+        // Récupérer l'activité et le projet depuis la tâche
+        if (tache.getActivite() != null) {
+            depot.setActivite(tache.getActivite());
+            if (tache.getActivite().getProjet() != null) {
+                depot.setProjet(tache.getActivite().getProjet());
+            }
+        }
+        depotRepository.save(depot);
+
+        // Rafraîchir la tâche depuis la base pour charger les dépôts associés
+        tache = tacheRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tâche non trouvée avec l'id: " + id));
+
+        log.info("Tâche {} déposée avec dépôt {}", id, depot.getId());
+        return mapToResponse(tache);
     }
 }

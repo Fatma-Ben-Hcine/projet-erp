@@ -57,4 +57,19 @@ export class ActiviteService {
   getProgression(activiteId: number): Observable<ActiviteProgressionResponse> {
     return this.http.get<ActiviteProgressionResponse>(`${this.baseUrl}/${activiteId}/progression`);
   }
+
+  // Dépôt d'activité
+  deposerActivite(id: number, depotData: { type: 'lien' | 'fichier', value: string | File }): Observable<ActiviteResponse> {
+    const formData = new FormData();
+    formData.append('type', depotData.type);
+
+    if (depotData.type === 'lien') {
+      formData.append('lien', depotData.value as string);
+    } else if (depotData.type === 'fichier') {
+      formData.append('file', depotData.value as File);
+      formData.append('nomFichier', (depotData.value as File).name);
+    }
+
+    return this.http.patch<ActiviteResponse>(`${this.baseUrl}/${id}/depot`, formData);
+  }
 }

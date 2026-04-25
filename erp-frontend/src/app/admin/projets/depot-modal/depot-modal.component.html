@@ -2,7 +2,7 @@
   <div class="modal-container" (click)="$event.stopPropagation()">
     <!-- Header -->
     <div class="modal-header">
-      <h2 class="modal-title">Dépôt</h2>
+      <h2 class="modal-title">Dépôt - {{ targetName }}</h2>
       <button class="close-btn" (click)="close()">
         <span class="material-icons">close</span>
       </button>
@@ -11,10 +11,10 @@
     <!-- Body -->
     <div class="modal-body">
       <!-- Zone de consultation des dépôts existants (mode view uniquement) -->
-      <div *ngIf="mode === 'view' && depotsExistant && depotsExistant.length > 0" class="existing-depots-section">
+      <div *ngIf="mode === 'view' && depots && depots.length > 0" class="existing-depots-section">
         <h3>Dépôts existants</h3>
         <div class="existing-depots-list">
-          <div *ngFor="let depot of depotsExistant" class="existing-depot-item">
+          <div *ngFor="let depot of depots" class="existing-depot-item">
             <div class="depot-type-badge">
               <span class="material-icons">
                 {{ depot.type === 'lien' ? 'link' : 'description' }}

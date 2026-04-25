@@ -9,5 +9,7 @@ import java.util.List;
 @Repository
 public interface DepotRepository extends JpaRepository<Depot, Long> {
     List<Depot> findByProjetId(Long projetId);
+    List<Depot> findByTacheId(Long tacheId);
+    List<Depot> findByActiviteId(Long activiteId);
     void deleteByProjetId(Long projetId);
 }

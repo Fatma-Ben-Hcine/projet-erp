@@ -34,6 +34,14 @@ public class Depot {
     private LocalDateTime dateDepot;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "projet_id", nullable = false)
+    @JoinColumn(name = "projet_id")
     private Projet projet;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tache_id")
+    private Tache tache;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "activite_id")
+    private Activite activite;
 }

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { ProjetService } from '../../../core/services/projet.service';
 import { ClientService } from '../../../core/services/client.service';
 import { UtilisateurService } from'../../../core/services/utilisateur.service';
@@ -65,7 +65,8 @@ export class ProjetsBoardComponent implements OnInit {
     private projetService: ProjetService,
     private clientService: ClientService,
     private utilisateurService: UtilisateurService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -456,10 +457,7 @@ export class ProjetsBoardComponent implements OnInit {
   }
 
   openDepotModal(projet: ProjetResponse): void {
-    this.projetPourDepot = projet;
-    this.depotModalMode = projet.statut === 'TERMINE' ? 'view' : 'create';
-    this.depotModalDepots = projet.depots || [];
-    this.showDepotModal = true;
+    this.router.navigate(['/admin/projets', projet.id, 'depot']);
   }
 
   closeDepotModal(): void {

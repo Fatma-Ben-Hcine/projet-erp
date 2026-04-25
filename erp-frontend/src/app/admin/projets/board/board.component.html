@@ -148,7 +148,7 @@
                 </div>
               </div>
               <div class="card-actions">
-                <button class="action-btn view-btn" title="Voir le projet" (click)="viewProjet(projet)">
+                <button class="action-btn view-btn" title="Voir le projet" [routerLink]="['/admin/projets', projet.id]">
                   <span class="material-icons">visibility</span>
                   <span>Voir</span>
                 </button>
@@ -590,9 +590,9 @@
 <!-- Dépôt Modal -->
 <app-depot-modal
   [isVisible]="showDepotModal"
-  [projet]="projetPourDepot"
+  [targetName]="projetPourDepot?.nom || ''"
   [mode]="depotModalMode"
-  [depotsExistant]="depotModalDepots"
+  [depots]="depotModalDepots"
   (closed)="closeDepotModal()"
   (depotSubmitted)="onDepotSubmitted($event)">
 </app-depot-modal>

@@ -13,9 +13,9 @@ import { ProjetService } from '../../../core/services/projet.service';
 })
 export class DepotModalComponent {
   @Input() isVisible: boolean = false;
-  @Input() projet: ProjetResponse | null = null;
+  @Input() targetName: string = '';
   @Input() mode: 'create' | 'view' = 'create';
-  @Input() depotsExistant: DepotResponse[] = [];
+  @Input() depots: any[] = [];
   @Output() closed = new EventEmitter<void>();
   @Output() depotSubmitted = new EventEmitter<{type: 'lien' | 'fichier', value: string | File}>();
 
@@ -23,6 +23,7 @@ export class DepotModalComponent {
   selectedTab: 'lien' | 'fichier' = 'lien';
   selectedFile: File | null = null;
   errorMessage: string = '';
+  private lastDepotData: { type: 'lien' | 'fichier', value: string | File } | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -35,9 +36,9 @@ export class DepotModalComponent {
   }
 
   ngOnChanges(): void {
-    if (this.mode === 'view' && this.depotsExistant && this.depotsExistant.length > 0) {
+    if (this.mode === 'view' && this.depots && this.depots.length > 0) {
       // Pré-remplir avec le dernier dépôt
-      const dernierDepot = this.depotsExistant[this.depotsExistant.length - 1];
+      const dernierDepot = this.depots[this.depots.length - 1];
       if (dernierDepot.type === 'lien' && dernierDepot.lien) {
         this.depotForm.get('lien')?.setValue(dernierDepot.lien);
         this.selectedTab = 'lien';
@@ -93,21 +94,27 @@ export class DepotModalComponent {
   onSubmit(): void {
     console.log('onSubmit appelé');
     this.errorMessage = '';
-    
+
     if (this.selectedTab === 'lien') {
       const lien = this.depotForm.get('lien')?.value?.trim();
       if (!lien) {
         this.errorMessage = 'Veuillez entrer un lien valide';
         return;
       }
-      this.depotSubmitted.emit({ type: 'lien', value: lien });
+      this.lastDepotData = { type: 'lien', value: lien };
+      this.depotSubmitted.emit(this.lastDepotData);
     } else {
       if (!this.selectedFile) {
         this.errorMessage = 'Veuillez sélectionner un fichier';
         return;
       }
-      this.depotSubmitted.emit({ type: 'fichier', value: this.selectedFile });
+      this.lastDepotData = { type: 'fichier', value: this.selectedFile };
+      this.depotSubmitted.emit(this.lastDepotData);
     }
+  }
+
+  get depotData(): { type: 'lien' | 'fichier', value: string | File } | null {
+    return this.lastDepotData;
   }
 
   close(): void {
