@@ -30,6 +30,7 @@
               class="view-btn" 
               [class.active]="currentView === 'kanban'"
               (click)="toggleView('kanban')">
+              <span class="material-icons">grid_view</span>
               Kanban
             </button>
             <button 
@@ -64,45 +65,43 @@
       <div class="kanban-columns">
         <!-- Colonne Nouveau Projet -->
         <div class="kanban-column">
-          <div class="column-header" style="border-left-color: #3b82f6;">
-            <span class="status-icon">?</span>
+          <div class="column-header">
+            <span class="status-dot" style="background-color: #3b82f6;"></span>
             <span class="status-text">Nouveau Projet</span>
             <span class="status-count">{{ nouveauxProjets.length }}</span>
           </div>
           <div class="column-content">
-            <div *ngFor="let projet of nouveauxProjets" class="project-card" [style.border-left-color]="getStatutColor(projet.statut!)">
+            <div *ngFor="let projet of nouveauxProjets" class="project-card" [style.border-left-color]="'#3b82f6'">
               <div class="card-header">
                 <h3 class="project-title">{{ projet.nom }}</h3>
-                <p class="project-deadline">- {{ formatDate(projet.dateLimite) }}</p>
+                <span class="project-deadline">— {{ formatDate(projet.dateLimite) }}</span>
               </div>
               <p class="project-description">{{ projet.description }}</p>
-              <div class="project-client" *ngIf="projet.client">
-                <span class="material-icons">business</span>
-                {{ projet.client.nom }} {{ projet.client.prenom }}
-              </div>
-              <div class="project-budget">
-                <span class="material-icons">payments</span>
-                {{ projet.budget }} TND
-              </div>
-              <div class="project-days">
-                <span class="material-icons">schedule</span>
-                {{ projet.joursRestants }} jours restants
+              <div class="project-info-row">
+                <span class="info-label">Jours restants :</span>
+                <span class="info-value">{{ projet.joursRestants }}</span>
               </div>
               <div class="project-progress">
-                <div class="progress-bar">
-                  <div class="progress-fill" [style.width.%]="projet.progression"></div>
+                <div class="progress-label">
+                  <span class="info-label">Progression :</span>
+                  <span class="info-value">{{ projet.progression }}%</span>
                 </div>
-                <span class="progress-text">{{ projet.progression }}%</span>
+                <div class="progress-bar">
+                  <div class="progress-fill" [style.width.%]="projet.progression" [style.background-color]="'#3b82f6'"></div>
+                </div>
               </div>
               <div class="card-actions">
                 <button class="action-btn view-btn" title="Voir le projet" (click)="viewProjet(projet)">
                   <span class="material-icons">visibility</span>
+                  <span>Voir</span>
                 </button>
                 <button class="action-btn edit-btn" title="Modifier le projet" (click)="editProjet(projet)">
                   <span class="material-icons">edit</span>
+                  <span>Modifier</span>
                 </button>
                 <button class="action-btn delete-btn" title="Supprimer le projet" (click)="confirmDelete(projet)">
                   <span class="material-icons">delete</span>
+                  <span>Supprimer</span>
                 </button>
               </div>
               <div class="status-actions">
@@ -115,106 +114,165 @@
                 </button>
               </div>
             </div>
+            <div *ngIf="nouveauxProjets.length === 0" class="empty-state">
+              <p>Aucun projet</p>
+            </div>
           </div>
         </div>
 
         <!-- Colonne En Cours -->
         <div class="kanban-column">
-          <div class="column-header" style="border-left-color: #eab308;">
-            <span class="status-icon">🟡</span>
+          <div class="column-header">
+            <span class="status-dot" style="background-color: #f59e0b;"></span>
             <span class="status-text">En Cours</span>
             <span class="status-count">{{ projetsEnCours.length }}</span>
           </div>
           <div class="column-content">
-            <div *ngFor="let projet of projetsEnCours" class="project-card" [style.border-left-color]="getStatutColor(projet.statut!)">
+            <div *ngFor="let projet of projetsEnCours" class="project-card" [style.border-left-color]="'#f59e0b'">
               <div class="card-header">
                 <h3 class="project-title">{{ projet.nom }}</h3>
-                <p class="project-deadline">— {{ formatDate(projet.dateLimite) }}</p>
+                <span class="project-deadline">— {{ formatDate(projet.dateLimite) }}</span>
               </div>
               <p class="project-description">{{ projet.description }}</p>
-              <div class="project-client" *ngIf="projet.client">
-                <span class="material-icons">business</span>
-                {{ projet.client.nom }} {{ projet.client.prenom }}
-              </div>
-              <div class="project-budget">
-                <span class="material-icons">payments</span>
-                {{ projet.budget }} TND
-              </div>
-              <div class="project-days">
-                <span class="material-icons">schedule</span>
-                {{ projet.joursRestants }} jours restants
+              <div class="project-info-row">
+                <span class="info-label">Jours restants :</span>
+                <span class="info-value">{{ projet.joursRestants }}</span>
               </div>
               <div class="project-progress">
-                <div class="progress-bar">
-                  <div class="progress-fill" [style.width.%]="projet.progression"></div>
+                <div class="progress-label">
+                  <span class="info-label">Progression :</span>
+                  <span class="info-value">{{ projet.progression }}%</span>
                 </div>
-                <span class="progress-text">{{ projet.progression }}%</span>
+                <div class="progress-bar">
+                  <div class="progress-fill" [style.width.%]="projet.progression" [style.background-color]="'#f59e0b'"></div>
+                </div>
               </div>
               <div class="card-actions">
-                <button class="action-btn view-btn" title="Voir le projet" (click)="viewProjet(projet)">
+                <button class="action-btn view-btn" title="Voir le projet" [routerLink]="['/admin/projets', projet.id]">
                   <span class="material-icons">visibility</span>
+                  <span>Voir</span>
                 </button>
                 <button class="action-btn edit-btn" title="Modifier le projet" (click)="editProjet(projet)">
                   <span class="material-icons">edit</span>
+                  <span>Modifier</span>
                 </button>
                 <button class="action-btn delete-btn" title="Supprimer le projet" (click)="confirmDelete(projet)">
                   <span class="material-icons">delete</span>
+                  <span>Supprimer</span>
                 </button>
               </div>
               <div class="status-actions">
-                <button 
+                <button
                   *ngIf="getNextStatutButton(projet.statut!)"
                   class="status-btn"
                   [style.background-color]="getNextStatutButton(projet.statut!)!.color"
-                  (click)="updateStatut(projet, getNextStatutButton(projet.statut!)!.action)">
+                  (click)="getNextStatutButton(projet.statut!)!.text === 'Dépôt' ? openDepotModal(projet) : updateStatut(projet, getNextStatutButton(projet.statut!)!.action)">
                   {{ getNextStatutButton(projet.statut!)!.text }}
                 </button>
               </div>
+            </div>
+            <div *ngIf="projetsEnCours.length === 0" class="empty-state">
+              <p>Aucun projet</p>
             </div>
           </div>
         </div>
 
         <!-- Colonne Terminé -->
         <div class="kanban-column">
-          <div class="column-header" style="border-left-color: #22c55e;">
-            <span class="status-icon">🟢</span>
+          <div class="column-header">
+            <span class="status-dot" style="background-color: #22c55e;"></span>
             <span class="status-text">Terminé</span>
             <span class="status-count">{{ projetsTermines.length }}</span>
           </div>
           <div class="column-content">
-            <div *ngFor="let projet of projetsTermines" class="project-card" [style.border-left-color]="getStatutColor(projet.statut!)">
+            <div *ngFor="let projet of projetsTermines" class="project-card" [style.border-left-color]="'#22c55e'">
               <div class="card-header">
                 <h3 class="project-title">{{ projet.nom }}</h3>
-                <p class="project-deadline">— {{ formatDate(projet.dateLimite) }}</p>
+                <span class="project-deadline">— {{ formatDate(projet.dateLimite) }}</span>
               </div>
               <p class="project-description">{{ projet.description }}</p>
-              <div class="project-client" *ngIf="projet.client">
-                <span class="material-icons">business</span>
-                {{ projet.client.nom }} {{ projet.client.prenom }}
-              </div>
-              <div class="project-budget">
-                <span class="material-icons">payments</span>
-                {{ projet.budget }} TND
-              </div>
-              <div class="project-days">
-                <span class="material-icons">schedule</span>
-                {{ projet.joursRestants }} jours restants
+              <div class="project-info-row">
+                <span class="info-label">Jours restants :</span>
+                <span class="info-value">{{ projet.joursRestants }}</span>
               </div>
               <div class="project-progress">
-                <div class="progress-bar">
-                  <div class="progress-fill" [style.width.%]="projet.progression"></div>
+                <div class="progress-label">
+                  <span class="info-label">Progression :</span>
+                  <span class="info-value">{{ projet.progression }}%</span>
                 </div>
-                <span class="progress-text">{{ projet.progression }}%</span>
+                <div class="progress-bar">
+                  <div class="progress-fill" [style.width.%]="projet.progression" [style.background-color]="'#22c55e'"></div>
+                </div>
               </div>
               <div class="card-actions">
                 <button class="action-btn view-btn" title="Voir le projet" (click)="viewProjet(projet)">
                   <span class="material-icons">visibility</span>
+                  <span>Voir</span>
                 </button>
                 <button class="action-btn edit-btn" title="Modifier le projet" (click)="editProjet(projet)">
                   <span class="material-icons">edit</span>
+                  <span>Modifier</span>
                 </button>
                 <button class="action-btn delete-btn" title="Supprimer le projet" (click)="confirmDelete(projet)">
                   <span class="material-icons">delete</span>
+                  <span>Supprimer</span>
+                </button>
+              </div>
+              <div class="status-actions">
+                <button
+                  *ngIf="getNextStatutButton(projet.statut!)"
+                  class="status-btn"
+                  [style.background-color]="getNextStatutButton(projet.statut!)!.color"
+                  (click)="getNextStatutButton(projet.statut!)!.action === 'DEPOT_VIEW' ? openDepotModal(projet) : updateStatut(projet, getNextStatutButton(projet.statut!)!.action)">
+                  {{ getNextStatutButton(projet.statut!)!.text }}
+                </button>
+              </div>
+            </div>
+            <div *ngIf="projetsTermines.length === 0" class="empty-state">
+              <p>Aucun projet</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Colonne En Retard -->
+        <div class="kanban-column">
+          <div class="column-header">
+            <span class="status-dot" style="background-color: #ef4444;"></span>
+            <span class="status-text">En Retard</span>
+            <span class="status-count">{{ projetsEnRetard.length }}</span>
+          </div>
+          <div class="column-content">
+            <div *ngFor="let projet of projetsEnRetard" class="project-card" [style.border-left-color]="'#ef4444'">
+              <div class="card-header">
+                <h3 class="project-title">{{ projet.nom }}</h3>
+                <span class="project-deadline">— {{ formatDate(projet.dateLimite) }}</span>
+              </div>
+              <p class="project-description">{{ projet.description }}</p>
+              <div class="project-info-row">
+                <span class="info-label">Jours restants :</span>
+                <span class="info-value">{{ projet.joursRestants }}</span>
+              </div>
+              <div class="project-progress">
+                <div class="progress-label">
+                  <span class="info-label">Progression :</span>
+                  <span class="info-value">{{ projet.progression }}%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" [style.width.%]="projet.progression" [style.background-color]="'#ef4444'"></div>
+                </div>
+              </div>
+              <div class="card-actions">
+                <button class="action-btn view-btn" title="Voir le projet" (click)="viewProjet(projet)">
+                  <span class="material-icons">visibility</span>
+                  <span>Voir</span>
+                </button>
+                <button class="action-btn edit-btn" title="Modifier le projet" (click)="editProjet(projet)">
+                  <span class="material-icons">edit</span>
+                  <span>Modifier</span>
+                </button>
+                <button class="action-btn delete-btn" title="Supprimer le projet" (click)="confirmDelete(projet)">
+                  <span class="material-icons">delete</span>
+                  <span>Supprimer</span>
                 </button>
               </div>
               <div class="status-actions">
@@ -227,61 +285,8 @@
                 </button>
               </div>
             </div>
-          </div>
-        </div>
-
-        <!-- Colonne En Retard -->
-        <div class="kanban-column">
-          <div class="column-header" style="border-left-color: #ef4444;">
-            <span class="status-icon">🔴</span>
-            <span class="status-text">En Retard</span>
-            <span class="status-count">{{ projetsEnRetard.length }}</span>
-          </div>
-          <div class="column-content">
-            <div *ngFor="let projet of projetsEnRetard" class="project-card" [style.border-left-color]="getStatutColor(projet.statut!)">
-              <div class="card-header">
-                <h3 class="project-title">{{ projet.nom }}</h3>
-                <p class="project-deadline">— {{ formatDate(projet.dateLimite) }}</p>
-              </div>
-              <p class="project-description">{{ projet.description }}</p>
-              <div class="project-client" *ngIf="projet.client">
-                <span class="material-icons">business</span>
-                {{ projet.client.nom }} {{ projet.client.prenom }}
-              </div>
-              <div class="project-budget">
-                <span class="material-icons">payments</span>
-                {{ projet.budget }} TND
-              </div>
-              <div class="project-days">
-                <span class="material-icons">schedule</span>
-                {{ projet.joursRestants }} jours restants
-              </div>
-              <div class="project-progress">
-                <div class="progress-bar">
-                  <div class="progress-fill" [style.width.%]="projet.progression"></div>
-                </div>
-                <span class="progress-text">{{ projet.progression }}%</span>
-              </div>
-              <div class="card-actions">
-                <button class="action-btn view-btn" title="Voir le projet" (click)="viewProjet(projet)">
-                  <span class="material-icons">visibility</span>
-                </button>
-                <button class="action-btn edit-btn" title="Modifier le projet" (click)="editProjet(projet)">
-                  <span class="material-icons">edit</span>
-                </button>
-                <button class="action-btn delete-btn" title="Supprimer le projet" (click)="confirmDelete(projet)">
-                  <span class="material-icons">delete</span>
-                </button>
-              </div>
-              <div class="status-actions">
-                <button 
-                  *ngIf="getNextStatutButton(projet.statut!)"
-                  class="status-btn"
-                  [style.background-color]="getNextStatutButton(projet.statut!)!.color"
-                  (click)="updateStatut(projet, getNextStatutButton(projet.statut!)!.action)">
-                  {{ getNextStatutButton(projet.statut!)!.text }}
-                </button>
-              </div>
+            <div *ngIf="projetsEnRetard.length === 0" class="empty-state">
+              <p>Aucun projet</p>
             </div>
           </div>
         </div>
@@ -583,9 +588,11 @@
 </div>
 
 <!-- Dépôt Modal -->
-<app-depot-modal 
-  [isVisible]="showDepotModal" 
-  [projet]="projetPourDepot"
+<app-depot-modal
+  [isVisible]="showDepotModal"
+  [targetName]="projetPourDepot?.nom || ''"
+  [mode]="depotModalMode"
+  [depots]="depotModalDepots"
   (closed)="closeDepotModal()"
   (depotSubmitted)="onDepotSubmitted($event)">
 </app-depot-modal>

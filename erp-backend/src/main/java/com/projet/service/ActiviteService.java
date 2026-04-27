@@ -2,6 +2,8 @@ package com.projet.service;
 
 import com.projet.dto.ActiviteRequest;
 import com.projet.dto.ActiviteResponse;
+import com.projet.dto.DepotRequest;
+import com.projet.dto.DepotResponse;
 import com.projet.entity.*;
 import com.projet.enums.StatutActivite;
 import com.projet.repository.*;
@@ -9,11 +11,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.time.format.DateTimeFormatter;
+import java.io.IOException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
@@ -28,6 +32,10 @@ public class ActiviteService {
     private final EmployeRepository employeRepository;
     private final TravaillerActiviteRepository travaillerActiviteRepository;
     private final TacheRepository tacheRepository;
+    private final DepotRepository depotRepository;
+    private final ProjetProgressionService projetProgressionService;
+    private final FileUploadService fileUploadService;
+    private final TacheService tacheService;
 
     // CRUD de base
     public List<ActiviteResponse> getAllActivites() {
@@ -212,9 +220,44 @@ public class ActiviteService {
                     tacheInfo.setDescription(tache.getDescription());
                     tacheInfo.setDateDebut(tache.getDateDebut());
                     tacheInfo.setDateFin(tache.getDateFin());
+                    tacheInfo.setEstDeposé(tache.isEstDeposé());
                     // Calculer la progression moyenne des tâches
                     Double avgProgression = travaillerActiviteRepository.getAverageProgressionByActiviteId(activite.getId());
                     tacheInfo.setProgression(avgProgression != null ? avgProgression.intValue() : 0);
+                    // Info employés assignés à la tâche
+                    List<ActiviteResponse.EmployeTacheInfo> employeTaches = tache.getTravaillerTaches().stream()
+                            .map(tt -> {
+                                ActiviteResponse.EmployeTacheInfo info = new ActiviteResponse.EmployeTacheInfo();
+                                info.setEmployeId(tt.getEmploye().getId());
+                                info.setEmployeNom(tt.getEmploye().getNom());
+                                info.setEmployePrenom(tt.getEmploye().getPrenom());
+                                return info;
+                            })
+                            .collect(Collectors.toList());
+                    tacheInfo.setEmployeTaches(employeTaches);
+                    
+                    // Récupérer les dépôts de la tâche
+                    List<Depot> depots = depotRepository.findDepotsByTacheId(tache.getId());
+                    if (depots != null && !depots.isEmpty()) {
+                        List<DepotResponse> depotsResponse = depots.stream()
+                                .map(depot -> {
+                                    DepotResponse depotResponse = new DepotResponse();
+                                    depotResponse.setId(depot.getId());
+                                    depotResponse.setType(depot.getType());
+                                    depotResponse.setLien(depot.getLien());
+                                    depotResponse.setNomFichier(depot.getNomFichier());
+                                    depotResponse.setCheminFichier(depot.getCheminFichier());
+                                    depotResponse.setDateDepot(depot.getDateDepot());
+                                    // IDs de relation
+                                    depotResponse.setTacheId(tache.getId());
+                                    depotResponse.setActiviteId(activite.getId());
+                                    depotResponse.setProjetId(activite.getProjet().getId());
+                                    return depotResponse;
+                                })
+                                .collect(Collectors.toList());
+                        tacheInfo.setDepots(depotsResponse);
+                    }
+                    
                     return tacheInfo;
                 })
                 .collect(Collectors.toList());
@@ -228,8 +271,6 @@ public class ActiviteService {
                     info.setEmployeNom(ta.getEmploye().getNom());
                     info.setEmployePrenom(ta.getEmploye().getPrenom());
                     info.setProgression(ta.getProgression());
-                    info.setDateDebut(ta.getDateDebut());
-                    info.setDateFin(ta.getDateFin());
                     return info;
                 })
                 .collect(Collectors.toList());
@@ -241,6 +282,28 @@ public class ActiviteService {
 
         // Nombre d'employés assignés
         response.setNombreEmployesAssignes(employeActivites.size());
+
+        // Mapper les dépôts d'activité uniquement (pas les dépôts de tâches)
+        List<Depot> depots = depotRepository.findDepotsByActiviteIdSeulement(activite.getId());
+        if (depots != null && !depots.isEmpty()) {
+            List<com.projet.dto.DepotResponse> depotsResponse = depots.stream()
+                    .map(depot -> {
+                        com.projet.dto.DepotResponse depotResponse = new com.projet.dto.DepotResponse();
+                        depotResponse.setId(depot.getId());
+                        depotResponse.setType(depot.getType());
+                        depotResponse.setLien(depot.getLien());
+                        depotResponse.setNomFichier(depot.getNomFichier());
+                        depotResponse.setCheminFichier(depot.getCheminFichier());
+                        depotResponse.setDateDepot(depot.getDateDepot());
+                        // IDs de relation (pas de tacheId pour un dépôt d'activité)
+                        depotResponse.setTacheId(null);
+                        depotResponse.setActiviteId(activite.getId());
+                        depotResponse.setProjetId(activite.getProjet().getId());
+                        return depotResponse;
+                    })
+                    .collect(Collectors.toList());
+            response.setDepots(depotsResponse);
+        }
 
         return response;
     }
@@ -275,5 +338,64 @@ public class ActiviteService {
                     request.getDateFin().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
             );
         }
+    }
+
+    @Transactional
+    public ActiviteResponse deposerActivite(Long id, DepotRequest depotRequest, MultipartFile file) throws IOException {
+        log.info("Dépôt de l'activité {}", id);
+        Activite activite = activiteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Activité non trouvée avec l'id: " + id));
+        activite.setEstDeposé(true);
+        activite = activiteRepository.save(activite);
+
+        // Chercher un dépôt existant pour cette activité (tache IS NULL)
+        List<Depot> existingDepots = depotRepository.findDepotsByActiviteIdSeulement(id);
+        Depot depot = existingDepots.isEmpty() ? new Depot() : existingDepots.get(0);
+
+        depot.setType(depotRequest.getType());
+        depot.setLien(depotRequest.getLien());
+        depot.setNomFichier(depotRequest.getNomFichier());
+
+        // Si c'est un fichier, le stocker physiquement
+        if ("fichier".equals(depotRequest.getType()) && file != null && !file.isEmpty()) {
+            String filePath = fileUploadService.uploadDepotFile(file);
+            depot.setCheminFichier(filePath);
+        } else {
+            depot.setCheminFichier(depotRequest.getCheminFichier());
+        }
+
+        depot.setDateDepot(java.time.LocalDateTime.now());
+        depot.setActivite(activite);
+        depot.setTache(null);  // ← IMPORTANT : pas de tâche pour un dépôt d'activité
+        // Récupérer le projet depuis l'activité
+        if (activite.getProjet() != null) {
+            depot.setProjet(activite.getProjet());
+        }
+        depotRepository.save(depot);
+
+        // Rafraîchir l'activité depuis la base pour charger les dépôts associés
+        activite = activiteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Activité non trouvée avec l'id: " + id));
+
+        // Recalculer la progression du projet parent
+        Long projetId = activite.getProjet().getId();
+        projetProgressionService.recalculerEtSauvegarder(projetId);
+
+        log.info("Activité {} déposée avec dépôt {}", id, depot.getId());
+        return mapToResponse(activite);
+    }
+
+    public boolean hasDepot(Long activiteId) {
+        List<Depot> depots = depotRepository.findDepotsByActiviteIdSeulement(activiteId);
+        return !depots.isEmpty();
+    }
+
+    public boolean areAllTachesDeposees(Long activiteId) {
+        Activite activite = activiteRepository.findById(activiteId)
+                .orElseThrow(() -> new RuntimeException("Activité non trouvée"));
+        if (activite.getTaches() == null || activite.getTaches().isEmpty()) {
+            return false;
+        }
+        return activite.getTaches().stream().allMatch(Tache::isEstDeposé);
     }
 }

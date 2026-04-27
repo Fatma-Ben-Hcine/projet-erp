@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.Valid;
 import java.util.List;
@@ -152,21 +153,79 @@ public class ActiviteController {
     @GetMapping("/{activiteId}/progression")
     public ResponseEntity<Map<String, Object>> getActiviteProgression(@PathVariable Long activiteId) {
         log.info("GET /api/admin/activites/{}/progression - Récupération de la progression de l'activité", activiteId);
-        
+
         try {
             ActiviteResponse activite = activiteService.getActiviteById(activiteId)
                     .orElseThrow(() -> new RuntimeException("Activité non trouvée"));
-            
+
             Map<String, Object> response = Map.of(
                 "progressionMoyenne", activite.getProgressionMoyenne(),
                 "nombreEmployesAssignes", activite.getNombreEmployesAssignes(),
                 "nombreEmployesTermines", 0
             );
-            
+
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Erreur lors de la récupération de la progression: {}", e.getMessage());
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/{id}/depot-exists")
+    public ResponseEntity<Map<String, Object>> checkDepotExists(@PathVariable Long id) {
+        log.info("GET /api/admin/activites/{}/depot-exists - Vérification dépôt activité", id);
+        try {
+            boolean exists = activiteService.hasDepot(id);
+            Map<String, Object> response = Map.of(
+                "hasDepot", exists,
+                "activiteId", id
+            );
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Erreur lors de la vérification du dépôt: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/{id}/toutes-taches-deposees")
+    public ResponseEntity<Map<String, Object>> checkAllTachesDeposees(@PathVariable Long id) {
+        log.info("GET /api/admin/activites/{}/toutes-taches-deposees - Vérification tâches déposées", id);
+        try {
+            boolean allDeposees = activiteService.areAllTachesDeposees(id);
+            Map<String, Object> response = Map.of(
+                "allDeposees", allDeposees,
+                "activiteId", id
+            );
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Erreur lors de la vérification des tâches: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @PatchMapping(value = "/{id}/depot", consumes = "multipart/form-data")
+    public ResponseEntity<?> deposerActivite(
+            @PathVariable Long id,
+            @RequestPart("type") String type,
+            @RequestPart(value = "lien", required = false) String lien,
+            @RequestPart(value = "nomFichier", required = false) String nomFichier,
+            @RequestPart(value = "file", required = false) MultipartFile file) {
+        log.info("PATCH /api/admin/activites/{}/depot - Dépôt de l'activité", id);
+        try {
+            com.projet.dto.DepotRequest depotRequest = new com.projet.dto.DepotRequest();
+            depotRequest.setType(type);
+            depotRequest.setLien(lien);
+            depotRequest.setNomFichier(nomFichier);
+            depotRequest.setCheminFichier(null);
+
+            ActiviteResponse response = activiteService.deposerActivite(id, depotRequest, file);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            log.error("Erreur lors du dépôt de l'activité: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            log.error("Erreur inattendue lors du dépôt de l'activité: {}", e.getMessage());
+            return ResponseEntity.internalServerError().body("Erreur lors du dépôt de l'activité");
         }
     }
 }

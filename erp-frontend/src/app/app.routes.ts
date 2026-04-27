@@ -13,6 +13,17 @@ import { UserManagementComponent } from './admin/rh/user-management/user-managem
 import { ClientManagementComponent } from './admin/clients/client-management/client-management.component';
 import { ContratManagementComponent } from './admin/contrats/contrat-management/contrat-management.component';
 import { ProjetsBoardComponent } from './admin/projets/board/board.component';
+import { ProjetDetailComponent } from './admin/projets/projet-detail/projet-detail.component';
+import { ProjetDepotComponent } from './admin/projets/projet-depot/projet-depot.component';
+
+// Conge module imports
+import { CongeListComponent } from './employe/conges/conge-list/conge-list.component';
+import { CongeFormComponent } from './employe/conges/conge-form/conge-form.component';
+import { AdminCongeListComponent } from './admin/conges/admin-conge-list/admin-conge-list.component';
+
+// Heures Supplementaires module imports
+import { HeuresSupplementairesListComponent } from './admin/heures-supplementaires/heures-supplementaires-list/heures-supplementaires-list.component';
+import { HeuresSupplementaireFormComponent } from './admin/heures-supplementaires/heures-supplementaire-form/heures-supplementaire-form.component';
 
 export const routes: Routes = [
   {
@@ -72,6 +83,18 @@ export const routes: Routes = [
     title: 'Board Projets'
   },
   {
+    path: 'admin/projets/:id',
+    component: ProjetDetailComponent,
+    canActivate: [AuthGuard, AdminGuard],
+    title: 'Détail Projet'
+  },
+  {
+    path: 'admin/projets/:id/depot',
+    component: ProjetDepotComponent,
+    canActivate: [AuthGuard, AdminGuard],
+    title: 'Dépôt Projet'
+  },
+  {
     path: 'employe/dashboard',
     component: EmployeDashboardComponent,
     canActivate: [AuthGuard, EmployeGuard],
@@ -82,6 +105,48 @@ export const routes: Routes = [
     component: ProfileComponent,
     canActivate: [AuthGuard, EmployeGuard],
     title: 'Profil Employé'
+  },
+  {
+    path: 'employe/conges',
+    component: CongeListComponent,
+    canActivate: [AuthGuard, EmployeGuard],
+    title: 'Mes Congés'
+  },
+  {
+    path: 'employe/conges/nouveau',
+    component: CongeFormComponent,
+    canActivate: [AuthGuard, EmployeGuard],
+    title: 'Nouvelle Demande de Congé'
+  },
+  {
+    path: 'employe/conges/modifier/:id',
+    component: CongeFormComponent,
+    canActivate: [AuthGuard, EmployeGuard],
+    title: 'Modifier Demande de Congé'
+  },
+  {
+    path: 'admin/conges',
+    component: AdminCongeListComponent,
+    canActivate: [AuthGuard, AdminGuard],
+    title: 'Gestion des Congés'
+  },
+  {
+    path: 'admin/heures-supplementaires',
+    component: HeuresSupplementairesListComponent,
+    canActivate: [AuthGuard, AdminGuard],
+    title: 'Gestion des Heures Supplémentaires'
+  },
+  {
+    path: 'admin/heures-supplementaires/new',
+    component: HeuresSupplementaireFormComponent,
+    canActivate: [AuthGuard, AdminGuard],
+    title: 'Ajouter une Heure Supplémentaire'
+  },
+  {
+    path: 'admin/heures-supplementaires/edit/:id',
+    component: HeuresSupplementaireFormComponent,
+    canActivate: [AuthGuard, AdminGuard],
+    title: 'Modifier une Heure Supplémentaire'
   },
   {
     path: '**',

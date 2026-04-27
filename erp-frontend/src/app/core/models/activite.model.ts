@@ -21,6 +21,8 @@ export interface ActiviteResponse {
   employeActivites: EmployeActiviteResponse[];
   progressionMoyenne: number;
   nombreEmployesAssignes: number;
+  estDepose: boolean;
+  depots: any[];
 }
 
 export interface TacheRequest {
@@ -47,41 +49,23 @@ export interface TacheResponse {
   progression: number;
   nombreEmployesAssignes: number;
   nombreEmployesTermines: number;
+  estDepose: boolean;
+  depots: any[];
 }
 
 export interface EmployeActiviteResponse {
   id: number;
-  employe: {
-    id: number;
-    nom: string;
-    prenom: string;
-    poste?: string;
-  };
-  activite: {
-    id: number;
-    nom: string;
-  };
-  statut: string;
+  employeId: number;
+  employeNom: string;
+  employePrenom: string;
   progression: number;
-  dateDebut: string;
-  dateFin?: string;
 }
 
 export interface EmployeTacheResponse {
   id: number;
-  employe: {
-    id: number;
-    nom: string;
-    prenom: string;
-    poste?: string;
-  };
-  tache: {
-    id: number;
-    nom: string;
-  };
-  statut: string;
-  dateDebut: string;
-  dateFin?: string;
+  employeId: number;
+  employeNom: string;
+  employePrenom: string;
 }
 
 export interface AssignEmployeToActiviteRequest {

@@ -2,7 +2,7 @@
   <div class="modal-container" (click)="$event.stopPropagation()">
     <!-- Header -->
     <div class="modal-header">
-      <h2 class="modal-title">Dépôt</h2>
+      <h2 class="modal-title">Dépôt - {{ targetName }}</h2>
       <button class="close-btn" (click)="close()">
         <span class="material-icons">close</span>
       </button>
@@ -10,101 +10,134 @@
 
     <!-- Body -->
     <div class="modal-body">
-      <!-- Toggle Tabs -->
-      <div class="toggle-container">
-        <button 
-          class="toggle-btn" 
-          [class]="{'active': selectedTab === 'lien'}"
-          (click)="onTabChange('lien')">
-          Lien
-        </button>
-        <button 
-          class="toggle-btn" 
-          [class]="{'active': selectedTab === 'fichier'}"
-          (click)="onTabChange('fichier')">
-          Fichier
-        </button>
-      </div>
-
-      <!-- Error Message -->
-      <div *ngIf="errorMessage" class="error-message">
-        <span class="material-icons">error</span>
-        {{ errorMessage }}
-      </div>
-
-      <!-- Option 1: Lien -->
-      <div *ngIf="selectedTab === 'lien'" class="form-section">
-        <div class="form-group">
-          <label for="lien">URL du dépôt</label>
-          <input 
-            id="lien"
-            type="url" 
-            formControlName="lien"
-            placeholder="https://github.com/votre-projet"
-            class="form-input">
-          <small class="form-hint">
-            Ajoutez un lien vers votre dépôt Git, Google Drive, ou tout autre lien
-          </small>
+      <!-- Zone de consultation des dépôts existants (mode view uniquement) -->
+      <div *ngIf="mode === 'view' && depots && depots.length > 0" class="existing-depots-section">
+        <h3>Dépôts existants</h3>
+        <div class="existing-depots-list">
+          <div *ngFor="let depot of depots" class="existing-depot-item">
+            <div class="depot-type-badge">
+              <span class="material-icons">
+                {{ depot.type === 'lien' ? 'link' : 'description' }}
+              </span>
+              {{ depot.type === 'lien' ? 'Lien' : 'Fichier' }}
+            </div>
+            <div class="depot-content">
+              <span *ngIf="depot.type === 'lien'" class="depot-link">
+                <a [href]="depot.lien" target="_blank" rel="noopener noreferrer">{{ depot.lien }}</a>
+              </span>
+              <span *ngIf="depot.type === 'fichier'" class="depot-file">
+                <a (click)="downloadFile(depot.id, depot.nomFichier!)" class="file-link" style="cursor: pointer;">
+                  {{ depot.nomFichier }}
+                </a>
+              </span>
+              <span class="depot-date">{{ depot.dateDepot | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Option 2: Fichier -->
-      <div *ngIf="selectedTab === 'fichier'" class="form-section">
-        <!-- Upload Zone -->
-        <div 
-          class="upload-zone"
-          [class]="{'has-file': selectedFile}"
-          (dragover)="onDragOver($event)"
-          (drop)="onDrop($event)"
-          (click)="triggerFileInput()">
-          
-          <div class="upload-content">
-            <span class="material-icons upload-icon">cloud_upload</span>
-            <div class="upload-text">
-              <p>Glissez votre fichier ici</p>
-              <p class="upload-subtext">ou</p>
-            </div>
-          </div>
-          
-          <input 
-            id="fileInput"
-            type="file" 
-            (change)="onFileSelected($event)"
-            accept=".pdf,.zip,.docx,.png,.jpg,.jpeg"
-            style="display: none;">
-          
-          <button type="button" class="browse-btn" (click)="triggerFileInput()">
-            Parcourir les fichiers
+      <form [formGroup]="depotForm" (ngSubmit)="onSubmit()">
+        <!-- Toggle Tabs -->
+        <div class="toggle-container">
+          <button
+            type="button"
+            class="toggle-btn"
+            [class]="{'active': selectedTab === 'lien'}"
+            (click)="onTabChange('lien')">
+            Lien
+          </button>
+          <button
+            type="button"
+            class="toggle-btn"
+            [class]="{'active': selectedTab === 'fichier'}"
+            (click)="onTabChange('fichier')">
+            Fichier
           </button>
         </div>
 
-        <!-- File Info -->
-        <div *ngIf="selectedFile" class="file-info">
-          <div class="file-details">
-            <span class="material-icons file-icon">description</span>
-            <div class="file-meta">
-              <p class="file-name">{{ selectedFile.name }}</p>
-              <p class="file-size">{{ formatFileSize(selectedFile.size) }}</p>
-            </div>
+        <!-- Error Message -->
+        <div *ngIf="errorMessage" class="error-message">
+          <span class="material-icons">error</span>
+          {{ errorMessage }}
+        </div>
+
+        <!-- Option 1: Lien -->
+        <div *ngIf="selectedTab === 'lien'" class="form-section">
+          <div class="form-group">
+            <label for="lien">URL du dépôt</label>
+            <input
+              id="lien"
+              type="url"
+              formControlName="lien"
+              placeholder="https://github.com/votre-projet"
+              class="form-input">
+            <small class="form-hint">
+              Ajoutez un lien vers votre dépôt Git, Google Drive, ou tout autre lien
+            </small>
           </div>
         </div>
 
-        <!-- Accepted Formats -->
-        <div class="accepted-formats">
-          <small>Formats acceptés : PDF, ZIP, DOCX, PNG, JPG</small>
-        </div>
-      </div>
-    </div>
+        <!-- Option 2: Fichier -->
+        <div *ngIf="selectedTab === 'fichier'" class="form-section">
+          <!-- Upload Zone -->
+          <div
+            class="upload-zone"
+            [class]="{'has-file': selectedFile}"
+            (dragover)="onDragOver($event)"
+            (drop)="onDrop($event)"
+            (click)="triggerFileInput()">
 
-    <!-- Footer -->
-    <div class="modal-footer">
-      <button class="btn-cancel" (click)="close()">Annuler</button>
-      <button 
-        class="btn-submit" 
-        [disabled]="depotForm.invalid || (selectedTab === 'fichier' && !selectedFile)"
-        (click)="onSubmit()">
-        Valider
-      </button>
+            <div class="upload-content">
+              <span class="material-icons upload-icon">cloud_upload</span>
+              <div class="upload-text">
+                <p>Glissez votre fichier ici</p>
+                <p class="upload-subtext">ou</p>
+              </div>
+            </div>
+
+            <input
+              id="fileInput"
+              type="file"
+              (change)="onFileSelected($event)"
+              accept=".pdf,.zip,.docx,.png,.jpg,.jpeg"
+              style="display: none;">
+
+            <button type="button" class="browse-btn" (click)="$event.stopPropagation(); triggerFileInput()">
+              Parcourir les fichiers
+            </button>
+          </div>
+
+          <!-- File Info -->
+          <div *ngIf="selectedFile" class="file-info">
+            <div class="file-details">
+              <span class="material-icons file-icon">description</span>
+              <div class="file-meta">
+                <p class="file-name">{{ selectedFile.name }}</p>
+                <p class="file-size">{{ formatFileSize(selectedFile.size) }}</p>
+              </div>
+              <button type="button" class="remove-file-btn" (click)="removeFile()">
+                <span class="material-icons">close</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Accepted Formats -->
+          <div class="accepted-formats">
+            <small>Formats acceptés : PDF, ZIP, DOCX, PNG, JPG</small>
+          </div>
+        </div>
+
+        <!-- Footer inside form -->
+        <div class="modal-footer">
+          <button type="button" class="btn-cancel" (click)="close()">Annuler</button>
+          <button
+            type="submit"
+            class="btn-submit"
+            [disabled]="!isFormValid">
+            Valider
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </div>

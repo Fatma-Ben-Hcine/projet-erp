@@ -24,6 +24,7 @@ public class TacheResponse {
     private Integer nombreEmployesAssignes;
     private Integer nombreEmployesTermines;
     private boolean estDeposé;
+    private List<DepotResponse> depots;
 
     @Data
     @NoArgsConstructor

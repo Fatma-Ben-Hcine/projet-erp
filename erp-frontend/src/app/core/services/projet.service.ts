@@ -36,7 +36,38 @@ export class ProjetService {
     return this.http.patch<ProjetResponse>(`${this.baseUrl}/${id}/statut`, { statut });
   }
 
+  deposerProjet(id: number, depotData: { type: 'lien' | 'fichier', value: string | File }): Observable<ProjetResponse> {
+    const formData = new FormData();
+
+    formData.append('type', depotData.type);
+
+    if (depotData.type === 'lien') {
+      formData.append('lien', depotData.value as string);
+    } else if (depotData.type === 'fichier' && depotData.value instanceof File) {
+      formData.append('nomFichier', (depotData.value as File).name);
+      formData.append('file', depotData.value);
+    }
+
+    return this.http.patch<ProjetResponse>(`${this.baseUrl}/${id}/depot`, formData);
+  }
+
+  downloadDepotFile(depotId: number, filename: string): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/depots/${depotId}/download`, {
+      responseType: 'blob'
+    });
+  }
+
   delete(id: number): Observable<any> {
     return this.http.delete(`${this.baseUrl}/${id}`, { responseType: 'text' });
+  }
+
+  // Vérification de dépôt
+  hasDepot(id: number): Observable<{ hasDepot: boolean; projetId: number }> {
+    return this.http.get<{ hasDepot: boolean; projetId: number }>(`${this.baseUrl}/${id}/depot-exists`);
+  }
+
+  // Vérification si toutes les activités sont déposées
+  areAllActivitesDeposees(id: number): Observable<{ allDeposees: boolean; projetId: number }> {
+    return this.http.get<{ allDeposees: boolean; projetId: number }>(`${this.baseUrl}/${id}/toutes-activites-deposees`);
   }
 }

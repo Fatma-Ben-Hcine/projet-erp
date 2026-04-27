@@ -25,6 +25,8 @@ export interface ProjetResponse {
   dateLimite: string;
   progression: number;
   statut?: string;
+  estDepose?: boolean;
+  depots?: DepotResponse[];
   client?: {
     id: number;
     nom: string;
@@ -43,6 +45,15 @@ export interface ProjetResponse {
   }>;
   activites?: ActiviteResponse[];
   joursRestants?: number;
+}
+
+export interface DepotResponse {
+  id: number;
+  type: string;
+  lien?: string;
+  nomFichier?: string;
+  cheminFichier?: string;
+  dateDepot?: string;
 }
 
 export interface ActiviteResponse {

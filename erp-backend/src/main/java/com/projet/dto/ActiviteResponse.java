@@ -25,6 +25,7 @@ public class ActiviteResponse {
     private Integer progressionMoyenne;
     private Integer nombreEmployesAssignes;
     private boolean estDeposé;
+    private List<DepotResponse> depots;
 
     @Data
     @NoArgsConstructor
@@ -44,6 +45,28 @@ public class ActiviteResponse {
         private LocalDate dateDebut;
         private LocalDate dateFin;
         private Integer progression;
+        private boolean estDeposé;
+        private List<EmployeTacheInfo> employeTaches;
+        private List<DepotResponse> depots;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class EmployeTacheInfo {
+        private Long employeId;
+        private String employeNom;
+        private String employePrenom;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class EmployeInfo {
+        private Long id;
+        private String nom;
+        private String prenom;
+        private String poste;
     }
 
     @Data
@@ -54,7 +77,5 @@ public class ActiviteResponse {
         private String employeNom;
         private String employePrenom;
         private Integer progression;
-        private LocalDate dateDebut;
-        private LocalDate dateFin;
     }
 }

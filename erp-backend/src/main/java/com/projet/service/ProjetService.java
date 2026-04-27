@@ -2,6 +2,8 @@ package com.projet.service;
 
 import com.projet.dto.ProjetRequest;
 import com.projet.dto.ProjetResponse;
+import com.projet.dto.DepotRequest;
+import com.projet.dto.DepotResponse;
 import com.projet.entity.Projet;
 import com.projet.entity.TravaillerProjet;
 import com.projet.entity.Employe;
@@ -11,6 +13,7 @@ import com.projet.entity.Activite;
 import com.projet.entity.Tache;
 import com.projet.entity.TravaillerActivite;
 import com.projet.entity.TravaillerTache;
+import com.projet.entity.Depot;
 import com.projet.enums.Role;
 import com.projet.enums.StatutProjet;
 import com.projet.repository.ProjetRepository;
@@ -21,6 +24,7 @@ import com.projet.repository.ActiviteRepository;
 import com.projet.repository.TacheRepository;
 import com.projet.repository.TravaillerActiviteRepository;
 import com.projet.repository.TravaillerTacheRepository;
+import com.projet.repository.DepotRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,8 +35,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.io.IOException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -47,6 +53,9 @@ public class ProjetService {
     private final TacheRepository tacheRepository;
     private final TravaillerActiviteRepository travaillerActiviteRepository;
     private final TravaillerTacheRepository travaillerTacheRepository;
+    private final DepotRepository depotRepository;
+    private final FileUploadService fileUploadService;
+    private final ProjetProgressionService projetProgressionService;
 
     public List<ProjetResponse> getAllProjets() {
         return projetRepository.findAll()
@@ -315,8 +324,15 @@ public class ProjetService {
                 log.info("Suppression de {} relations employé-projet", travaillerProjets.size());
                 travaillerProjetRepository.deleteAll(travaillerProjets);
             }
-            
-            // 8. Supprimer le projet lui-même
+
+            // 8. Supprimer les dépôts du projet
+            List<Depot> depots = depotRepository.findByProjetId(id);
+            if (!depots.isEmpty()) {
+                log.info("Suppression de {} dépôts pour le projet {}", depots.size(), id);
+                depotRepository.deleteAll(depots);
+            }
+
+            // 9. Supprimer le projet lui-même
             projetRepository.delete(projet);
             log.info("Projet {} supprimé avec succès (toutes les relations nettoyées)", id);
             
@@ -392,7 +408,29 @@ public class ProjetService {
                     .collect(Collectors.toList());
             response.setEmployes(employesInfo);
         }
-        
+
+        // Mapper les dépôts
+        List<Depot> depots = depotRepository.findByProjetId(projet.getId());
+        if (depots != null && !depots.isEmpty()) {
+            List<DepotResponse> depotsResponse = depots.stream()
+                    .map(depot -> {
+                        DepotResponse depotResponse = new DepotResponse();
+                        depotResponse.setId(depot.getId());
+                        depotResponse.setType(depot.getType());
+                        depotResponse.setLien(depot.getLien());
+                        depotResponse.setNomFichier(depot.getNomFichier());
+                        depotResponse.setCheminFichier(depot.getCheminFichier());
+                        depotResponse.setDateDepot(depot.getDateDepot());
+                        // IDs de relation (dépôt de projet uniquement)
+                        depotResponse.setTacheId(null);
+                        depotResponse.setActiviteId(null);
+                        depotResponse.setProjetId(projet.getId());
+                        return depotResponse;
+                    })
+                    .collect(Collectors.toList());
+            response.setDepots(depotsResponse);
+        }
+
         return response;
     }
 
@@ -418,6 +456,63 @@ public class ProjetService {
         projet.setStatut(statut);
         projet = projetRepository.save(projet);
         return mapToResponse(projet);
+    }
+
+    @Transactional
+    public ProjetResponse deposerProjet(Long id, DepotRequest depotRequest, MultipartFile file) throws IOException {
+        log.info("Dépôt du projet {}", id);
+        Projet projet = projetRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Projet non trouvé avec l'id: " + id));
+        projet.setEstDeposé(true);
+        projet.setStatut(StatutProjet.TERMINE);
+        projet = projetRepository.save(projet);
+
+        // Chercher un dépôt existant pour ce projet
+        List<Depot> existingDepots = depotRepository.findByProjetId(id);
+        Depot depot = existingDepots.isEmpty() ? new Depot() : existingDepots.get(0);
+
+        depot.setType(depotRequest.getType());
+        depot.setLien(depotRequest.getLien());
+        depot.setNomFichier(depotRequest.getNomFichier());
+
+        // Si c'est un fichier, le stocker physiquement
+        if ("fichier".equals(depotRequest.getType()) && file != null && !file.isEmpty()) {
+            String filePath = fileUploadService.uploadDepotFile(file);
+            depot.setCheminFichier(filePath);
+        } else {
+            depot.setCheminFichier(depotRequest.getCheminFichier());
+        }
+
+        depot.setDateDepot(java.time.LocalDateTime.now());
+        depot.setProjet(projet);
+        depotRepository.save(depot);
+
+        // Forcer la progression à 100% car le projet est déposé
+        projet.setProgression(100);
+        projetRepository.save(projet);
+
+        log.info("Projet {} déposé et marqué comme terminé avec dépôt {}", id, depot.getId());
+        return mapToResponse(projet);
+    }
+
+    public boolean hasDepot(Long projetId) {
+        List<Depot> depots = depotRepository.findByProjetId(projetId);
+        return !depots.isEmpty();
+    }
+
+    public boolean areAllActivitesDeposees(Long projetId) {
+        Projet projet = projetRepository.findById(projetId)
+                .orElseThrow(() -> new RuntimeException("Projet non trouvé"));
+        if (projet.getActivites() == null || projet.getActivites().isEmpty()) {
+            return false;
+        }
+        return projet.getActivites().stream().allMatch(Activite::isEstDeposé);
+    }
+
+    public String getDepotFilePath(Long depotId) {
+        Depot depot = depotRepository.findById(depotId)
+                .orElseThrow(() -> new RuntimeException("Dépôt non trouvé avec l'id: " + depotId));
+        return depot.getCheminFichier();
     }
 
     private Integer calculerJoursRestants(Projet projet) {

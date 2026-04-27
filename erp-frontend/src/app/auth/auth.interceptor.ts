@@ -11,6 +11,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   console.log('AuthInterceptor - URL:', req.url);
   console.log('AuthInterceptor - Token:', token ? 'présent' : 'absent');
+  console.log('AuthInterceptor - Content-Type:', req.headers.get('Content-Type'));
 
   // Cloner la requête et ajouter le header Authorization
   let authReq = req;

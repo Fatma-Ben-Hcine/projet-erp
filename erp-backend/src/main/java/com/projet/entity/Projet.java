@@ -12,6 +12,7 @@ import java.util.List;
 import com.projet.entity.Client;
 import com.projet.entity.TravaillerProjet;
 import com.projet.entity.Employe;
+import com.projet.entity.Activite;
 import com.projet.enums.StatutProjet;
 
 @Entity
@@ -62,4 +63,8 @@ public class Projet {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "client_id")
     private Client client;
+
+    // Activites du projet
+    @OneToMany(mappedBy = "projet", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Activite> activites;
 }
