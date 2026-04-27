@@ -192,6 +192,22 @@ public class TacheController {
         }
     }
 
+    @GetMapping("/{id}/depot-exists")
+    public ResponseEntity<Map<String, Object>> checkDepotExists(@PathVariable Long id) {
+        log.info("GET /api/admin/taches/{}/depot-exists - Vérification dépôt tâche", id);
+        try {
+            boolean exists = tacheService.hasDepot(id);
+            Map<String, Object> response = Map.of(
+                "hasDepot", exists,
+                "tacheId", id
+            );
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Erreur lors de la vérification du dépôt: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
     @PatchMapping(value = "/{id}/depot", consumes = "multipart/form-data")
     public ResponseEntity<?> deposerTache(
             @PathVariable Long id,
@@ -199,7 +215,11 @@ public class TacheController {
             @RequestPart(value = "lien", required = false) String lien,
             @RequestPart(value = "nomFichier", required = false) String nomFichier,
             @RequestPart(value = "file", required = false) MultipartFile file) {
+        log.info("========================================");
         log.info("PATCH /api/admin/taches/{}/depot - Dépôt de la tâche", id);
+        log.info("ID reçu dans le controller: {}", id);
+        log.info("Type: {}, Lien: {}, Fichier: {}", type, lien, nomFichier);
+        log.info("========================================");
         try {
             com.projet.dto.DepotRequest depotRequest = new com.projet.dto.DepotRequest();
             depotRequest.setType(type);
@@ -208,6 +228,9 @@ public class TacheController {
             depotRequest.setCheminFichier(null);
 
             TacheResponse response = tacheService.deposerTache(id, depotRequest, file);
+            log.info(">>> RÉPONSE envoyée - estDepose: {}, depots count: {}", 
+                response.isEstDeposé(),
+                response.getDepots() != null ? response.getDepots().size() : 0);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             log.error("Erreur lors du dépôt de la tâche: {}", e.getMessage());

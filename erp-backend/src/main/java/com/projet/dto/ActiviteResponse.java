@@ -47,6 +47,7 @@ public class ActiviteResponse {
         private Integer progression;
         private boolean estDeposé;
         private List<EmployeTacheInfo> employeTaches;
+        private List<DepotResponse> depots;
     }
 
     @Data

@@ -72,6 +72,9 @@ export class TacheService {
 
   // Dépôt de tâche
   deposerTache(id: number, depotData: { type: 'lien' | 'fichier', value: string | File }): Observable<TacheResponse> {
+    const url = `${this.baseUrl}/${id}/depot`;
+    console.log('>>> tacheService.deposerTache - URL:', url, 'id:', id);
+    
     const formData = new FormData();
     formData.append('type', depotData.type);
 
@@ -82,6 +85,11 @@ export class TacheService {
       formData.append('nomFichier', (depotData.value as File).name);
     }
 
-    return this.http.patch<TacheResponse>(`${this.baseUrl}/${id}/depot`, formData);
+    return this.http.patch<TacheResponse>(url, formData);
+  }
+
+  // Vérification de dépôt
+  hasDepot(id: number): Observable<{ hasDepot: boolean; tacheId: number }> {
+    return this.http.get<{ hasDepot: boolean; tacheId: number }>(`${this.baseUrl}/${id}/depot-exists`);
   }
 }

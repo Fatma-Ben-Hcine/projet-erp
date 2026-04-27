@@ -171,6 +171,38 @@ public class ActiviteController {
         }
     }
 
+    @GetMapping("/{id}/depot-exists")
+    public ResponseEntity<Map<String, Object>> checkDepotExists(@PathVariable Long id) {
+        log.info("GET /api/admin/activites/{}/depot-exists - Vérification dépôt activité", id);
+        try {
+            boolean exists = activiteService.hasDepot(id);
+            Map<String, Object> response = Map.of(
+                "hasDepot", exists,
+                "activiteId", id
+            );
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Erreur lors de la vérification du dépôt: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/{id}/toutes-taches-deposees")
+    public ResponseEntity<Map<String, Object>> checkAllTachesDeposees(@PathVariable Long id) {
+        log.info("GET /api/admin/activites/{}/toutes-taches-deposees - Vérification tâches déposées", id);
+        try {
+            boolean allDeposees = activiteService.areAllTachesDeposees(id);
+            Map<String, Object> response = Map.of(
+                "allDeposees", allDeposees,
+                "activiteId", id
+            );
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Erreur lors de la vérification des tâches: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
     @PatchMapping(value = "/{id}/depot", consumes = "multipart/form-data")
     public ResponseEntity<?> deposerActivite(
             @PathVariable Long id,

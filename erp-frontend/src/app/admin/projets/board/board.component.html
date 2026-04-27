@@ -75,6 +75,25 @@
               <div class="card-header">
                 <h3 class="project-title">{{ projet.nom }}</h3>
                 <span class="project-deadline">— {{ formatDate(projet.dateLimite) }}</span>
+                <div class="menu-wrapper">
+                  <button class="btn-menu-dots" (click)="toggleMenu(projet.id, $event)">
+                    ⋮
+                  </button>
+                  <div class="dropdown-menu" *ngIf="openMenuId === projet.id">
+                    <button class="menu-item" (click)="viewProjet(projet); closeMenu()">
+                      <span class="material-icons">visibility</span>
+                      Voir
+                    </button>
+                    <button class="menu-item" (click)="editProjet(projet); closeMenu()">
+                      <span class="material-icons">edit</span>
+                      Modifier
+                    </button>
+                    <button class="menu-item danger" (click)="confirmDelete(projet); closeMenu()">
+                      <span class="material-icons">delete</span>
+                      Supprimer
+                    </button>
+                  </div>
+                </div>
               </div>
               <p class="project-description">{{ projet.description }}</p>
               <div class="project-info-row">
@@ -89,20 +108,6 @@
                 <div class="progress-bar">
                   <div class="progress-fill" [style.width.%]="projet.progression" [style.background-color]="'#3b82f6'"></div>
                 </div>
-              </div>
-              <div class="card-actions">
-                <button class="action-btn view-btn" title="Voir le projet" (click)="viewProjet(projet)">
-                  <span class="material-icons">visibility</span>
-                  <span>Voir</span>
-                </button>
-                <button class="action-btn edit-btn" title="Modifier le projet" (click)="editProjet(projet)">
-                  <span class="material-icons">edit</span>
-                  <span>Modifier</span>
-                </button>
-                <button class="action-btn delete-btn" title="Supprimer le projet" (click)="confirmDelete(projet)">
-                  <span class="material-icons">delete</span>
-                  <span>Supprimer</span>
-                </button>
               </div>
               <div class="status-actions">
                 <button 
@@ -132,6 +137,25 @@
               <div class="card-header">
                 <h3 class="project-title">{{ projet.nom }}</h3>
                 <span class="project-deadline">— {{ formatDate(projet.dateLimite) }}</span>
+                <div class="menu-wrapper">
+                  <button class="btn-menu-dots" (click)="toggleMenu(projet.id, $event)">
+                    ⋮
+                  </button>
+                  <div class="dropdown-menu" *ngIf="openMenuId === projet.id">
+                    <button class="menu-item" (click)="viewProjet(projet); closeMenu()">
+                      <span class="material-icons">visibility</span>
+                      Voir
+                    </button>
+                    <button class="menu-item" (click)="editProjet(projet); closeMenu()">
+                      <span class="material-icons">edit</span>
+                      Modifier
+                    </button>
+                    <button class="menu-item danger" (click)="confirmDelete(projet); closeMenu()">
+                      <span class="material-icons">delete</span>
+                      Supprimer
+                    </button>
+                  </div>
+                </div>
               </div>
               <p class="project-description">{{ projet.description }}</p>
               <div class="project-info-row">
@@ -146,20 +170,6 @@
                 <div class="progress-bar">
                   <div class="progress-fill" [style.width.%]="projet.progression" [style.background-color]="'#f59e0b'"></div>
                 </div>
-              </div>
-              <div class="card-actions">
-                <button class="action-btn view-btn" title="Voir le projet" [routerLink]="['/admin/projets', projet.id]">
-                  <span class="material-icons">visibility</span>
-                  <span>Voir</span>
-                </button>
-                <button class="action-btn edit-btn" title="Modifier le projet" (click)="editProjet(projet)">
-                  <span class="material-icons">edit</span>
-                  <span>Modifier</span>
-                </button>
-                <button class="action-btn delete-btn" title="Supprimer le projet" (click)="confirmDelete(projet)">
-                  <span class="material-icons">delete</span>
-                  <span>Supprimer</span>
-                </button>
               </div>
               <div class="status-actions">
                 <button
@@ -189,6 +199,25 @@
               <div class="card-header">
                 <h3 class="project-title">{{ projet.nom }}</h3>
                 <span class="project-deadline">— {{ formatDate(projet.dateLimite) }}</span>
+                <div class="menu-wrapper">
+                  <button class="btn-menu-dots" (click)="toggleMenu(projet.id, $event)">
+                    ⋮
+                  </button>
+                  <div class="dropdown-menu" *ngIf="openMenuId === projet.id">
+                    <button class="menu-item" (click)="viewProjet(projet); closeMenu()">
+                      <span class="material-icons">visibility</span>
+                      Voir
+                    </button>
+                    <button class="menu-item" (click)="editProjet(projet); closeMenu()">
+                      <span class="material-icons">edit</span>
+                      Modifier
+                    </button>
+                    <button class="menu-item danger" (click)="confirmDelete(projet); closeMenu()">
+                      <span class="material-icons">delete</span>
+                      Supprimer
+                    </button>
+                  </div>
+                </div>
               </div>
               <p class="project-description">{{ projet.description }}</p>
               <div class="project-info-row">
@@ -203,20 +232,6 @@
                 <div class="progress-bar">
                   <div class="progress-fill" [style.width.%]="projet.progression" [style.background-color]="'#22c55e'"></div>
                 </div>
-              </div>
-              <div class="card-actions">
-                <button class="action-btn view-btn" title="Voir le projet" (click)="viewProjet(projet)">
-                  <span class="material-icons">visibility</span>
-                  <span>Voir</span>
-                </button>
-                <button class="action-btn edit-btn" title="Modifier le projet" (click)="editProjet(projet)">
-                  <span class="material-icons">edit</span>
-                  <span>Modifier</span>
-                </button>
-                <button class="action-btn delete-btn" title="Supprimer le projet" (click)="confirmDelete(projet)">
-                  <span class="material-icons">delete</span>
-                  <span>Supprimer</span>
-                </button>
               </div>
               <div class="status-actions">
                 <button
@@ -246,6 +261,25 @@
               <div class="card-header">
                 <h3 class="project-title">{{ projet.nom }}</h3>
                 <span class="project-deadline">— {{ formatDate(projet.dateLimite) }}</span>
+                <div class="menu-wrapper">
+                  <button class="btn-menu-dots" (click)="toggleMenu(projet.id, $event)">
+                    ⋮
+                  </button>
+                  <div class="dropdown-menu" *ngIf="openMenuId === projet.id">
+                    <button class="menu-item" (click)="viewProjet(projet); closeMenu()">
+                      <span class="material-icons">visibility</span>
+                      Voir
+                    </button>
+                    <button class="menu-item" (click)="editProjet(projet); closeMenu()">
+                      <span class="material-icons">edit</span>
+                      Modifier
+                    </button>
+                    <button class="menu-item danger" (click)="confirmDelete(projet); closeMenu()">
+                      <span class="material-icons">delete</span>
+                      Supprimer
+                    </button>
+                  </div>
+                </div>
               </div>
               <p class="project-description">{{ projet.description }}</p>
               <div class="project-info-row">
@@ -260,20 +294,6 @@
                 <div class="progress-bar">
                   <div class="progress-fill" [style.width.%]="projet.progression" [style.background-color]="'#ef4444'"></div>
                 </div>
-              </div>
-              <div class="card-actions">
-                <button class="action-btn view-btn" title="Voir le projet" (click)="viewProjet(projet)">
-                  <span class="material-icons">visibility</span>
-                  <span>Voir</span>
-                </button>
-                <button class="action-btn edit-btn" title="Modifier le projet" (click)="editProjet(projet)">
-                  <span class="material-icons">edit</span>
-                  <span>Modifier</span>
-                </button>
-                <button class="action-btn delete-btn" title="Supprimer le projet" (click)="confirmDelete(projet)">
-                  <span class="material-icons">delete</span>
-                  <span>Supprimer</span>
-                </button>
               </div>
               <div class="status-actions">
                 <button 
@@ -403,7 +423,7 @@
               </div>
             </div>
           </div>
-          
+
           <div class="form-row">
             <div class="form-group full-width">
               <label for="description">Description</label>
@@ -500,43 +520,206 @@
           </div>
         </div>
 
-        <!-- Section 3 - Activités -->
-        <div class="form-section">
-          <h3>Activités (optionnel)</h3>
-          <div class="activities-container">
-            <div *ngFor="let activite of activites; let i = index" class="activity-item">
-              <div class="form-row">
-                <div class="form-group">
-                  <label>Nom de l'activité</label>
-                  <input type="text" [(ngModel)]="activite.nom" class="form-control" />
-                </div>
-                <div class="form-group">
-                  <label>Description de l'activité</label>
-                  <input type="text" [(ngModel)]="activite.description" class="form-control" />
-                </div>
-                <div class="form-group">
-                  <label>&nbsp;</label>
-                  <button type='button' class='btn-danger' (click)='removeActivite(i)'>
-                    <span class='material-icons'>delete</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-            <button type="button" class="btn-secondary" (click)="addActivite()">
-              <span class="material-icons">add</span>
-              Ajouter une activité
-            </button>
-          </div>
-          <p class="info-text">
-            Ajoutez des activités pour démarrer le projet directement en 'En cours'. 
-            Sans activités, le projet restera en 'Nouveau Projet'.
-          </p>
-        </div>
-
         <!-- Erreurs -->
         <div *ngIf="errorMessage" class="error-message">
           <span class="material-icons">error</span>
           {{ errorMessage }}
+        </div>
+
+        <!-- Section 3 - Activités -->
+        <div class="form-section" *ngIf="!isEditMode || projetStatutEnEdition !== 'NOUVEAU'">
+          <!-- Si mode edit et statut != NOUVEAU, afficher un message -->
+          <div *ngIf="isEditMode" class="info-ajout-activites">
+            <span class="material-icons">info</span>
+            Les activités ajoutées ici s'ajouteront aux activités existantes.
+          </div>
+
+          <h3>Activités (optionnel)</h3>
+          <p>Définissez les activités principales. Chaque activité peut être divisée en tâches.</p>
+
+          <div formArrayName="activites">
+            <div *ngFor="let act of activites.controls; let i = index"
+                 [formGroupName]="i"
+                 class="activite-block">
+
+              <div class="activite-header">
+                <span>Activité {{i+1}}</span>
+                <button type="button" (click)="removeActivite(i)"
+                        *ngIf="activites.length > 1">×</button>
+              </div>
+
+              <!-- Nom activité -->
+              <div class="form-group">
+                <label>Nom de l'activité *</label>
+                <input type="text" formControlName="nom"
+                       placeholder="Ex: Phase de conception">
+              </div>
+
+              <!-- Description activité -->
+              <div class="form-group">
+                <label>Description</label>
+                <textarea formControlName="description"
+                          placeholder="Décrivez cette activité..."></textarea>
+              </div>
+
+              <!-- Dates activité -->
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Date début</label>
+                  <input type="date"
+                         formControlName="dateDebut"
+                         [min]="getActivityMinDate()"
+                         [max]="getActivityMaxDate()">
+                  <div *ngIf="activites.at(i).errors?.['activityStartBeforeProject']"
+                       class="error-message">
+                    <span class="material-icons">error</span>
+                    {{ getActivityErrorMessage(i, 'activityStartBeforeProject') }}
+                  </div>
+                  <div *ngIf="activites.at(i).errors?.['activityStartAfterEnd']"
+                       class="error-message">
+                    <span class="material-icons">error</span>
+                    {{ getActivityErrorMessage(i, 'activityStartAfterEnd') }}
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Date fin</label>
+                  <input type="date"
+                         formControlName="dateFin"
+                         [min]="getActivityMinDate()"
+                         [max]="getActivityMaxDate()">
+                  <div *ngIf="activites.at(i).errors?.['activityEndAfterProject']"
+                       class="error-message">
+                    <span class="material-icons">error</span>
+                    {{ getActivityErrorMessage(i, 'activityEndAfterProject') }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Employés activité -->
+              <div class="assign-section">
+                <label>Assigner des employés à cette activité</label>
+                <p class="hint">Seuls les employés affectés au projet sont disponibles</p>
+                <div class="employes-list">
+                  <label class="emp-check" *ngFor="let emp of getEmployesDisponiblesPourActivite(i)">
+                    <input type="checkbox"
+                           [checked]="isActiviteEmployeChecked(i, emp.id)"
+                           (change)="onActiviteEmployeToggle(i, emp.id, $event)">
+                    {{emp.prenom}} {{emp.nom}}
+                  </label>
+                </div>
+              </div>
+
+              <!-- ===== TÂCHES ===== -->
+              <div class="taches-section">
+                <div class="taches-header">
+                  <span>Tâches de l'activité</span>
+                  <button type="button" class="btn-add-tache"
+                          (click)="addTache(i)">
+                    + Ajouter une tâche
+                  </button>
+                </div>
+
+                <!-- État vide -->
+                <div class="no-taches" *ngIf="getTaches(i).length === 0">
+                  <p>Aucune tâche pour cette activité</p>
+                  <span>Cliquez sur "Ajouter une tâche" pour commencer</span>
+                </div>
+
+                <!-- FormArray tâches - IMBRIQUÉ dans [formGroupName]="i" -->
+                <div formArrayName="taches">
+                  <div *ngFor="let t of getTaches(i).controls; let j = index"
+                       [formGroupName]="j"
+                       class="tache-block">
+
+                    <div class="tache-header">
+                      <span>Tâche {{j+1}}</span>
+                      <button type="button" (click)="removeTache(i, j)">×</button>
+                    </div>
+
+                    <div class="form-group">
+                      <label>Nom de la tâche *</label>
+                      <input type="text" formControlName="nom"
+                             placeholder="Ex: Rédiger le cahier des charges">
+                    </div>
+
+                    <div class="form-group">
+                      <label>Description</label>
+                      <textarea formControlName="description"
+                                placeholder="Décrivez cette tâche..."></textarea>
+                    </div>
+
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label>Date début</label>
+                        <input type="date"
+                               formControlName="dateDebut"
+                               [min]="getTaskMinDate(i)"
+                               [max]="getTaskMaxDate(i)">
+                        <div *ngIf="getTaches(i).at(j).errors?.['taskStartBeforeActivity']"
+                             class="error-message">
+                          <span class="material-icons">error</span>
+                          {{ getTaskErrorMessage(i, j, 'taskStartBeforeActivity') }}
+                        </div>
+                        <div *ngIf="getTaches(i).at(j).errors?.['taskStartAfterEnd']"
+                             class="error-message">
+                          <span class="material-icons">error</span>
+                          {{ getTaskErrorMessage(i, j, 'taskStartAfterEnd') }}
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label>Date fin</label>
+                        <input type="date"
+                               formControlName="dateFin"
+                               [min]="getTaskMinDate(i)"
+                               [max]="getTaskMaxDate(i)">
+                        <div *ngIf="getTaches(i).at(j).errors?.['taskEndAfterActivity']"
+                             class="error-message">
+                          <span class="material-icons">error</span>
+                          {{ getTaskErrorMessage(i, j, 'taskEndAfterActivity') }}
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Employés tâche -->
+                    <div class="assign-section">
+                      <label>Assigner des employés à cette tâche</label>
+                      <div class="employes-list">
+                        <label class="emp-check" *ngFor="let emp of getEmployesDisponiblesPourTache(i)">
+                          <input type="checkbox"
+                                 [checked]="isTacheEmployeChecked(i, j, emp.id)"
+                                 (change)="onTacheEmployeToggle(i, j, emp.id, $event)">
+                          {{emp.prenom}} {{emp.nom}}
+                        </label>
+                        <!-- Message si aucun employé n'est assigné à l'activité -->
+                        <div *ngIf="getEmployesDisponiblesPourTache(i).length === 0" class="no-employes-message">
+                          <p>Aucun employé assigné à cette activité</p>
+                          <small>Veuillez d'abord assigner des employés à l'activité ci-dessus</small>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+                <!-- fin formArrayName="taches" -->
+
+              </div>
+              <!-- fin taches-section -->
+
+            </div>
+            <!-- fin [formGroupName]="i" -->
+
+          </div>
+          <!-- fin formArrayName="activites" -->
+
+          <!-- Bouton ajouter activité -->
+          <button type="button" class="btn-add-activite" (click)="addActivite()">
+            + Ajouter une activité
+          </button>
+
+          <p class="info-text">
+            Ajoutez des activités pour démarrer le projet directement en 'En cours'.
+            Sans activités, le projet restera en 'Nouveau Projet'.
+          </p>
         </div>
       </form>
 

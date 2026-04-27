@@ -587,3 +587,270 @@
 .btn-submit:hover {
   background: #fde047;
 }
+
+/* Styles pour les boutons de dépôt */
+.btn-depot-task,
+.btn-depot-activity,
+.btn-depot-project {
+  padding: 0.625rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+/* Bouton désactivé (gris) */
+.btn-depot-task.btn-disabled,
+.btn-depot-activity.btn-disabled,
+.btn-depot-project.btn-disabled {
+  background: #d1d5db;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+/* Bouton actif (jaune) */
+.btn-depot-task.btn-active,
+.btn-depot-activity.btn-active,
+.btn-depot-project.btn-active {
+  background: #F9D949;
+  color: #111827;
+  cursor: pointer;
+}
+
+.btn-depot-task.btn-active:hover,
+.btn-depot-activity.btn-active:hover,
+.btn-depot-project.btn-active:hover {
+  background: #fde047;
+}
+
+/* Carte de dépôt affichée après soumission */
+.depot-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-left: 3px solid #16a34a;
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.depot-card .depot-icon {
+  color: #16a34a;
+  font-size: 1.25rem;
+}
+
+.depot-card .depot-link {
+  color: #2563eb;
+  text-decoration: none;
+  word-break: break-all;
+  flex: 1;
+  min-width: 0;
+}
+
+.depot-card .depot-link:hover {
+  text-decoration: underline;
+}
+
+.depot-card .depot-filename {
+  color: #374151;
+  font-weight: 500;
+  flex: 1;
+  min-width: 0;
+}
+
+.depot-card .depot-date {
+  color: #6b7280;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+/* Carte de dépôt cliquable */
+.depot-card.clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-left: 3px solid #16a34a;
+}
+
+.depot-card.clickable:hover {
+  background: #dcfce7;
+  border-left-color: #15803d;
+  transform: translateX(2px);
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.2);
+}
+
+/* Style pour le texte du lien dans la carte */
+.depot-card .depot-link-text {
+  color: #2563eb;
+  word-break: break-all;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Indicateur d'action (Télécharger/Ouvrir) */
+.depot-card .depot-action {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: #16a34a;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.depot-card .btn-modifier {
+  padding: 0.375rem 0.75rem;
+  background: transparent;
+  color: #16a34a;
+  border: 1px solid #16a34a;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-left: auto;
+}
+
+.depot-card .btn-modifier:hover {
+  background: #16a34a;
+  color: white;
+}
+
+/* Affichage des dépôts (ancien style - conservé pour compatibilité) */
+.depot-display {
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-top: 0.75rem;
+}
+
+.depot-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.depot-icon {
+  color: #16a34a;
+  font-size: 1.25rem;
+}
+
+.depot-link {
+  color: #2563eb;
+  text-decoration: none;
+  word-break: break-all;
+  flex: 1;
+}
+
+.depot-link:hover {
+  text-decoration: underline;
+}
+
+.depot-filename {
+  color: #374151;
+  font-weight: 500;
+  flex: 1;
+}
+
+.depot-date {
+  color: #6b7280;
+  font-size: 0.75rem;
+  margin-left: auto;
+}
+
+/* ============================
+   SECTION PROGRESSION
+   ============================ */
+
+.progression-section {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.progression-container {
+  margin: 16px 0;
+  padding: 16px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.progression-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.progression-percent {
+  font-weight: 600;
+  color: #f59e0b;
+  font-size: 18px;
+}
+
+.progression-percent.complete {
+  color: #16a34a;
+}
+
+.progression-bar {
+  height: 12px;
+  background: #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.progression-bar.small {
+  height: 6px;
+  margin: 4px 0 12px;
+}
+
+.progression-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%);
+  border-radius: 6px;
+  transition: width 0.6s ease, background-color 0.3s ease;
+}
+
+.progression-fill.complete {
+  background: linear-gradient(90deg, #4ade80 0%, #16a34a 100%);
+}
+
+.activites-progression {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.subsection-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mini-progression {
+  margin-bottom: 12px;
+}
+
+.progression-mini {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #4b5563;
+  margin-bottom: 4px;
+}
+
+.progression-mini-percent {
+  font-weight: 500;
+  color: #6b7280;
+}

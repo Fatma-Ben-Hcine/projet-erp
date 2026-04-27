@@ -60,4 +60,14 @@ export class ProjetService {
   delete(id: number): Observable<any> {
     return this.http.delete(`${this.baseUrl}/${id}`, { responseType: 'text' });
   }
+
+  // Vérification de dépôt
+  hasDepot(id: number): Observable<{ hasDepot: boolean; projetId: number }> {
+    return this.http.get<{ hasDepot: boolean; projetId: number }>(`${this.baseUrl}/${id}/depot-exists`);
+  }
+
+  // Vérification si toutes les activités sont déposées
+  areAllActivitesDeposees(id: number): Observable<{ allDeposees: boolean; projetId: number }> {
+    return this.http.get<{ allDeposees: boolean; projetId: number }>(`${this.baseUrl}/${id}/toutes-activites-deposees`);
+  }
 }

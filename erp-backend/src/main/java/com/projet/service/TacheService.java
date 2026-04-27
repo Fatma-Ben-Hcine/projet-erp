@@ -78,7 +78,7 @@ public class TacheService {
         tache.setDateDebut(request.getDateDebut());
         tache.setDateFin(request.getDateFin());
         tache.setActivite(activite);
-        tache.setEstDeposé(request.isEstDeposé());
+        tache.setEstDeposé(request.getEstDeposé());
 
         Tache savedTache = tacheRepository.save(tache);
 
@@ -111,7 +111,7 @@ public class TacheService {
         tache.setDescription(request.getDescription());
         tache.setDateDebut(request.getDateDebut());
         tache.setDateFin(request.getDateFin());
-        tache.setEstDeposé(request.isEstDeposé());
+        tache.setEstDeposé(request.getEstDeposé());
 
         // Mettre à jour l'activité si nécessaire
         if (!tache.getActivite().getId().equals(request.getActiviteId())) {
@@ -241,6 +241,10 @@ public class TacheService {
                         depotResponse.setNomFichier(depot.getNomFichier());
                         depotResponse.setCheminFichier(depot.getCheminFichier());
                         depotResponse.setDateDepot(depot.getDateDepot());
+                        // IDs de relation
+                        depotResponse.setTacheId(tache.getId());
+                        depotResponse.setActiviteId(tache.getActivite().getId());
+                        depotResponse.setProjetId(tache.getActivite().getProjet().getId());
                         return depotResponse;
                     })
                     .collect(Collectors.toList());
@@ -290,8 +294,10 @@ public class TacheService {
         tache.setEstDeposé(true);
         tache = tacheRepository.save(tache);
 
-        // Créer et sauvegarder le dépôt
-        Depot depot = new Depot();
+        // Chercher un dépôt existant pour cette tâche
+        List<Depot> existingDepots = depotRepository.findByTacheId(id);
+        Depot depot = existingDepots.isEmpty() ? new Depot() : existingDepots.get(0);
+
         depot.setType(depotRequest.getType());
         depot.setLien(depotRequest.getLien());
         depot.setNomFichier(depotRequest.getNomFichier());
@@ -321,5 +327,10 @@ public class TacheService {
 
         log.info("Tâche {} déposée avec dépôt {}", id, depot.getId());
         return mapToResponse(tache);
+    }
+
+    public boolean hasDepot(Long tacheId) {
+        List<Depot> depots = depotRepository.findByTacheId(tacheId);
+        return !depots.isEmpty();
     }
 }

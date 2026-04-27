@@ -14,4 +14,12 @@ public class DepotResponse {
     private String cheminFichier;
     @JsonProperty("dateDepot")
     private LocalDateTime dateDepot;
+    
+    // IDs des entités liées pour distinguer les niveaux hiérarchiques
+    @JsonProperty("tacheId")
+    private Long tacheId;
+    @JsonProperty("activiteId")
+    private Long activiteId;
+    @JsonProperty("projetId")
+    private Long projetId;
 }

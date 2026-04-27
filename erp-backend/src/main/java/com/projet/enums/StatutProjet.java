@@ -3,7 +3,8 @@ package com.projet.enums;
 public enum StatutProjet {
     NOUVEAU("Nouveau"),
     EN_COURS("En cours"),
-    TERMINE("Terminé");
+    TERMINE("Terminé"),
+    EN_RETARD("En retard");
 
     private final String displayName;
 

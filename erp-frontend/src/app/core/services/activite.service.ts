@@ -72,4 +72,14 @@ export class ActiviteService {
 
     return this.http.patch<ActiviteResponse>(`${this.baseUrl}/${id}/depot`, formData);
   }
+
+  // Vérification de dépôt
+  hasDepot(id: number): Observable<{ hasDepot: boolean; activiteId: number }> {
+    return this.http.get<{ hasDepot: boolean; activiteId: number }>(`${this.baseUrl}/${id}/depot-exists`);
+  }
+
+  // Vérification si toutes les tâches sont déposées
+  areAllTachesDeposees(id: number): Observable<{ allDeposees: boolean; activiteId: number }> {
+    return this.http.get<{ allDeposees: boolean; activiteId: number }>(`${this.baseUrl}/${id}/toutes-taches-deposees`);
+  }
 }

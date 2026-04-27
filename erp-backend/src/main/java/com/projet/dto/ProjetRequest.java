@@ -1,5 +1,7 @@
 package com.projet.dto;
 
+import com.projet.dto.ActiviteRequest;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import java.time.LocalDate;
@@ -22,19 +24,23 @@ public class ProjetRequest {
 
     @NotNull(message = "La date de début est obligatoire")
     @FutureOrPresent(message = "La date de début doit être aujourd'hui ou dans le futur")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate dateDebut;
 
     @NotNull(message = "La date limite est obligatoire")
     @Future(message = "La date limite doit être dans le futur")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate dateLimite;
 
     @Min(value = 0, message = "La progression ne peut être inférieure à 0")
     @Max(value = 100, message = "La progression ne peut dépasser 100")
     private Integer progression = 0; // Valeur par défaut pour les nouveaux projets
 
-    private boolean estDeposé = false; // Valeur par défaut pour les nouveaux projets
+    private Boolean estDeposé = false; // Valeur par défaut pour les nouveaux projets
 
     private List<Long> employeIds;
     private Long chefDeProjetId;
     private Long clientId;
+
+    private List<ActiviteRequest> activites;
 }

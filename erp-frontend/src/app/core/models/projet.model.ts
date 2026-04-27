@@ -14,6 +14,18 @@ export interface ProjetRequest {
 export interface ActiviteRequest {
   nom: string;
   description: string;
+  dateDebut: string;
+  dateFin: string;
+  employeIds?: number[];
+  taches?: TacheRequest[];
+}
+
+export interface TacheRequest {
+  nom: string;
+  description: string;
+  dateDebut: string;
+  dateFin: string;
+  employeIds?: number[];
 }
 
 export interface ProjetResponse {

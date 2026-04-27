@@ -16,9 +16,17 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   // Cloner la requête et ajouter le header Authorization
   let authReq = req;
   if (token) {
-    authReq = req.clone({
-      headers: req.headers.set('Authorization', `Bearer ${token}`)
-    });
+    let headers = req.headers.set('Authorization', `Bearer ${token}`);
+
+    // Ne pas définir Content-Type pour GET et DELETE
+    if (req.method !== 'GET' && req.method !== 'DELETE') {
+      // Ne forcer Content-Type que s'il n'est pas déjà défini (ex: multipart/form-data)
+      if (!req.headers.has('Content-Type')) {
+        headers = headers.set('Content-Type', 'application/json');
+      }
+    }
+
+    authReq = req.clone({ headers });
     console.log('AuthInterceptor - Header ajouté');
   }
 

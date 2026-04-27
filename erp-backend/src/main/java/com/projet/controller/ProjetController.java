@@ -5,8 +5,12 @@ import com.projet.dto.ProjetResponse;
 import com.projet.dto.DepotRequest;
 import com.projet.enums.StatutProjet;
 import com.projet.service.ProjetService;
+import com.projet.service.ProjetProgressionService;
+import com.projet.repository.ProjetRepository;
+import com.projet.entity.Projet;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
@@ -27,10 +31,13 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/admin/projets")
 @RequiredArgsConstructor
+@Slf4j
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class ProjetController {
 
     private final ProjetService projetService;
+    private final ProjetProgressionService projetProgressionService;
+    private final ProjetRepository projetRepository;
 
     @GetMapping
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
@@ -60,15 +67,20 @@ public class ProjetController {
     public ResponseEntity<?> createProjet(
             @Valid @RequestBody ProjetRequest request) {
         try {
+            log.info("Payload reçu pour création projet: {}", request);
+            log.info("Activités reçues: {}", request.getActivites());
             ProjetResponse response = projetService.createProjet(request);
             return ResponseEntity.ok(response);
         } catch (ResponseStatusException e) {
+            log.error("ResponseStatusException lors de la création du projet: {}", e.getReason());
             return ResponseEntity.status(e.getStatusCode())
                     .body(Map.of("message", e.getReason()));
         } catch (IllegalArgumentException e) {
+            log.error("IllegalArgumentException lors de la création du projet: {}", e.getMessage());
             return ResponseEntity.badRequest()
                     .body(Map.of("message", e.getMessage()));
         } catch (RuntimeException e) {
+            log.error("RuntimeException lors de la création du projet: {}", e.getMessage(), e);
             return ResponseEntity.badRequest()
                     .body(Map.of("message", e.getMessage()));
         }
@@ -117,6 +129,40 @@ public class ProjetController {
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/{id}/depot-exists")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<Map<String, Object>> checkDepotExists(@PathVariable Long id) {
+        log.info("GET /api/admin/projets/{}/depot-exists - Vérification dépôt projet", id);
+        try {
+            boolean exists = projetService.hasDepot(id);
+            Map<String, Object> response = Map.of(
+                "hasDepot", exists,
+                "projetId", id
+            );
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Erreur lors de la vérification du dépôt: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/{id}/toutes-activites-deposees")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<Map<String, Object>> checkAllActivitesDeposees(@PathVariable Long id) {
+        log.info("GET /api/admin/projets/{}/toutes-activites-deposees - Vérification activités déposées", id);
+        try {
+            boolean allDeposees = projetService.areAllActivitesDeposees(id);
+            Map<String, Object> response = Map.of(
+                "allDeposees", allDeposees,
+                "projetId", id
+            );
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Erreur lors de la vérification des activités: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
         }
     }
 
@@ -187,5 +233,22 @@ public class ProjetController {
         } catch (IOException e) {
             return ResponseEntity.internalServerError().build();
         }
+    }
+
+    /**
+     * Endpoint admin one-shot pour corriger les progressions des projets existants.
+     * À appeler une seule fois puis à supprimer ou sécuriser.
+     */
+    @GetMapping("/admin/fix-progressions")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<String> fixProgressions() {
+        List<Projet> projets = projetRepository.findAll();
+        int count = 0;
+        for (Projet projet : projets) {
+            projetProgressionService.recalculerEtSauvegarder(projet.getId());
+            count++;
+        }
+        log.info("Progressions recalculées pour {} projets", count);
+        return ResponseEntity.ok("Progressions recalculées : " + count + " projets");
     }
 }

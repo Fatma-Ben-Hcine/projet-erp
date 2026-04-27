@@ -3,6 +3,7 @@ package com.projet.service;
 import com.projet.dto.ActiviteRequest;
 import com.projet.dto.ActiviteResponse;
 import com.projet.dto.DepotRequest;
+import com.projet.dto.DepotResponse;
 import com.projet.entity.*;
 import com.projet.enums.StatutActivite;
 import com.projet.repository.*;
@@ -32,6 +33,7 @@ public class ActiviteService {
     private final TravaillerActiviteRepository travaillerActiviteRepository;
     private final TacheRepository tacheRepository;
     private final DepotRepository depotRepository;
+    private final ProjetProgressionService projetProgressionService;
     private final FileUploadService fileUploadService;
     private final TacheService tacheService;
 
@@ -73,7 +75,7 @@ public class ActiviteService {
         activite.setDateDebut(request.getDateDebut());
         activite.setDateFin(request.getDateFin());
         activite.setProjet(projet);
-        activite.setEstDeposé(request.isEstDeposé());
+        activite.setEstDeposé(request.getEstDeposé());
 
         Activite savedActivite = activiteRepository.save(activite);
 
@@ -107,7 +109,7 @@ public class ActiviteService {
         activite.setDescription(request.getDescription());
         activite.setDateDebut(request.getDateDebut());
         activite.setDateFin(request.getDateFin());
-        activite.setEstDeposé(request.isEstDeposé());
+        activite.setEstDeposé(request.getEstDeposé());
 
         // Mettre à jour le projet si nécessaire
         if (!activite.getProjet().getId().equals(request.getProjetId())) {
@@ -233,6 +235,29 @@ public class ActiviteService {
                             })
                             .collect(Collectors.toList());
                     tacheInfo.setEmployeTaches(employeTaches);
+                    
+                    // Récupérer les dépôts de la tâche
+                    List<Depot> depots = depotRepository.findDepotsByTacheId(tache.getId());
+                    if (depots != null && !depots.isEmpty()) {
+                        List<DepotResponse> depotsResponse = depots.stream()
+                                .map(depot -> {
+                                    DepotResponse depotResponse = new DepotResponse();
+                                    depotResponse.setId(depot.getId());
+                                    depotResponse.setType(depot.getType());
+                                    depotResponse.setLien(depot.getLien());
+                                    depotResponse.setNomFichier(depot.getNomFichier());
+                                    depotResponse.setCheminFichier(depot.getCheminFichier());
+                                    depotResponse.setDateDepot(depot.getDateDepot());
+                                    // IDs de relation
+                                    depotResponse.setTacheId(tache.getId());
+                                    depotResponse.setActiviteId(activite.getId());
+                                    depotResponse.setProjetId(activite.getProjet().getId());
+                                    return depotResponse;
+                                })
+                                .collect(Collectors.toList());
+                        tacheInfo.setDepots(depotsResponse);
+                    }
+                    
                     return tacheInfo;
                 })
                 .collect(Collectors.toList());
@@ -258,8 +283,8 @@ public class ActiviteService {
         // Nombre d'employés assignés
         response.setNombreEmployesAssignes(employeActivites.size());
 
-        // Mapper les dépôts
-        List<Depot> depots = depotRepository.findByActiviteId(activite.getId());
+        // Mapper les dépôts d'activité uniquement (pas les dépôts de tâches)
+        List<Depot> depots = depotRepository.findDepotsByActiviteIdSeulement(activite.getId());
         if (depots != null && !depots.isEmpty()) {
             List<com.projet.dto.DepotResponse> depotsResponse = depots.stream()
                     .map(depot -> {
@@ -270,6 +295,10 @@ public class ActiviteService {
                         depotResponse.setNomFichier(depot.getNomFichier());
                         depotResponse.setCheminFichier(depot.getCheminFichier());
                         depotResponse.setDateDepot(depot.getDateDepot());
+                        // IDs de relation (pas de tacheId pour un dépôt d'activité)
+                        depotResponse.setTacheId(null);
+                        depotResponse.setActiviteId(activite.getId());
+                        depotResponse.setProjetId(activite.getProjet().getId());
                         return depotResponse;
                     })
                     .collect(Collectors.toList());
@@ -319,8 +348,10 @@ public class ActiviteService {
         activite.setEstDeposé(true);
         activite = activiteRepository.save(activite);
 
-        // Créer et sauvegarder le dépôt
-        Depot depot = new Depot();
+        // Chercher un dépôt existant pour cette activité (tache IS NULL)
+        List<Depot> existingDepots = depotRepository.findDepotsByActiviteIdSeulement(id);
+        Depot depot = existingDepots.isEmpty() ? new Depot() : existingDepots.get(0);
+
         depot.setType(depotRequest.getType());
         depot.setLien(depotRequest.getLien());
         depot.setNomFichier(depotRequest.getNomFichier());
@@ -335,6 +366,7 @@ public class ActiviteService {
 
         depot.setDateDepot(java.time.LocalDateTime.now());
         depot.setActivite(activite);
+        depot.setTache(null);  // ← IMPORTANT : pas de tâche pour un dépôt d'activité
         // Récupérer le projet depuis l'activité
         if (activite.getProjet() != null) {
             depot.setProjet(activite.getProjet());
@@ -345,7 +377,25 @@ public class ActiviteService {
         activite = activiteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Activité non trouvée avec l'id: " + id));
 
+        // Recalculer la progression du projet parent
+        Long projetId = activite.getProjet().getId();
+        projetProgressionService.recalculerEtSauvegarder(projetId);
+
         log.info("Activité {} déposée avec dépôt {}", id, depot.getId());
         return mapToResponse(activite);
+    }
+
+    public boolean hasDepot(Long activiteId) {
+        List<Depot> depots = depotRepository.findDepotsByActiviteIdSeulement(activiteId);
+        return !depots.isEmpty();
+    }
+
+    public boolean areAllTachesDeposees(Long activiteId) {
+        Activite activite = activiteRepository.findById(activiteId)
+                .orElseThrow(() -> new RuntimeException("Activité non trouvée"));
+        if (activite.getTaches() == null || activite.getTaches().isEmpty()) {
+            return false;
+        }
+        return activite.getTaches().stream().allMatch(Tache::isEstDeposé);
     }
 }
