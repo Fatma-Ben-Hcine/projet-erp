@@ -537,8 +537,7 @@ export class ProjetsBoardComponent implements OnInit {
               description: t.description,
               dateDebut: this.formatDateForBackend(t.dateDebut),
               dateFin: this.formatDateForBackend(t.dateFin),
-              employeIds: t.employes || [],
-              estDeposé: false
+              employeIds: t.employes || []
             }))
           }))
         : []

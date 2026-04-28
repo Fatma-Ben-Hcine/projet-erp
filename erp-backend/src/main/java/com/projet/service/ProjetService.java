@@ -60,15 +60,22 @@ public class ProjetService {
     private final ProjetProgressionService projetProgressionService;
 
     public List<ProjetResponse> getAllProjets() {
-        return projetRepository.findAll()
-                .stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+        log.info("Récupération de tous les projets");
+        try {
+            List<Projet> projets = projetRepository.findAll();
+            log.info("Nombre de projets trouvés: {}", projets.size());
+            return projets.stream()
+                    .map(this::mapToResponse)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Erreur lors de la récupération des projets: {}", e.getMessage(), e);
+            throw new RuntimeException("Erreur lors de la récupération des projets: " + e.getMessage(), e);
+        }
     }
 
     @Transactional
     public ProjetResponse getProjetById(Long id) {
-        Projet projet = projetRepository.findById(id)
+        Projet projet = projetRepository.findByIdWithEmployes(id)
                 .orElseThrow(() -> new RuntimeException("Projet non trouvé avec l'id: " + id));
         return mapToResponse(projet);
     }
@@ -374,6 +381,9 @@ public class ProjetService {
         if (request.getActivites() != null && !request.getActivites().isEmpty()) {
             log.info("Ajout de {} nouvelles activités pour le projet {}", request.getActivites().size(), id);
             for (ActiviteRequest activiteRequest : request.getActivites()) {
+                log.info("Activité reçue: {}, nombre de tâches: {}", 
+                    activiteRequest.getNom(), 
+                    activiteRequest.getTaches() != null ? activiteRequest.getTaches().size() : 0);
                 // Validation : les employés de l'activité doivent être assignés au projet
                 if (activiteRequest.getEmployeIds() != null && !activiteRequest.getEmployeIds().isEmpty()) {
                     for (Long employeId : activiteRequest.getEmployeIds()) {
@@ -414,7 +424,9 @@ public class ProjetService {
 
                 // Gérer les tâches de l'activité
                 if (activiteRequest.getTaches() != null && !activiteRequest.getTaches().isEmpty()) {
+                    log.info("Traitement de {} tâches pour l'activité {}", activiteRequest.getTaches().size(), savedActivite.getId());
                     for (ActiviteRequest.TacheRequestSimple tacheRequest : activiteRequest.getTaches()) {
+                        log.info("Création de la tâche: {} pour l'activité {}", tacheRequest.getNom(), savedActivite.getId());
                         // Validation : les employés de la tâche doivent être assignés à l'activité
                         if (tacheRequest.getEmployeIds() != null && !tacheRequest.getEmployeIds().isEmpty()) {
                             for (Long employeId : tacheRequest.getEmployeIds()) {

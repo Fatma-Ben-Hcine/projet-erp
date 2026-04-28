@@ -78,7 +78,7 @@ public class TacheService {
         tache.setDateDebut(request.getDateDebut());
         tache.setDateFin(request.getDateFin());
         tache.setActivite(activite);
-        tache.setEstDeposé(request.getEstDeposé());
+        tache.setEstDeposé(request.getEstDeposé() != null ? request.getEstDeposé() : false);
 
         Tache savedTache = tacheRepository.save(tache);
 
@@ -86,6 +86,11 @@ public class TacheService {
         if (request.getEmployeTaches() != null && !request.getEmployeTaches().isEmpty()) {
             for (TacheRequest.EmployeTacheRequest empTache : request.getEmployeTaches()) {
                 assignEmployeToTache(savedTache.getId(), empTache.getEmployeId());
+            }
+        } else if (request.getEmployeIds() != null && !request.getEmployeIds().isEmpty()) {
+            // Support pour employeIds (compatibilité frontend)
+            for (Long employeId : request.getEmployeIds()) {
+                assignEmployeToTache(savedTache.getId(), employeId);
             }
         }
 
@@ -111,13 +116,31 @@ public class TacheService {
         tache.setDescription(request.getDescription());
         tache.setDateDebut(request.getDateDebut());
         tache.setDateFin(request.getDateFin());
-        tache.setEstDeposé(request.getEstDeposé());
+        tache.setEstDeposé(request.getEstDeposé() != null ? request.getEstDeposé() : false);
 
         // Mettre à jour l'activité si nécessaire
         if (!tache.getActivite().getId().equals(request.getActiviteId())) {
             Activite nouvelleActivite = activiteRepository.findById(request.getActiviteId())
                     .orElseThrow(() -> new RuntimeException("Activité non trouvée avec ID: " + request.getActiviteId()));
             tache.setActivite(nouvelleActivite);
+        }
+
+        // Mettre à jour les employés si spécifiés
+        if (request.getEmployeTaches() != null && !request.getEmployeTaches().isEmpty()) {
+            // Supprimer les anciennes assignations
+            travaillerTacheRepository.deleteByTacheId(id);
+            // Ajouter les nouvelles
+            for (TacheRequest.EmployeTacheRequest empTache : request.getEmployeTaches()) {
+                assignEmployeToTache(id, empTache.getEmployeId());
+            }
+        } else if (request.getEmployeIds() != null && !request.getEmployeIds().isEmpty()) {
+            // Support pour employeIds (compatibilité frontend)
+            // Supprimer les anciennes assignations
+            travaillerTacheRepository.deleteByTacheId(id);
+            // Ajouter les nouvelles
+            for (Long employeId : request.getEmployeIds()) {
+                assignEmployeToTache(id, employeId);
+            }
         }
 
         Tache updatedTache = tacheRepository.save(tache);

@@ -4,10 +4,12 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 
 import java.time.LocalDate;
 import java.math.BigDecimal;
-import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 import com.projet.entity.Client;
 import com.projet.entity.TravaillerProjet;
@@ -20,6 +22,7 @@ import com.projet.enums.StatutProjet;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(exclude = {"travaillerProjets", "activites"})
 public class Projet {
 
     @Id
@@ -52,7 +55,7 @@ public class Projet {
 
     // Relations avec les employés via TravaillerProjet
     @OneToMany(mappedBy = "projet", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TravaillerProjet> travaillerProjets;
+    private Set<TravaillerProjet> travaillerProjets = new HashSet<>();
 
     // Chef de projet
     @ManyToOne(fetch = FetchType.LAZY)
@@ -66,5 +69,5 @@ public class Projet {
 
     // Activites du projet
     @OneToMany(mappedBy = "projet", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Activite> activites;
+    private Set<Activite> activites = new HashSet<>();
 }

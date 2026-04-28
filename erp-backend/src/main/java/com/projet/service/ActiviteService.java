@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.time.format.DateTimeFormatter;
@@ -53,9 +54,16 @@ public class ActiviteService {
 
     public List<ActiviteResponse> getActivitesByProjetId(Long projetId) {
         log.info("Récupération des activités pour le projet ID: {}", projetId);
-        return activiteRepository.findByProjetIdOrderByDateDebut(projetId).stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+        try {
+            List<Activite> activites = activiteRepository.findByProjetIdWithEmployesAndTaches(projetId);
+            log.info("Nombre d'activités trouvées: {}", activites.size());
+            return activites.stream()
+                    .map(this::mapToResponse)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Erreur lors de la récupération des activités pour le projet {}: {}", projetId, e.getMessage(), e);
+            throw new RuntimeException("Erreur lors de la récupération des activités: " + e.getMessage(), e);
+        }
     }
 
     public ActiviteResponse createActivite(ActiviteRequest request) {
@@ -75,7 +83,7 @@ public class ActiviteService {
         activite.setDateDebut(request.getDateDebut());
         activite.setDateFin(request.getDateFin());
         activite.setProjet(projet);
-        activite.setEstDeposé(request.getEstDeposé());
+        activite.setEstDeposé(request.getEstDeposé() != null ? request.getEstDeposé() : false);
 
         Activite savedActivite = activiteRepository.save(activite);
 
@@ -84,6 +92,11 @@ public class ActiviteService {
             for (ActiviteRequest.EmployeActiviteRequest empAct : request.getEmployeActivites()) {
                 assignEmployeToActivite(savedActivite.getId(), empAct.getEmployeId(), 
                     empAct.getProgression());
+            }
+        } else if (request.getEmployeIds() != null && !request.getEmployeIds().isEmpty()) {
+            // Support pour employeIds (compatibilité frontend)
+            for (Long employeId : request.getEmployeIds()) {
+                assignEmployeToActivite(savedActivite.getId(), employeId, 0);
             }
         }
 
@@ -109,13 +122,31 @@ public class ActiviteService {
         activite.setDescription(request.getDescription());
         activite.setDateDebut(request.getDateDebut());
         activite.setDateFin(request.getDateFin());
-        activite.setEstDeposé(request.getEstDeposé());
+        activite.setEstDeposé(request.getEstDeposé() != null ? request.getEstDeposé() : false);
 
         // Mettre à jour le projet si nécessaire
         if (!activite.getProjet().getId().equals(request.getProjetId())) {
             Projet nouveauProjet = projetRepository.findById(request.getProjetId())
                     .orElseThrow(() -> new RuntimeException("Projet non trouvé avec ID: " + request.getProjetId()));
             activite.setProjet(nouveauProjet);
+        }
+
+        // Mettre à jour les employés si spécifiés
+        if (request.getEmployeActivites() != null && !request.getEmployeActivites().isEmpty()) {
+            // Supprimer les anciennes assignations
+            travaillerActiviteRepository.deleteByActiviteId(id);
+            // Ajouter les nouvelles
+            for (ActiviteRequest.EmployeActiviteRequest empAct : request.getEmployeActivites()) {
+                assignEmployeToActivite(id, empAct.getEmployeId(), empAct.getProgression());
+            }
+        } else if (request.getEmployeIds() != null && !request.getEmployeIds().isEmpty()) {
+            // Support pour employeIds (compatibilité frontend)
+            // Supprimer les anciennes assignations
+            travaillerActiviteRepository.deleteByActiviteId(id);
+            // Ajouter les nouvelles
+            for (Long employeId : request.getEmployeIds()) {
+                assignEmployeToActivite(id, employeId, 0);
+            }
         }
 
         Activite updatedActivite = activiteRepository.save(activite);
@@ -388,6 +419,23 @@ public class ActiviteService {
     public boolean hasDepot(Long activiteId) {
         List<Depot> depots = depotRepository.findDepotsByActiviteIdSeulement(activiteId);
         return !depots.isEmpty();
+    }
+
+    public List<Map<String, Object>> getEmployesByActiviteId(Long activiteId) {
+        log.info("Récupération des employés pour l'activité ID: {}", activiteId);
+        List<TravaillerActivite> travaillerActivites = travaillerActiviteRepository.findByActiviteIdWithQuery(activiteId);
+        log.info("Nombre d'entrées travailler_activite trouvées pour l'activité {}: {}", activiteId, travaillerActivites.size());
+        
+        return travaillerActivites.stream()
+                .map(ta -> {
+                    Map<String, Object> employeInfo = new java.util.HashMap<>();
+                    employeInfo.put("id", ta.getEmploye().getId());
+                    employeInfo.put("nom", ta.getEmploye().getNom());
+                    employeInfo.put("prenom", ta.getEmploye().getPrenom());
+                    employeInfo.put("progression", ta.getProgression());
+                    return employeInfo;
+                })
+                .collect(java.util.stream.Collectors.toList());
     }
 
     public boolean areAllTachesDeposees(Long activiteId) {
