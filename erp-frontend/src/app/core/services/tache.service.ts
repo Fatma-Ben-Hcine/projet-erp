@@ -73,7 +73,6 @@ export class TacheService {
   // Dépôt de tâche
   deposerTache(id: number, depotData: { type: 'lien' | 'fichier', value: string | File }): Observable<TacheResponse> {
     const url = `${this.baseUrl}/${id}/depot`;
-    console.log('>>> tacheService.deposerTache - URL:', url, 'id:', id);
     
     const formData = new FormData();
     formData.append('type', depotData.type);

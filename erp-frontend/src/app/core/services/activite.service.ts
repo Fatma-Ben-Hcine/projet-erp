@@ -58,6 +58,11 @@ export class ActiviteService {
     return this.http.get<ActiviteProgressionResponse>(`${this.baseUrl}/${activiteId}/progression`);
   }
 
+  // Récupérer les employés d'une activité
+  getEmployesByActiviteId(activiteId: number): Observable<Array<{ id: number; nom: string; prenom: string; progression: number }>> {
+    return this.http.get<Array<{ id: number; nom: string; prenom: string; progression: number }>>(`${this.baseUrl}/${activiteId}/employes`);
+  }
+
   // Dépôt d'activité
   deposerActivite(id: number, depotData: { type: 'lien' | 'fichier', value: string | File }): Observable<ActiviteResponse> {
     const formData = new FormData();

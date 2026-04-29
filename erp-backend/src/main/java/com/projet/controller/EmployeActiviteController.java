@@ -3,6 +3,7 @@ package com.projet.controller;
 import com.projet.dto.ActiviteRequest;
 import com.projet.dto.ActiviteResponse;
 import com.projet.enums.StatutActivite;
+import com.projet.security.EmployeeProjectSecurityService;
 import com.projet.service.ActiviteService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,7 @@ import java.util.Map;
 public class EmployeActiviteController {
 
     private final ActiviteService activiteService;
+    private final EmployeeProjectSecurityService securityService;
 
     // CRUD de base pour les employés
     @GetMapping
@@ -48,25 +50,37 @@ public class EmployeActiviteController {
     }
 
     @PostMapping
-    public ResponseEntity<ActiviteResponse> createActivite(@Valid @RequestBody ActiviteRequest request) {
+    public ResponseEntity<?> createActivite(@Valid @RequestBody ActiviteRequest request) {
         log.info("POST /api/employe/activites - Création d'une nouvelle activité: {}", request.getNom());
         try {
+            // Check if user is chef de projet for this project
+            securityService.checkCurrentUserIsChefDeProjet(request.getProjetId());
+            
             ActiviteResponse created = activiteService.createActivite(request);
             return new ResponseEntity<>(created, HttpStatus.CREATED);
+        } catch (SecurityException e) {
+            log.warn("Security violation: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (Exception e) {
             log.error("Erreur lors de la création de l'activité: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body("Erreur lors de la création de l'activité");
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ActiviteResponse> updateActivite(
+    public ResponseEntity<?> updateActivite(
             @PathVariable Long id, 
             @Valid @RequestBody ActiviteRequest request) {
         log.info("PUT /api/employe/activites/{} - Mise à jour de l'activité", id);
         try {
+            // Check if user is chef de projet for this project
+            securityService.checkCurrentUserIsChefDeProjet(request.getProjetId());
+            
             ActiviteResponse updated = activiteService.updateActivite(id, request);
             return ResponseEntity.ok(updated);
+        } catch (SecurityException e) {
+            log.warn("Security violation: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (RuntimeException e) {
             log.error("Erreur lors de la mise à jour de l'activité: {}", e.getMessage());
             return ResponseEntity.notFound().build();

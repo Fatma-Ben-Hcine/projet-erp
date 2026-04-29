@@ -16,6 +16,11 @@ import { ProjetsBoardComponent } from './admin/projets/board/board.component';
 import { ProjetDetailComponent } from './admin/projets/projet-detail/projet-detail.component';
 import { ProjetDepotComponent } from './admin/projets/projet-depot/projet-depot.component';
 
+// Employee project pages
+import { EmployeProjetDetailComponent } from './employe/projets/projet-detail/projet-detail.component';
+import { EmployeProjetStartComponent } from './employe/projets/projet-start/projet-start.component';
+import { EmployeProjetDepotComponent } from './employe/projets/projet-depot/projet-depot.component';
+
 // Conge module imports
 import { CongeListComponent } from './employe/conges/conge-list/conge-list.component';
 import { CongeFormComponent } from './employe/conges/conge-form/conge-form.component';
@@ -99,6 +104,25 @@ export const routes: Routes = [
     component: EmployeDashboardComponent,
     canActivate: [AuthGuard, EmployeGuard],
     title: 'Dashboard Employé'
+  },
+  // Employee project routes
+  {
+    path: 'employe/projets/:id/details',
+    component: EmployeProjetDetailComponent,
+    canActivate: [AuthGuard, EmployeGuard],
+    title: 'Détail Projet'
+  },
+  {
+    path: 'employe/projets/:id/start',
+    component: EmployeProjetStartComponent,
+    canActivate: [AuthGuard, EmployeGuard],
+    title: 'Configurer Projet'
+  },
+  {
+    path: 'employe/projets/:id/depot',
+    component: EmployeProjetDepotComponent,
+    canActivate: [AuthGuard, EmployeGuard],
+    title: 'Gestion Projet'
   },
   {
     path: 'employe/profile',

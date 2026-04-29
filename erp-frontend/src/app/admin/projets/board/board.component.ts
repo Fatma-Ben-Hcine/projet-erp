@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule, FormArray, AbstractControl, ValidationErrors } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { ProjetService } from '../../../core/services/projet.service';
 import { ClientService } from '../../../core/services/client.service';
@@ -25,7 +25,7 @@ export class ProjetsBoardComponent implements OnInit {
   employes: UtilisateurResponse[] = [];
   isLoading = false;
   errorMessage = '';
-  showModal = false;
+  showModal = false; 
   currentView: 'kanban' | 'calendar' = 'kanban';
   isEditMode = false;
   projetEnCoursId: number | null = null;
@@ -44,9 +44,6 @@ export class ProjetsBoardComponent implements OnInit {
   projetsTermines: ProjetResponse[] = [];
   projetsEnRetard: ProjetResponse[] = [];
 
-  // Activités
-  activites: ActiviteRequest[] = [];
-
   // Modal de détails
   selectedProjet: ProjetResponse | null = null;
 
@@ -60,6 +57,12 @@ export class ProjetsBoardComponent implements OnInit {
 
   isDarkMode = false;
   private observer: MutationObserver | null = null;
+
+  // Menu déroulant
+  openMenuId: number | null = null;
+
+  // Statut du projet en édition
+  projetStatutEnEdition: string = '';
 
   constructor(
     private projetService: ProjetService,
@@ -107,7 +110,8 @@ export class ProjetsBoardComponent implements OnInit {
       dateLimite: ['', Validators.required],
       clientId: [null, Validators.required],
       chefDeProjetId: [null, Validators.required],
-      progression: [0]
+      progression: [0],
+      activites: this.fb.array([])
     });
   }
 
@@ -171,14 +175,22 @@ export class ProjetsBoardComponent implements OnInit {
       const joursRestants = Math.ceil((dateLimite.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
       projet.joursRestants = Math.max(0, joursRestants);
 
+      // Vérification côté client : si date limite dépassée et statut != TERMINE, afficher en retard
+      const estEnRetard = joursRestants < 0 && projet.statut !== StatutProjet.TERMINE;
+
       // Utiliser le statut du backend et calculer les projets en retard
       switch (projet.statut) {
         case StatutProjet.NOUVEAU:
-          this.nouveauxProjets.push(projet);
+          // Filet de sécurité : si en retard, afficher dans EN_RETARD
+          if (estEnRetard) {
+            this.projetsEnRetard.push(projet);
+          } else {
+            this.nouveauxProjets.push(projet);
+          }
           break;
         case StatutProjet.EN_COURS:
           // Vérifier si le projet est en retard
-          if (joursRestants < 0) {
+          if (estEnRetard) {
             this.projetsEnRetard.push(projet);
           } else {
             this.projetsEnCours.push(projet);
@@ -187,12 +199,15 @@ export class ProjetsBoardComponent implements OnInit {
         case StatutProjet.TERMINE:
           this.projetsTermines.push(projet);
           break;
+        case StatutProjet.EN_RETARD:
+          this.projetsEnRetard.push(projet);
+          break;
         default:
           // Cas par défaut pour les anciens projets sans statut
           if (projet.progression === 100) {
             projet.statut = StatutProjet.TERMINE;
             this.projetsTermines.push(projet);
-          } else if (joursRestants < 0) {
+          } else if (estEnRetard) {
             projet.statut = StatutProjet.EN_RETARD;
             this.projetsEnRetard.push(projet);
           } else if (projet.progression > 0) {
@@ -213,7 +228,7 @@ export class ProjetsBoardComponent implements OnInit {
     this.errorMessage = '';
     this.createForm.reset({ progression: 0 });
     this.selectedEmployes = [];
-    this.activites = [];
+    (this.createForm.get('activites') as FormArray).clear();
   }
 
   closeModal(): void {
@@ -242,15 +257,251 @@ export class ProjetsBoardComponent implements OnInit {
     }
   }
 
-  addActivite(): void {
-    this.activites.push({
-      nom: '',
-      description: ''
-    });
+  // ---- ACTIVITÉS ----
+  get activites(): FormArray {
+    return this.createForm.get('activites') as FormArray || this.fb.array([]);
   }
 
-  removeActivite(index: number): void {
-    this.activites.splice(index, 1);
+  newActivite(): FormGroup {
+    const activityIndex = this.activites.length;
+    const group = this.fb.group({
+      nom:          ['', Validators.required],
+      description:  [''],
+      dateDebut:    [''],
+      dateFin:      [''],
+      employes:     [[]],
+      taches:       this.fb.array([])
+    });
+
+    // Ajouter le validateur personnalisé pour les dates
+    group.setValidators(this.activityDateRangeValidator(activityIndex));
+    return group;
+  }
+
+  addActivite(): void {
+    this.activites.push(this.newActivite());
+  }
+
+  removeActivite(i: number): void {
+    this.activites.removeAt(i);
+  }
+
+  // ---- TÂCHES ----
+  getTaches(i: number): FormArray {
+    if (i >= this.activites.length || i < 0) {
+      return this.fb.array([]);
+    }
+    const activityGroup = this.activites.at(i) as FormGroup;
+    if (!activityGroup) {
+      return this.fb.array([]);
+    }
+    return activityGroup.get('taches') as FormArray || this.fb.array([]);
+  }
+
+  newTache(activityIndex: number): FormGroup {
+    const taskIndex = this.getTaches(activityIndex).length;
+    const group = this.fb.group({
+      nom:         ['', Validators.required],
+      description: [''],
+      dateDebut:   [''],
+      dateFin:     [''],
+      employes:    [[]]
+    });
+
+    // Ajouter le validateur personnalisé pour les dates
+    group.setValidators(this.taskDateRangeValidator(activityIndex, taskIndex));
+    return group;
+  }
+
+  addTache(i: number): void {
+    this.getTaches(i).push(this.newTache(i));
+  }
+
+  removeTache(i: number, j: number): void {
+    this.getTaches(i).removeAt(j);
+  }
+
+  // ---- VALIDATEURS PERSONNALISÉS ----
+  private activityDateRangeValidator(activityIndex: number) {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const activityGroup = control as FormGroup;
+      const dateDebut = activityGroup.get('dateDebut')?.value;
+      const dateFin = activityGroup.get('dateFin')?.value;
+      const projetDateDebut = this.createForm.get('dateDebut')?.value;
+      const projetDateFin = this.createForm.get('dateLimite')?.value;
+
+      const errors: ValidationErrors = {};
+
+      // Validation: startDate >= project.startDate
+      if (dateDebut && projetDateDebut && dateDebut < projetDateDebut) {
+        errors['activityStartBeforeProject'] = {
+          projectStartDate: projetDateDebut,
+          activityStartDate: dateDebut
+        };
+      }
+
+      // Validation: endDate <= project.endDate
+      if (dateFin && projetDateFin && dateFin > projetDateFin) {
+        errors['activityEndAfterProject'] = {
+          projectEndDate: projetDateFin,
+          activityEndDate: dateFin
+        };
+      }
+
+      // Validation: startDate < endDate
+      if (dateDebut && dateFin && dateDebut >= dateFin) {
+        errors['activityStartAfterEnd'] = true;
+      }
+
+      return Object.keys(errors).length > 0 ? errors : null;
+    };
+  }
+
+  private taskDateRangeValidator(activityIndex: number, taskIndex: number) {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const taskGroup = control as FormGroup;
+      const taskDateDebut = taskGroup.get('dateDebut')?.value;
+      const taskDateFin = taskGroup.get('dateFin')?.value;
+
+      // Get parent activity dates
+      const activityGroup = this.activites.at(activityIndex) as FormGroup;
+      const activityDateDebut = activityGroup.get('dateDebut')?.value;
+      const activityDateFin = activityGroup.get('dateFin')?.value;
+
+      const errors: ValidationErrors = {};
+
+      // Validation: task.startDate >= activity.startDate
+      if (taskDateDebut && activityDateDebut && taskDateDebut < activityDateDebut) {
+        errors['taskStartBeforeActivity'] = {
+          activityStartDate: activityDateDebut,
+          taskStartDate: taskDateDebut
+        };
+      }
+
+      // Validation: task.endDate <= activity.endDate
+      if (taskDateFin && activityDateFin && taskDateFin > activityDateFin) {
+        errors['taskEndAfterActivity'] = {
+          activityEndDate: activityDateFin,
+          taskEndDate: taskDateFin
+        };
+      }
+
+      // Validation: startDate < endDate
+      if (taskDateDebut && taskDateFin && taskDateDebut >= taskDateFin) {
+        errors['taskStartAfterEnd'] = true;
+      }
+
+      return Object.keys(errors).length > 0 ? errors : null;
+    };
+  }
+
+  // ---- MESSAGES D'ERREUR ----
+  getActivityErrorMessage(activityIndex: number, errorType: string): string {
+    const projetDateDebut = this.createForm.get('dateDebut')?.value;
+    const projetDateFin = this.createForm.get('dateLimite')?.value;
+
+    switch (errorType) {
+      case 'activityStartBeforeProject':
+        return `La date de début doit être supérieure ou égale à la date de début du projet (${this.formatDate(projetDateDebut)})`;
+      case 'activityEndAfterProject':
+        return `La date de fin doit être inférieure ou égale à la date de fin du projet (${this.formatDate(projetDateFin)})`;
+      case 'activityStartAfterEnd':
+        return 'La date de début doit être antérieure à la date de fin';
+      default:
+        return 'Date invalide';
+    }
+  }
+
+  getTaskErrorMessage(activityIndex: number, taskIndex: number, errorType: string): string {
+    const activityGroup = this.activites.at(activityIndex) as FormGroup;
+    const activityDateDebut = activityGroup.get('dateDebut')?.value;
+    const activityDateFin = activityGroup.get('dateFin')?.value;
+
+    switch (errorType) {
+      case 'taskStartBeforeActivity':
+        return `La date de début doit être supérieure ou égale à la date de début de l'activité (${this.formatDate(activityDateDebut)})`;
+      case 'taskEndAfterActivity':
+        return `La date de fin doit être inférieure ou égale à la date de fin de l'activité (${this.formatDate(activityDateFin)})`;
+      case 'taskStartAfterEnd':
+        return 'La date de début doit être antérieure à la date de fin';
+      default:
+        return 'Date invalide';
+    }
+  }
+
+  formatDate(dateString: string): string {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  }
+
+  // ---- GETTERS MIN/MAX DATES ----
+  getActivityMinDate(): string {
+    return this.createForm.get('dateDebut')?.value || '';
+  }
+
+  getActivityMaxDate(): string {
+    return this.createForm.get('dateLimite')?.value || '';
+  }
+
+  getTaskMinDate(activityIndex: number): string {
+    const activityGroup = this.activites.at(activityIndex) as FormGroup;
+    return activityGroup.get('dateDebut')?.value || '';
+  }
+
+  getTaskMaxDate(activityIndex: number): string {
+    const activityGroup = this.activites.at(activityIndex) as FormGroup;
+    return activityGroup.get('dateFin')?.value || '';
+  }
+
+  // ---- EMPLOYÉS ----
+  getEmployesDisponiblesPourActivite(i: number): UtilisateurResponse[] {
+    return this.employesSelectionnes;
+  }
+
+  getEmployesDisponiblesPourTache(i: number): UtilisateurResponse[] {
+    const activiteEmployes = ((this.activites.at(i) as FormGroup)
+      .get('employes')?.value || []) as number[];
+
+    return this.employesSelectionnes.filter(emp =>
+      activiteEmployes.includes(emp.id)
+    );
+  }
+
+  isActiviteEmployeChecked(i: number, empId: number): boolean {
+    return ((this.activites.at(i) as FormGroup)
+      .get('employes')?.value || []).includes(empId);
+  }
+
+  onActiviteEmployeToggle(i: number, empId: number, e: any): void {
+    const ctrl = (this.activites.at(i) as FormGroup).get('employes')!;
+    let ids: number[] = ctrl.value || [];
+    ids = e.target.checked
+      ? [...ids, empId]
+      : ids.filter(id => id !== empId);
+    ctrl.setValue(ids);
+  }
+
+  isTacheEmployeChecked(i: number, j: number, empId: number): boolean {
+    return ((this.getTaches(i).at(j) as FormGroup)
+      .get('employes')?.value || []).includes(empId);
+  }
+
+  onTacheEmployeToggle(i: number, j: number, empId: number, e: any): void {
+    const ctrl = (this.getTaches(i).at(j) as FormGroup).get('employes')!;
+    let ids: number[] = ctrl.value || [];
+    ids = e.target.checked
+      ? [...ids, empId]
+      : ids.filter(id => id !== empId);
+    ctrl.setValue(ids);
+  }
+
+  // Fonction de conversion des dates en format yyyy-MM-dd pour le backend
+  formatDateForBackend(date: any): string | null {
+    if (!date) return null;
+    if (typeof date === 'string') return date;
+    const d = new Date(date);
+    return d.toISOString().split('T')[0];
   }
 
   saveProjet(): void {
@@ -258,13 +509,41 @@ export class ProjetsBoardComponent implements OnInit {
       this.errorMessage = 'Veuillez remplir tous les champs obligatoires';
       return;
     }
+
     this.errorMessage = '';
+
+    // Convertir les dates du formulaire
+    const formValue = this.createForm.value;
+    
+    // Déterminer si on doit inclure les activités dans le payload
+    const shouldIncludeActivites = !this.isEditMode || this.projetStatutEnEdition !== 'NOUVEAU';
+    
     const payload: ProjetRequest = {
-      ...this.createForm.value,
-      progression: this.createForm.value.progression || 0,
+      ...formValue,
+      dateDebut: this.formatDateForBackend(formValue.dateDebut),
+      dateLimite: this.formatDateForBackend(formValue.dateLimite),
+      progression: formValue.progression || 0,
       employeIds: this.selectedEmployes,
-      activites: this.activites.length > 0 ? this.activites : undefined
+      activites: shouldIncludeActivites && this.activites.length > 0 
+        ? this.activites.value.map((act: any) => ({
+            nom: act.nom,
+            description: act.description,
+            dateDebut: this.formatDateForBackend(act.dateDebut),
+            dateFin: this.formatDateForBackend(act.dateFin),
+            employeIds: act.employes || [],
+            estDeposé: false,
+            taches: (act.taches || []).map((t: any) => ({
+              nom: t.nom,
+              description: t.description,
+              dateDebut: this.formatDateForBackend(t.dateDebut),
+              dateFin: this.formatDateForBackend(t.dateFin),
+              employeIds: t.employes || []
+            }))
+          }))
+        : []
     };
+
+    console.log('PAYLOAD ENVOYÉ:', JSON.stringify(payload, null, 2));
 
     if (this.isEditMode && this.projetEnCoursId) {
       this.projetService.update(this.projetEnCoursId, payload).subscribe({
@@ -281,7 +560,10 @@ export class ProjetsBoardComponent implements OnInit {
       });
     } else {
       this.projetService.create(payload).subscribe({
-        next: () => { this.loadProjets(); this.closeModal(); },
+        next: () => {
+          this.loadProjets();
+          this.closeModal();
+        },
         error: (err) => {
           if (err.status === 400 && err.error?.message) {
             this.errorMessage = err.error.message;
@@ -329,11 +611,6 @@ export class ProjetsBoardComponent implements OnInit {
   cancelDelete(): void {
     this.showDeleteModal = false;
     this.projetASupprimer = null;
-  }
-
-  formatDate(dateStr: string): string {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
   }
 
   getStatutColor(statut: string): string {
@@ -388,7 +665,12 @@ export class ProjetsBoardComponent implements OnInit {
         this.projetEnCoursId = details.id;
         this.showModal = true;
         this.errorMessage = '';
-        this.activites = [];
+        
+        // Stocker le statut du projet en édition
+        this.projetStatutEnEdition = details.statut || '';
+
+        // Vider le FormArray activités (dans tous les cas)
+        (this.createForm.get('activites') as FormArray).clear();
 
         // Pré-remplir le formulaire
         this.createForm.patchValue({
@@ -480,5 +762,20 @@ export class ProjetsBoardComponent implements OnInit {
         this.errorMessage = err.error?.message || 'Erreur lors du dépôt du projet';
       }
     });
+  }
+
+  // Menu déroulant
+  toggleMenu(projetId: number, event: MouseEvent): void {
+    event.stopPropagation();
+    this.openMenuId = this.openMenuId === projetId ? null : projetId;
+  }
+
+  closeMenu(): void {
+    this.openMenuId = null;
+  }
+
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    this.openMenuId = null;
   }
 }

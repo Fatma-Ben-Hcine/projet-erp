@@ -1,6 +1,6 @@
 package com.projet.dto;
 
-import com.projet.enums.StatutActivite;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -22,19 +22,22 @@ public class ActiviteRequest {
     private String description;
 
     @NotNull(message = "La date de début est obligatoire")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate dateDebut;
 
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate dateFin;
 
-    @NotNull(message = "L'ID du projet est obligatoire")
     @Positive(message = "L'ID du projet doit être positif")
-    private Long projetId;
+    private Long projetId; // Optionnel lors de la création avec le projet
 
-    private boolean estDeposé = false; // Valeur par défaut pour les nouvelles activités
+    private Boolean estDeposé = false; // Valeur par défaut pour les nouvelles activités
 
     private List<Long> employeIds;
-    
+
     private List<EmployeActiviteRequest> employeActivites;
+
+    private List<TacheRequestSimple> taches;
 
     @Data
     @NoArgsConstructor
@@ -42,7 +45,28 @@ public class ActiviteRequest {
     public static class EmployeActiviteRequest {
         private Long employeId;
         private Integer progression = 0;
+        @JsonFormat(pattern = "yyyy-MM-dd")
         private LocalDate dateDebut;
+        @JsonFormat(pattern = "yyyy-MM-dd")
         private LocalDate dateFin;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class TacheRequestSimple {
+        @NotBlank(message = "Le nom de la tâche est obligatoire")
+        private String nom;
+
+        private String description;
+
+        @NotNull(message = "La date de début de la tâche est obligatoire")
+        @JsonFormat(pattern = "yyyy-MM-dd")
+        private LocalDate dateDebut;
+
+        @JsonFormat(pattern = "yyyy-MM-dd")
+        private LocalDate dateFin;
+
+        private List<Long> employeIds;
     }
 }

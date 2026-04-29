@@ -67,15 +67,20 @@ public class ProjetController {
     public ResponseEntity<?> createProjet(
             @Valid @RequestBody ProjetRequest request) {
         try {
+            log.info("Payload reçu pour création projet: {}", request);
+            log.info("Activités reçues: {}", request.getActivites());
             ProjetResponse response = projetService.createProjet(request);
             return ResponseEntity.ok(response);
         } catch (ResponseStatusException e) {
+            log.error("ResponseStatusException lors de la création du projet: {}", e.getReason());
             return ResponseEntity.status(e.getStatusCode())
                     .body(Map.of("message", e.getReason()));
         } catch (IllegalArgumentException e) {
+            log.error("IllegalArgumentException lors de la création du projet: {}", e.getMessage());
             return ResponseEntity.badRequest()
                     .body(Map.of("message", e.getMessage()));
         } catch (RuntimeException e) {
+            log.error("RuntimeException lors de la création du projet: {}", e.getMessage(), e);
             return ResponseEntity.badRequest()
                     .body(Map.of("message", e.getMessage()));
         }

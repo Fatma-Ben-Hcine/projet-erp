@@ -17,6 +17,9 @@ public interface TravaillerActiviteRepository extends JpaRepository<TravaillerAc
     
     List<TravaillerActivite> findByActiviteId(Long activiteId);
     
+    @Query("SELECT ta FROM TravaillerActivite ta LEFT JOIN FETCH ta.employe WHERE ta.id.activiteId = :activiteId")
+    List<TravaillerActivite> findByActiviteIdWithQuery(@Param("activiteId") Long activiteId);
+    
     Optional<TravaillerActivite> findByEmployeIdAndActiviteId(Long employeId, Long activiteId);
     
     @Query("SELECT ta FROM TravaillerActivite ta WHERE ta.employe.id = :employeId AND ta.activite.id = :activiteId")

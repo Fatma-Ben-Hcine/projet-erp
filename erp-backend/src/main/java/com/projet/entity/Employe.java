@@ -12,8 +12,8 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.SuperBuilder;
 import lombok.Builder;
 
-import java.util.List;
-import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.SuperBuilder;
@@ -22,7 +22,7 @@ import lombok.experimental.SuperBuilder;
 @Entity
 @DiscriminatorValue("EMPLOYE")
 @Data
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, exclude = {"travaillerActivites", "travaillerTaches", "heuresSupplementaires"})
 @SuperBuilder
 public class Employe extends Utilisateur {
 
@@ -31,19 +31,19 @@ public class Employe extends Utilisateur {
     @OneToMany(mappedBy = "employe", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnoreProperties("employe")
     @Builder.Default
-    private List<TravaillerActivite> travaillerActivites = new ArrayList<>();
+    private Set<TravaillerActivite> travaillerActivites = new HashSet<>();
 
     // Relation avec TravaillerTache
     @OneToMany(mappedBy = "employe", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnoreProperties("employe")
     @Builder.Default
-    private List<TravaillerTache> travaillerTaches = new ArrayList<>();
+    private Set<TravaillerTache> travaillerTaches = new HashSet<>();
 
     // Relation avec HeureSupplementaire
     @OneToMany(mappedBy = "employe", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnoreProperties("employe")
     @Builder.Default
-    private List<HeureSupplementaire> heuresSupplementaires = new ArrayList<>();
+    private Set<HeureSupplementaire> heuresSupplementaires = new HashSet<>();
 
     public Employe() {
         super();

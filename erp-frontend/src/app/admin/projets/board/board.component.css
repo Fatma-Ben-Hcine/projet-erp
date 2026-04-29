@@ -777,6 +777,38 @@
   border-bottom: none;
 }
 
+.tasks-section {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+}
+
+.tasks-section h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.task-item {
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.task-item:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.btn-sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+}
+
 .modal-footer {
   display: flex;
   justify-content: flex-end;
@@ -902,6 +934,19 @@
 }
 
 :host-context(.dark) .activity-item {
+  border-color: #374151;
+}
+
+:host-context(.dark) .tasks-section {
+  background: #1f2937;
+  border-color: #374151;
+}
+
+:host-context(.dark) .tasks-section h4 {
+  color: #f9fafb;
+}
+
+:host-context(.dark) .task-item {
   border-color: #374151;
 }
 
@@ -1035,4 +1080,423 @@
 
 :host-context(.dark) .no-team {
   color: #9ca3af;
+}
+
+/* Activités Section - Copié depuis start-project-modal */
+.activite-block {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.activite-block .activite-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.activite-block .activite-header span {
+  font-weight: 600;
+  font-size: 16px;
+  color: #374151;
+}
+
+.activite-block .activite-header button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: #ef4444;
+  font-size: 16px;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+
+.activite-block .activite-header button:hover {
+  background-color: #fef2f2;
+}
+
+.tache-block {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  background: #f9fafb;
+}
+
+.tache-block .tache-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.tache-block .tache-header span {
+  font-weight: 600;
+  font-size: 13px;
+  color: #374151;
+}
+
+.tache-block .tache-header button {
+  background: transparent;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.tache-block .tache-header button:hover {
+  background: #fee2e2;
+}
+
+.taches-section {
+  margin-top: 20px;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 16px;
+}
+
+.taches-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.taches-header span {
+  font-weight: 600;
+  font-size: 14px;
+  color: #374151;
+}
+
+.btn-add-tache {
+  background: transparent;
+  border: 1px solid #3b82f6;
+  color: #3b82f6;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-add-tache:hover {
+  background: #3b82f6;
+  color: #fff;
+}
+
+.btn-add-activite {
+  width: 100%;
+  padding: 16px;
+  background: none;
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.btn-add-activite:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+  background-color: #f0f9ff;
+}
+
+.assign-section {
+  margin-bottom: 16px;
+}
+
+.assign-section label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+.assign-section .hint {
+  margin: 0 0 12px 0;
+  font-size: 12px;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.assign-section .employes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 12px;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+}
+
+.assign-section .employes-list .emp-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  font-size: 13px;
+  color: #374151;
+}
+
+.assign-section .employes-list .emp-check:hover {
+  background-color: #f3f4f6;
+}
+
+.assign-section .employes-list .emp-check input[type="checkbox"] {
+  margin: 0;
+}
+
+.no-taches {
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
+  padding: 24px;
+  text-align: center;
+  color: #6b7280;
+}
+
+.no-taches p {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+}
+
+.no-taches span {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.no-employes-message {
+  padding: 12px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 13px;
+  font-style: italic;
+}
+
+/* Dark mode pour la section activités */
+:host-context(.dark) .activite-block {
+  background: #1f2937;
+  border-color: #4b5563;
+}
+
+:host-context(.dark) .activite-block .activite-header span {
+  color: #f9fafb;
+}
+
+:host-context(.dark) .activite-block .activite-header button:hover {
+  background-color: #7f1d1d;
+}
+
+:host-context(.dark) .tache-block {
+  background: #374151;
+  border-color: #4b5563;
+}
+
+:host-context(.dark) .tache-block .tache-header span {
+  color: #f9fafb;
+}
+
+:host-context(.dark) .tache-block .tache-header button:hover {
+  background: #7f1d1d;
+}
+
+:host-context(.dark) .taches-section {
+  border-color: #4b5563;
+}
+
+:host-context(.dark) .taches-header span {
+  color: #f9fafb;
+}
+
+:host-context(.dark) .btn-add-tache:hover {
+  background: #2563eb;
+}
+
+:host-context(.dark) .btn-add-activite:hover {
+  border-color: #3b82f6;
+  background-color: #1e3a8a;
+}
+
+:host-context(.dark) .assign-section label {
+  color: #d1d5db;
+}
+
+:host-context(.dark) .assign-section .employes-list {
+  background-color: #1f2937;
+  border-color: #4b5563;
+}
+
+:host-context(.dark) .assign-section .employes-list .emp-check {
+  color: #f9fafb;
+}
+
+:host-context(.dark) .assign-section .employes-list .emp-check:hover {
+  background-color: #374151;
+}
+
+:host-context(.dark) .no-taches {
+  border-color: #4b5563;
+  color: #9ca3af;
+}
+
+:host-context(.dark) .no-taches span {
+  color: #6b7280;
+}
+
+:host-context(.dark) .no-employes-message {
+  color: #9ca3af;
+}
+
+/* Menu déroulant pour les cartes projet */
+.card-header {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.menu-wrapper {
+  position: relative;
+}
+
+.btn-menu-dots {
+  background: none;
+  border: none;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 2px 8px;
+  border-radius: 4px;
+  line-height: 1;
+  transition: background 0.2s;
+}
+
+.btn-menu-dots:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 28px;
+  right: 0;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  z-index: 100;
+  min-width: 150px;
+  overflow: hidden;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+  color: #374151;
+  transition: background 0.15s;
+}
+
+.menu-item:hover {
+  background: #f9fafb;
+}
+
+.menu-item .material-icons {
+  font-size: 16px;
+  color: #6b7280;
+}
+
+.menu-item.danger {
+  color: #ef4444;
+}
+
+.menu-item.danger .material-icons {
+  color: #ef4444;
+}
+
+/* Dark mode pour le menu déroulant */
+:host-context(.dark) .btn-menu-dots:hover {
+  background: #374151;
+  color: #f9fafb;
+}
+
+:host-context(.dark) .dropdown-menu {
+  background: #1f2937;
+  border-color: #4b5563;
+}
+
+:host-context(.dark) .menu-item {
+  color: #f9fafb;
+}
+
+:host-context(.dark) .menu-item:hover {
+  background: #374151;
+}
+
+:host-context(.dark) .menu-item .material-icons {
+  color: #9ca3af;
+}
+
+:host-context(.dark) .menu-item.danger {
+  color: #f87171;
+}
+
+:host-context(.dark) .menu-item.danger .material-icons {
+  color: #f87171;
+}
+
+/* Message d'information pour l'ajout d'activités en mode édition */
+.info-ajout-activites {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background-color: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  color: #0369a1;
+  font-size: 14px;
+}
+
+.info-ajout-activites .material-icons {
+  font-size: 20px;
+  color: #0284c7;
+}
+
+:host-context(.dark) .info-ajout-activites {
+  background-color: #0c4a6e;
+  border-color: #075985;
+  color: #e0f2fe;
+}
+
+:host-context(.dark) .info-ajout-activites .material-icons {
+  color: #38bdf8;
 }

@@ -19,11 +19,17 @@ public interface ActiviteRepository extends JpaRepository<Activite, Long> {
     @Query("SELECT a FROM Activite a WHERE a.projet.id = :projetId ORDER BY a.dateDebut ASC")
     List<Activite> findByProjetIdOrderByDateDebut(@Param("projetId") Long projetId);
     
+    @Query("SELECT DISTINCT a FROM Activite a LEFT JOIN FETCH a.travaillerActivites ta LEFT JOIN FETCH ta.employe LEFT JOIN FETCH a.taches t LEFT JOIN FETCH t.travaillerTaches tt LEFT JOIN FETCH tt.employe WHERE a.projet.id = :projetId ORDER BY a.dateDebut ASC")
+    List<Activite> findByProjetIdWithEmployesAndTaches(@Param("projetId") Long projetId);
+    
     @Query("SELECT COUNT(a) FROM Activite a WHERE a.projet.id = :projetId")
     long countByProjetId(@Param("projetId") Long projetId);
     
     @Query("SELECT a FROM Activite a JOIN a.travaillerActivites ta WHERE ta.employe.id = :employeId")
     List<Activite> findByEmployeId(@Param("employeId") Long employeId);
+    
+    @Query("SELECT ta.employe FROM TravaillerActivite ta WHERE ta.id.activiteId = :activiteId")
+    List<com.projet.entity.Employe> findEmployesByActiviteId(@Param("activiteId") Long activiteId);
     
     boolean existsByIdAndProjetId(Long id, Long projetId);
     

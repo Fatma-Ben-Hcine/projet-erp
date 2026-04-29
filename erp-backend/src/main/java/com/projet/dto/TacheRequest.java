@@ -30,7 +30,7 @@ public class TacheRequest {
     @Positive(message = "L'ID de l'activité doit être positif")
     private Long activiteId;
 
-    private boolean estDeposé = false; // Valeur par défaut pour les nouvelles tâches
+    private Boolean estDeposé = false; // Valeur par défaut pour les nouvelles tâches
 
     private List<Long> employeIds;
     

@@ -4,6 +4,7 @@ import com.projet.dto.ProjetRequest;
 import com.projet.dto.ProjetResponse;
 import com.projet.dto.DepotRequest;
 import com.projet.dto.DepotResponse;
+import com.projet.dto.ActiviteRequest;
 import com.projet.entity.Projet;
 import com.projet.entity.TravaillerProjet;
 import com.projet.entity.Employe;
@@ -27,6 +28,7 @@ import com.projet.repository.TravaillerTacheRepository;
 import com.projet.repository.DepotRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -58,15 +60,22 @@ public class ProjetService {
     private final ProjetProgressionService projetProgressionService;
 
     public List<ProjetResponse> getAllProjets() {
-        return projetRepository.findAll()
-                .stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+        log.info("Récupération de tous les projets");
+        try {
+            List<Projet> projets = projetRepository.findAll();
+            log.info("Nombre de projets trouvés: {}", projets.size());
+            return projets.stream()
+                    .map(this::mapToResponse)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Erreur lors de la récupération des projets: {}", e.getMessage(), e);
+            throw new RuntimeException("Erreur lors de la récupération des projets: " + e.getMessage(), e);
+        }
     }
 
     @Transactional
     public ProjetResponse getProjetById(Long id) {
-        Projet projet = projetRepository.findById(id)
+        Projet projet = projetRepository.findByIdWithEmployes(id)
                 .orElseThrow(() -> new RuntimeException("Projet non trouvé avec l'id: " + id));
         return mapToResponse(projet);
     }
@@ -93,7 +102,7 @@ public class ProjetService {
             projet.setDateDebut(request.getDateDebut());
             projet.setDateLimite(request.getDateLimite());
             projet.setProgression(request.getProgression());
-            projet.setEstDeposé(request.isEstDeposé());
+            projet.setEstDeposé(request.getEstDeposé());
 
             // Gérer le client
             if (request.getClientId() != null) {
@@ -159,6 +168,107 @@ public class ProjetService {
                 travaillerProjetRepository.saveAll(travaillerProjets);
                 log.info("{} employés assignés au projet {}", travaillerProjets.size(), saved.getId());
             }
+            // Gérer les activités et leurs tâches
+            if (request.getActivites() != null && !request.getActivites().isEmpty()) {
+                log.info("Création de {} activités pour le projet {}", request.getActivites().size(), saved.getId());
+                for (ActiviteRequest activiteRequest : request.getActivites()) {
+                    // Validation : les employés de l'activité doivent être assignés au projet
+                    if (activiteRequest.getEmployeIds() != null && !activiteRequest.getEmployeIds().isEmpty()) {
+                        for (Long employeId : activiteRequest.getEmployeIds()) {
+                            if (!request.getEmployeIds().contains(employeId)) {
+                                throw new IllegalArgumentException(
+                                    "L'employé " + employeId + " n'est pas assigné au projet. " +
+                                    "Les employés d'une activité doivent être parmi les employés assignés au projet."
+                                );
+                            }
+                        }
+                    }
+
+                    Activite activite = new Activite();
+                    activite.setNom(activiteRequest.getNom());
+                    activite.setDescription(activiteRequest.getDescription());
+                    activite.setDateDebut(activiteRequest.getDateDebut());
+                    activite.setDateFin(activiteRequest.getDateFin());
+                    activite.setProjet(saved);
+                    activite.setEstDeposé(activiteRequest.getEstDeposé());
+
+                    Activite savedActivite = activiteRepository.save(activite);
+                    log.info("Activité créée: {} (ID: {})", savedActivite.getNom(), savedActivite.getId());
+
+                    // Gérer les employés de l'activité
+                    if (activiteRequest.getEmployeIds() != null && !activiteRequest.getEmployeIds().isEmpty()) {
+                        log.info("Assignation de {} employés à l'activité {}", activiteRequest.getEmployeIds().size(), savedActivite.getId());
+                        for (Long employeId : activiteRequest.getEmployeIds()) {
+                            Employe employe = utilisateurRepository.findById(employeId)
+                                .filter(Employe.class::isInstance)
+                                .map(Employe.class::cast)
+                                .orElseThrow(() -> new RuntimeException("Employé non trouvé avec id: " + employeId));
+
+                            TravaillerActivite travaillerActivite = new TravaillerActivite(employe, savedActivite);
+                            travaillerActivite.setDateDebut(savedActivite.getDateDebut());
+                            travaillerActivite.setDateFin(savedActivite.getDateFin());
+                            travaillerActiviteRepository.save(travaillerActivite);
+                            log.info("Employé {} assigné à l'activité {}", employeId, savedActivite.getId());
+                        }
+                    }
+
+                    // Gérer les tâches de l'activité
+                    if (activiteRequest.getTaches() != null && !activiteRequest.getTaches().isEmpty()) {
+                        log.info("Création de {} tâches pour l'activité {}", activiteRequest.getTaches().size(), savedActivite.getId());
+                        for (ActiviteRequest.TacheRequestSimple tacheRequest : activiteRequest.getTaches()) {
+                            // Validation : les employés de la tâche doivent être assignés à l'activité
+                            if (tacheRequest.getEmployeIds() != null && !tacheRequest.getEmployeIds().isEmpty()) {
+                                for (Long employeId : tacheRequest.getEmployeIds()) {
+                                    if (!activiteRequest.getEmployeIds().contains(employeId)) {
+                                        throw new IllegalArgumentException(
+                                            "L'employé " + employeId + " n'est pas assigné à l'activité parente. " +
+                                            "Les employés d'une tâche doivent être parmi les employés assignés à l'activité."
+                                        );
+                                    }
+                                }
+                            }
+
+                            Tache tache = new Tache();
+                            tache.setNom(tacheRequest.getNom());
+                            tache.setDescription(tacheRequest.getDescription());
+                            tache.setDateDebut(tacheRequest.getDateDebut());
+                            tache.setDateFin(tacheRequest.getDateFin());
+                            tache.setActivite(savedActivite);
+                            tache.setEstDeposé(false);
+
+                            Tache savedTache = tacheRepository.save(tache);
+                            log.info("Tâche créée: {} (ID: {})", savedTache.getNom(), savedTache.getId());
+
+                            // Gérer les employés de la tâche
+                            if (tacheRequest.getEmployeIds() != null && !tacheRequest.getEmployeIds().isEmpty()) {
+                                log.info("Assignation de {} employés à la tâche {}", tacheRequest.getEmployeIds().size(), savedTache.getId());
+                                for (Long employeId : tacheRequest.getEmployeIds()) {
+                                    Employe employe = utilisateurRepository.findById(employeId)
+                                        .filter(Employe.class::isInstance)
+                                        .map(Employe.class::cast)
+                                        .orElseThrow(() -> new RuntimeException("Employé non trouvé avec id: " + employeId));
+
+                                    TravaillerTache travaillerTache = new TravaillerTache(employe, savedTache);
+                                    travaillerTache.setDateDebut(tacheRequest.getDateDebut());
+                                    travaillerTache.setDateFinReelle(tacheRequest.getDateFin());
+                                    travaillerTacheRepository.save(travaillerTache);
+                                    log.info("Employé {} assigné à la tâche {}", employeId, savedTache.getId());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Règle métier : définir le statut automatiquement
+            if (request.getActivites() != null && !request.getActivites().isEmpty()) {
+                projet.setStatut(StatutProjet.EN_COURS);
+                log.info("Projet créé avec activités - statut défini à EN_COURS");
+            } else {
+                projet.setStatut(StatutProjet.NOUVEAU);
+                log.info("Projet créé sans activités - statut défini à NOUVEAU");
+            }
+            projetRepository.save(projet);
 
             log.info("Projet créé avec succès: {}", saved.getNom());
             return mapToResponse(saved);
@@ -182,7 +292,7 @@ public class ProjetService {
         projet.setDateDebut(request.getDateDebut());
         projet.setDateLimite(request.getDateLimite());
         projet.setProgression(request.getProgression());
-        projet.setEstDeposé(request.isEstDeposé());
+        projet.setEstDeposé(request.getEstDeposé());
 
         // Gérer le client
         if (request.getClientId() != null) {
@@ -265,6 +375,111 @@ public class ProjetService {
             } else {
                 log.info("Aucun employé à assigner au projet {}", id);
             }
+        }
+
+        // Gérer les activités - ajouter les nouvelles sans supprimer les anciennes
+        if (request.getActivites() != null && !request.getActivites().isEmpty()) {
+            log.info("Ajout de {} nouvelles activités pour le projet {}", request.getActivites().size(), id);
+            for (ActiviteRequest activiteRequest : request.getActivites()) {
+                log.info("Activité reçue: {}, nombre de tâches: {}", 
+                    activiteRequest.getNom(), 
+                    activiteRequest.getTaches() != null ? activiteRequest.getTaches().size() : 0);
+                // Validation : les employés de l'activité doivent être assignés au projet
+                if (activiteRequest.getEmployeIds() != null && !activiteRequest.getEmployeIds().isEmpty()) {
+                    for (Long employeId : activiteRequest.getEmployeIds()) {
+                        if (!request.getEmployeIds().contains(employeId)) {
+                            throw new IllegalArgumentException(
+                                "L'employé " + employeId + " n'est pas assigné au projet. " +
+                                "Les employés d'une activité doivent être parmi les employés assignés au projet."
+                            );
+                        }
+                    }
+                }
+
+                Activite activite = new Activite();
+                activite.setNom(activiteRequest.getNom());
+                activite.setDescription(activiteRequest.getDescription());
+                activite.setDateDebut(activiteRequest.getDateDebut());
+                activite.setDateFin(activiteRequest.getDateFin());
+                activite.setProjet(projet);
+                activite.setEstDeposé(activiteRequest.getEstDeposé());
+
+                Activite savedActivite = activiteRepository.save(activite);
+                log.info("Activité ajoutée: {} (ID: {})", savedActivite.getNom(), savedActivite.getId());
+
+                // Gérer les employés de l'activité
+                if (activiteRequest.getEmployeIds() != null && !activiteRequest.getEmployeIds().isEmpty()) {
+                    for (Long employeId : activiteRequest.getEmployeIds()) {
+                        Employe employe = utilisateurRepository.findById(employeId)
+                            .filter(Employe.class::isInstance)
+                            .map(Employe.class::cast)
+                            .orElseThrow(() -> new RuntimeException("Employé non trouvé avec id: " + employeId));
+
+                        TravaillerActivite travaillerActivite = new TravaillerActivite(employe, savedActivite);
+                        travaillerActivite.setDateDebut(savedActivite.getDateDebut());
+                        travaillerActivite.setDateFin(savedActivite.getDateFin());
+                        travaillerActiviteRepository.save(travaillerActivite);
+                    }
+                }
+
+                // Gérer les tâches de l'activité
+                if (activiteRequest.getTaches() != null && !activiteRequest.getTaches().isEmpty()) {
+                    log.info("Traitement de {} tâches pour l'activité {}", activiteRequest.getTaches().size(), savedActivite.getId());
+                    for (ActiviteRequest.TacheRequestSimple tacheRequest : activiteRequest.getTaches()) {
+                        log.info("Création de la tâche: {} pour l'activité {}", tacheRequest.getNom(), savedActivite.getId());
+                        // Validation : les employés de la tâche doivent être assignés à l'activité
+                        if (tacheRequest.getEmployeIds() != null && !tacheRequest.getEmployeIds().isEmpty()) {
+                            for (Long employeId : tacheRequest.getEmployeIds()) {
+                                if (!activiteRequest.getEmployeIds().contains(employeId)) {
+                                    throw new IllegalArgumentException(
+                                        "L'employé " + employeId + " n'est pas assigné à l'activité parente. " +
+                                        "Les employés d'une tâche doivent être parmi les employés assignés à l'activité."
+                                    );
+                                }
+                            }
+                        }
+
+                        Tache tache = new Tache();
+                        tache.setNom(tacheRequest.getNom());
+                        tache.setDescription(tacheRequest.getDescription());
+                        tache.setDateDebut(tacheRequest.getDateDebut());
+                        tache.setDateFin(tacheRequest.getDateFin());
+                        tache.setActivite(savedActivite);
+                        tache.setEstDeposé(false);
+
+                        Tache savedTache = tacheRepository.save(tache);
+
+                        // Gérer les employés de la tâche
+                        if (tacheRequest.getEmployeIds() != null && !tacheRequest.getEmployeIds().isEmpty()) {
+                            for (Long employeId : tacheRequest.getEmployeIds()) {
+                                Employe employe = utilisateurRepository.findById(employeId)
+                                    .filter(Employe.class::isInstance)
+                                    .map(Employe.class::cast)
+                                    .orElseThrow(() -> new RuntimeException("Employé non trouvé avec id: " + employeId));
+
+                                TravaillerTache travaillerTache = new TravaillerTache(employe, savedTache);
+                                travaillerTache.setDateDebut(tacheRequest.getDateDebut());
+                                travaillerTache.setDateFinReelle(tacheRequest.getDateFin());
+                                travaillerTacheRepository.save(travaillerTache);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Règle métier : définir le statut automatiquement lors de la modification
+        StatutProjet ancienStatut = projet.getStatut();
+        boolean aDesActivites = (request.getActivites() != null && !request.getActivites().isEmpty());
+
+        if (ancienStatut == StatutProjet.NOUVEAU && aDesActivites) {
+            projet.setStatut(StatutProjet.EN_COURS);
+            log.info("Projet était NOUVEAU et on ajoute des activités - statut passé à EN_COURS");
+        } else if (ancienStatut == StatutProjet.EN_COURS && !aDesActivites) {
+            projet.setStatut(StatutProjet.NOUVEAU);
+            log.info("Projet était EN_COURS et on supprime toutes les activités - statut repassé à NOUVEAU");
+        } else if (ancienStatut == StatutProjet.TERMINE || ancienStatut == StatutProjet.EN_RETARD) {
+            log.info("Projet est {} - statut inchangé", ancienStatut);
         }
 
         Projet updated = projetRepository.save(projet);
@@ -362,7 +577,7 @@ public class ProjetService {
         }
     }
 
-    private ProjetResponse mapToResponse(Projet projet) {
+    public ProjetResponse mapToResponse(Projet projet) {
         ProjetResponse response = new ProjetResponse();
         response.setId(projet.getId());
         response.setNom(projet.getNom());
@@ -522,5 +737,30 @@ public class ProjetService {
         } else {
             return (int) java.time.temporal.ChronoUnit.DAYS.between(aujourdHui, projet.getDateLimite());
         }
+    }
+
+    @Scheduled(cron = "0 0 0 * * *")
+    @Transactional
+    public void verifierEtMettreAJourProjetsEnRetard() {
+        log.info("Début de la vérification automatique des projets en retard");
+        LocalDate aujourdHui = LocalDate.now();
+        
+        List<Projet> projets = projetRepository.findAll();
+        int count = 0;
+        
+        for (Projet projet : projets) {
+            // Si la date limite est dépassée et le statut n'est pas TERMINE
+            if (aujourdHui.isAfter(projet.getDateLimite()) && 
+                projet.getStatut() != StatutProjet.TERMINE && 
+                projet.getStatut() != StatutProjet.EN_RETARD) {
+                projet.setStatut(StatutProjet.EN_RETARD);
+                projetRepository.save(projet);
+                count++;
+                log.info("Projet {} marqué comme EN_RETARD (date limite: {})", 
+                    projet.getNom(), projet.getDateLimite());
+            }
+        }
+        
+        log.info("Fin de la vérification : {} projets mis à jour en retard", count);
     }
 }

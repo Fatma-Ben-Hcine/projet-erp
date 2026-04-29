@@ -37,4 +37,12 @@ export class ProjectCardComponent {
       default: return 'border-gray';
     }
   }
+
+  onDepositClick(): void {
+    this.deposit.emit(this.project.id);
+  }
+
+  onViewDetailsClick(): void {
+    this.viewDetails.emit(this.project.id);
+  }
 }

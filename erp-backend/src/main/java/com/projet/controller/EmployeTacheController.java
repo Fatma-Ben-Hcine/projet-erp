@@ -3,6 +3,8 @@ package com.projet.controller;
 import com.projet.dto.TacheRequest;
 import com.projet.dto.TacheResponse;
 import com.projet.enums.StatutTache;
+import com.projet.security.EmployeeProjectSecurityService;
+import com.projet.service.ActiviteService;
 import com.projet.service.TacheService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +24,8 @@ import java.util.Map;
 public class EmployeTacheController {
 
     private final TacheService tacheService;
+    private final ActiviteService activiteService;
+    private final EmployeeProjectSecurityService securityService;
 
     // CRUD de base pour les employés
     @GetMapping
@@ -47,25 +51,45 @@ public class EmployeTacheController {
     }
 
     @PostMapping
-    public ResponseEntity<TacheResponse> createTache(@Valid @RequestBody TacheRequest request) {
+    public ResponseEntity<?> createTache(@Valid @RequestBody TacheRequest request) {
         log.info("POST /api/employe/taches - Création d'une nouvelle tâche: {}", request.getNom());
         try {
+            // Get activity to find project ID
+            var activite = activiteService.getActiviteById(request.getActiviteId())
+                    .orElseThrow(() -> new RuntimeException("Activité non trouvée"));
+            
+            // Check if user is chef de projet for this project
+            securityService.checkCurrentUserIsChefDeProjet(activite.getProjet().getId());
+            
             TacheResponse created = tacheService.createTache(request);
             return new ResponseEntity<>(created, HttpStatus.CREATED);
+        } catch (SecurityException e) {
+            log.warn("Security violation: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (Exception e) {
             log.error("Erreur lors de la création de la tâche: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body("Erreur lors de la création de la tâche");
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TacheResponse> updateTache(
+    public ResponseEntity<?> updateTache(
             @PathVariable Long id, 
             @Valid @RequestBody TacheRequest request) {
         log.info("PUT /api/employe/taches/{} - Mise à jour de la tâche", id);
         try {
+            // Get activity to find project ID
+            var activite = activiteService.getActiviteById(request.getActiviteId())
+                    .orElseThrow(() -> new RuntimeException("Activité non trouvée"));
+            
+            // Check if user is chef de projet for this project
+            securityService.checkCurrentUserIsChefDeProjet(activite.getProjet().getId());
+            
             TacheResponse updated = tacheService.updateTache(id, request);
             return ResponseEntity.ok(updated);
+        } catch (SecurityException e) {
+            log.warn("Security violation: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (RuntimeException e) {
             log.error("Erreur lors de la mise à jour de la tâche: {}", e.getMessage());
             return ResponseEntity.notFound().build();

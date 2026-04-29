@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.validation.Valid;
 import java.util.List;
@@ -55,31 +56,39 @@ public class TacheController {
     }
 
     @PostMapping
-    public ResponseEntity<TacheResponse> createTache(@Valid @RequestBody TacheRequest request) {
+    public ResponseEntity<?> createTache(@Valid @RequestBody TacheRequest request) {
         log.info("POST /api/admin/taches - Création d'une nouvelle tâche: {}", request.getNom());
+        log.info("POST /api/admin/taches - Payload reçu: nom={}, dateDebut={}, dateFin={}, activiteId={}, employeIds={}", 
+            request.getNom(), request.getDateDebut(), request.getDateFin(), request.getActiviteId(), request.getEmployeIds());
         try {
             TacheResponse created = tacheService.createTache(request);
             return new ResponseEntity<>(created, HttpStatus.CREATED);
+        } catch (ResponseStatusException e) {
+            log.error("Erreur de validation lors de la création de la tâche: {}", e.getReason());
+            return ResponseEntity.badRequest().body(e.getReason());
         } catch (Exception e) {
             log.error("Erreur lors de la création de la tâche: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TacheResponse> updateTache(
+    public ResponseEntity<?> updateTache(
             @PathVariable Long id, 
             @Valid @RequestBody TacheRequest request) {
         log.info("PUT /api/admin/taches/{} - Mise à jour de la tâche", id);
         try {
             TacheResponse updated = tacheService.updateTache(id, request);
             return ResponseEntity.ok(updated);
+        } catch (ResponseStatusException e) {
+            log.error("Erreur de validation lors de la mise à jour de la tâche: {}", e.getReason());
+            return ResponseEntity.badRequest().body(e.getReason());
         } catch (RuntimeException e) {
             log.error("Erreur lors de la mise à jour de la tâche: {}", e.getMessage());
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
             log.error("Erreur inattendue lors de la mise à jour de la tâche: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 

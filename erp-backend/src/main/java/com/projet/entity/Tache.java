@@ -4,16 +4,18 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
 
 @Entity
 @Table(name = "taches")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(exclude = {"travaillerTaches"})
 public class Tache {
 
     @Id
@@ -41,7 +43,7 @@ public class Tache {
 
     // Relation avec TravaillerTache
     @OneToMany(mappedBy = "tache", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TravaillerTache> travaillerTaches = new ArrayList<>();
+    private Set<TravaillerTache> travaillerTaches = new HashSet<>();
 
     public Tache(String nom, String description, LocalDate dateDebut, LocalDate dateFin, Activite activite) {
         this.nom = nom;

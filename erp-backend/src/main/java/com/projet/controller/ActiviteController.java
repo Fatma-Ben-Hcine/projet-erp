@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.validation.Valid;
 import java.util.List;
@@ -48,31 +49,37 @@ public class ActiviteController {
     }
 
     @PostMapping
-    public ResponseEntity<ActiviteResponse> createActivite(@Valid @RequestBody ActiviteRequest request) {
+    public ResponseEntity<?> createActivite(@Valid @RequestBody ActiviteRequest request) {
         log.info("POST /api/admin/activites - Création d'une nouvelle activité: {}", request.getNom());
         try {
             ActiviteResponse created = activiteService.createActivite(request);
             return new ResponseEntity<>(created, HttpStatus.CREATED);
+        } catch (ResponseStatusException e) {
+            log.error("Erreur de validation lors de la création de l'activité: {}", e.getReason());
+            return ResponseEntity.badRequest().body(e.getReason());
         } catch (Exception e) {
             log.error("Erreur lors de la création de l'activité: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ActiviteResponse> updateActivite(
+    public ResponseEntity<?> updateActivite(
             @PathVariable Long id, 
             @Valid @RequestBody ActiviteRequest request) {
         log.info("PUT /api/admin/activites/{} - Mise à jour de l'activité", id);
         try {
             ActiviteResponse updated = activiteService.updateActivite(id, request);
             return ResponseEntity.ok(updated);
+        } catch (ResponseStatusException e) {
+            log.error("Erreur de validation lors de la mise à jour de l'activité: {}", e.getReason());
+            return ResponseEntity.badRequest().body(e.getReason());
         } catch (RuntimeException e) {
             log.error("Erreur lors de la mise à jour de l'activité: {}", e.getMessage());
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
             log.error("Erreur inattendue lors de la mise à jour de l'activité: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
@@ -167,7 +174,19 @@ public class ActiviteController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Erreur lors de la récupération de la progression: {}", e.getMessage());
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/{activiteId}/employes")
+    public ResponseEntity<List<Map<String, Object>>> getEmployesByActiviteId(@PathVariable Long activiteId) {
+        log.info("GET /api/admin/activites/{}/employes - Récupération des employés de l'activité", activiteId);
+        try {
+            List<Map<String, Object>> employes = activiteService.getEmployesByActiviteId(activiteId);
+            return ResponseEntity.ok(employes);
+        } catch (Exception e) {
+            log.error("Erreur lors de la récupération des employés: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
         }
     }
 
