@@ -95,7 +95,27 @@ export class EmployeProjetDepotComponent implements OnInit {
   ngOnInit(): void {
     this.currentUserId = parseInt(this.authService.getUserId() || '0', 10);
     this.projetId = +this.route.snapshot.paramMap.get('id')!;
-    this.loadData();
+
+    // Vérifier is-chef EN PREMIER avant de charger les données
+    this.isLoading = true;
+    this.employeProjetService.isChefDeProjet(this.projetId).subscribe({
+      next: (result: boolean) => {
+        this.isChefDeProjet = result === true;
+
+        if (!this.isChefDeProjet) {
+          // Pas chef → rediriger immédiatement vers /details
+          this.router.navigate(['/employe/projets', this.projetId, 'details']);
+          return;
+        }
+
+        // Est chef → charger les données
+        this.loadData();
+      },
+      error: () => {
+        // Erreur → rediriger vers /details par sécurité
+        this.router.navigate(['/employe/projets', this.projetId, 'details']);
+      }
+    });
   }
 
   loadData(): void {
@@ -116,16 +136,7 @@ export class EmployeProjetDepotComponent implements OnInit {
           this.progressionProjet = projet.progression;
         }
 
-        // Check chef de projet status
-        this.employeProjetService.isChefDeProjet(this.projetId).subscribe({
-          next: (isChef) => {
-            this.isChefDeProjet = Boolean(isChef);
-          },
-          error: () => {
-            this.isChefDeProjet = false;
-          }
-        });
-
+        // isChefDeProjet est déjà vérifié dans ngOnInit - ne pas refaire l'appel ici
         this.loadActivites();
       },
       error: (err: any) => {
@@ -380,10 +391,24 @@ export class EmployeProjetDepotComponent implements OnInit {
       return;
     }
 
+    // Logs de debug avant création de depotData
+    console.log('=== submitDepot ===');
+    console.log('selectedTab:', this.selectedTab);
+    console.log('depotLien:', this.depotLien);
+    console.log('selectedFile:', this.selectedFile);
+
     const depotData = {
       type: this.selectedTab,
       value: this.selectedTab === 'lien' ? this.depotLien : this.selectedFile!
     };
+
+    console.log('depotData construit:', depotData);
+
+    // Vérification avant envoi
+    if (!depotData.type) {
+      this.depotErrorMessage = 'Type de dépôt non défini';
+      return;
+    }
 
     switch (targetType) {
       case 'tache':
@@ -403,7 +428,16 @@ export class EmployeProjetDepotComponent implements OnInit {
             this.loadActivites();
           },
           error: (err: any) => {
-            this.depotErrorMessage = err.error || 'Erreur lors du dépôt de la tâche';
+            console.error('Erreur dépôt tâche:', err);
+            if (typeof err.error === 'string' && err.error.length > 0) {
+              this.depotErrorMessage = err.error;
+            } else if (err.error?.message) {
+              this.depotErrorMessage = err.error.message;
+            } else if (err.message) {
+              this.depotErrorMessage = err.message;
+            } else {
+              this.depotErrorMessage = 'Erreur lors du dépôt de la tâche. Veuillez vérifier les données et réessayer.';
+            }
           }
         });
         break;
@@ -425,7 +459,16 @@ export class EmployeProjetDepotComponent implements OnInit {
             this.updateProgressionFromBackend();
           },
           error: (err: any) => {
-            this.depotErrorMessage = err.error || 'Erreur lors du dépôt de l\'activité';
+            console.error('Erreur dépôt activité:', err);
+            if (typeof err.error === 'string' && err.error.length > 0) {
+              this.depotErrorMessage = err.error;
+            } else if (err.error?.message) {
+              this.depotErrorMessage = err.error.message;
+            } else if (err.message) {
+              this.depotErrorMessage = err.message;
+            } else {
+              this.depotErrorMessage = 'Erreur lors du dépôt de l\'activité. Veuillez vérifier les données et réessayer.';
+            }
           }
         });
         break;
@@ -440,7 +483,16 @@ export class EmployeProjetDepotComponent implements OnInit {
             this.updateProgressionFromBackend();
           },
           error: (err: any) => {
-            this.depotErrorMessage = err.error || 'Erreur lors du dépôt du projet';
+            console.error('Erreur dépôt projet:', err);
+            if (typeof err.error === 'string' && err.error.length > 0) {
+              this.depotErrorMessage = err.error;
+            } else if (err.error?.message) {
+              this.depotErrorMessage = err.error.message;
+            } else if (err.message) {
+              this.depotErrorMessage = err.message;
+            } else {
+              this.depotErrorMessage = 'Erreur lors du dépôt du projet. Veuillez vérifier les données et réessayer.';
+            }
           }
         });
         break;

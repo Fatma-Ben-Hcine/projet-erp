@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ProjetResponse } from '../models/projet.model';
@@ -32,19 +32,44 @@ export class EmployeProjetService {
   }
 
   /**
-   * Deposit a project (file or link)
+   * Deposit a project (file or link) - POST /soumettre avec FormData
    */
   deposerProjet(id: number, depotData: { type: 'lien' | 'fichier', value: string | File }): Observable<ProjetResponse> {
-    const formData = new FormData();
-    formData.append('type', depotData.type);
+    console.log('=== deposerProjet ===');
+    console.log('depotData:', depotData);
+    console.log('depotData.type:', depotData?.type);
 
-    if (depotData.type === 'lien') {
-      formData.append('lien', depotData.value as string);
-    } else if (depotData.type === 'fichier') {
-      formData.append('file', depotData.value as File);
-      formData.append('nomFichier', (depotData.value as File).name);
+    // Validation
+    if (!depotData || !depotData.type) {
+      console.error('ERREUR: depotData.type est manquant!');
+      throw new Error('Type de dépôt non défini');
     }
 
-    return this.http.patch<ProjetResponse>(`${this.baseUrl}/${id}/depot`, formData);
+    const formData = new FormData();
+    formData.append('type', depotData.type);
+    console.log('FormData: type ajouté =', depotData.type);
+
+    if (depotData.type === 'fichier' && depotData.value instanceof File) {
+      formData.append('fichier', depotData.value);
+      console.log('FormData: fichier ajouté =', depotData.value.name);
+    } else if (depotData.type === 'lien' && depotData.value) {
+      formData.append('lien', String(depotData.value));
+      console.log('FormData: lien ajouté =', depotData.value);
+    }
+
+    // Vérification finale
+    console.log('=== FormData entries ===');
+    formData.forEach((value, key) => {
+      console.log(key, ':', value);
+    });
+
+    return this.http.post<ProjetResponse>(`${this.baseUrl}/${id}/soumettre`, formData);
+  }
+
+  /**
+   * Update project status
+   */
+  updateStatut(id: number, statut: string): Observable<ProjetResponse> {
+    return this.http.patch<ProjetResponse>(`${this.baseUrl}/${id}/statut`, { statut });
   }
 }

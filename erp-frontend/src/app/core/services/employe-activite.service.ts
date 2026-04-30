@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { 
@@ -64,19 +64,37 @@ export class EmployeActiviteService {
     return this.http.get<Array<{ id: number; nom: string; prenom: string; progression: number }>>(`${this.baseUrl}/${activiteId}/employes`);
   }
 
-  // Dépôt d'activité
+  // Dépôt d'activité - POST /soumettre avec FormData
   deposerActivite(id: number, depotData: { type: 'lien' | 'fichier', value: string | File }): Observable<ActiviteResponse> {
-    const formData = new FormData();
-    formData.append('type', depotData.type);
+    console.log('=== deposerActivite ===');
+    console.log('depotData:', depotData);
+    console.log('depotData.type:', depotData?.type);
 
-    if (depotData.type === 'lien') {
-      formData.append('lien', depotData.value as string);
-    } else if (depotData.type === 'fichier') {
-      formData.append('file', depotData.value as File);
-      formData.append('nomFichier', (depotData.value as File).name);
+    // Validation
+    if (!depotData || !depotData.type) {
+      console.error('ERREUR: depotData.type est manquant!');
+      throw new Error('Type de dépôt non défini');
     }
 
-    return this.http.patch<ActiviteResponse>(`${this.baseUrl}/${id}/depot`, formData);
+    const formData = new FormData();
+    formData.append('type', depotData.type);
+    console.log('FormData: type ajouté =', depotData.type);
+
+    if (depotData.type === 'fichier' && depotData.value instanceof File) {
+      formData.append('fichier', depotData.value);
+      console.log('FormData: fichier ajouté =', depotData.value.name);
+    } else if (depotData.type === 'lien' && depotData.value) {
+      formData.append('lien', String(depotData.value));
+      console.log('FormData: lien ajouté =', depotData.value);
+    }
+
+    // Vérification finale
+    console.log('=== FormData entries ===');
+    formData.forEach((value, key) => {
+      console.log(key, ':', value);
+    });
+
+    return this.http.post<ActiviteResponse>(`${this.baseUrl}/${id}/soumettre`, formData);
   }
 
   // Vérification de dépôt

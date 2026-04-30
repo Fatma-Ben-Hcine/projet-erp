@@ -1,0 +1,76 @@
+<div class="demande-ressources-container">
+  <div class="header">
+    <h1>Demande de Ressources</h1>
+    <p class="subtitle">Sélectionnez les ressources dont vous avez besoin</p>
+  </div>
+
+  <div class="alerts">
+    <div class="alert alert-success" *ngIf="success">
+      {{ success }}
+    </div>
+    <div class="alert alert-error" *ngIf="error">
+      {{ error }}
+    </div>
+  </div>
+
+  <div class="loading" *ngIf="loading">
+    <p>Chargement des ressources disponibles...</p>
+  </div>
+
+  <div class="content" *ngIf="!loading">
+    <div class="empty-state" *ngIf="ressources.length === 0">
+      <p>Aucune ressource disponible pour le moment.</p>
+    </div>
+
+    <div class="ressources-grid" *ngIf="ressources.length > 0">
+      <div
+        class="ressource-card"
+        *ngFor="let ressource of ressources"
+        [class.selected]="isSelected(ressource.id)"
+        (click)="toggleSelection(ressource.id)"
+      >
+        <div class="ressource-checkbox">
+          <input
+            type="checkbox"
+            [id]="'ressource-' + ressource.id"
+            [disabled]="submitting || ressource.situation !== 'DISPONIBLE'"
+            [checked]="isSelected(ressource.id)"
+            (click)="$event.stopPropagation()"
+            (change)="toggleSelection(ressource.id)"
+          />
+        </div>
+
+        <div class="ressource-content">
+          <h3>{{ ressource.nom }}</h3>
+          <p class="description" *ngIf="ressource.description">{{ ressource.description }}</p>
+
+          <div class="situation-info">
+            <span class="badge" [class]="getSituationClass(ressource.situation)">
+              {{ ressource.situation === 'DISPONIBLE' ? 'Disponible' : 'Demandé' }}
+            </span>
+            <div class="demandeur-info" *ngIf="ressource.employeDemandeur">
+              <small>Demandé par: {{ ressource.employeDemandeur.prenom }} {{ ressource.employeDemandeur.nom }}</small>
+            </div>
+          </div>
+
+          <div class="type-info" *ngIf="ressource.type">
+            <span class="badge badge-info">{{ ressource.type }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions" *ngIf="ressources.length > 0">
+      <p class="selection-count" *ngIf="selectedRessources.size > 0">
+        {{ selectedRessources.size }} ressource(s) sélectionnée(s)
+      </p>
+      <button
+        class="btn btn-primary"
+        [disabled]="selectedRessources.size === 0 || submitting"
+        (click)="soumettreDemande()"
+      >
+        {{ submitting ? 'Envoi en cours...' : 'Soumettre la demande' }}
+      </button>
+    </div>
+  </div>
+</div>

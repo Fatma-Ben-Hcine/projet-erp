@@ -30,6 +30,11 @@ import { AdminCongeListComponent } from './admin/conges/admin-conge-list/admin-c
 import { HeuresSupplementairesListComponent } from './admin/heures-supplementaires/heures-supplementaires-list/heures-supplementaires-list.component';
 import { HeuresSupplementaireFormComponent } from './admin/heures-supplementaires/heures-supplementaire-form/heures-supplementaire-form.component';
 
+// Ressources imports
+import { RessourcesListComponent } from './admin/ressources/ressources-list/ressources-list.component';
+import { RessourceFormComponent } from './admin/ressources/ressource-form/ressource-form.component';
+import { DemandeRessourcesComponent } from './employe/ressources/demande-ressources/demande-ressources.component';
+
 export const routes: Routes = [
   {
     path: '',
@@ -171,6 +176,32 @@ export const routes: Routes = [
     component: HeuresSupplementaireFormComponent,
     canActivate: [AuthGuard, AdminGuard],
     title: 'Modifier une Heure Supplémentaire'
+  },
+  // Admin Ressources routes
+  {
+    path: 'admin/ressources',
+    component: RessourcesListComponent,
+    canActivate: [AuthGuard, AdminGuard],
+    title: 'Gestion des Ressources'
+  },
+  {
+    path: 'admin/ressources/nouveau',
+    component: RessourceFormComponent,
+    canActivate: [AuthGuard, AdminGuard],
+    title: 'Nouvelle Ressource'
+  },
+  {
+    path: 'admin/ressources/edit/:id',
+    component: RessourceFormComponent,
+    canActivate: [AuthGuard, AdminGuard],
+    title: 'Modifier Ressource'
+  },
+  // Employee Ressources routes
+  {
+    path: 'employe/ressources/demande',
+    component: DemandeRessourcesComponent,
+    canActivate: [AuthGuard, EmployeGuard],
+    title: 'Demande de Ressources'
   },
   {
     path: '**',

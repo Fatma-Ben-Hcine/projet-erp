@@ -2,26 +2,6 @@
   <app-employe-sidebar></app-employe-sidebar>
 
   <div class="main-content">
-    <!-- Header -->
-    <div class="page-header">
-      <div class="header-content">
-        <button class="back-btn" (click)="goBack()">
-          <span class="material-icons">arrow_back</span>
-          Retour au dashboard
-        </button>
-        <div class="header-text" *ngIf="projet">
-          <h1 class="page-title">Configurer le projet: {{ projet.nom }}</h1>
-          <p class="page-subtitle">Créez des activités et des tâches pour ce projet</p>
-        </div>
-      </div>
-      <div class="header-actions" *ngIf="projet && isChefDeProjet">
-        <button class="btn-primary" (click)="startProject()" [disabled]="activites.length === 0">
-          <span class="material-icons">play_arrow</span>
-          Démarrer le projet
-        </button>
-      </div>
-    </div>
-
     <!-- Loading -->
     <div class="loading-state" *ngIf="isLoading">
       <div class="spinner"></div>
@@ -35,187 +15,246 @@
     </div>
 
     <!-- Content -->
-    <div class="content" *ngIf="projet && !isLoading && isChefDeProjet">
+    <div class="page-container" *ngIf="projet && !isLoading && isChefDeProjet">
       
-      <!-- Warning: No activities -->
-      <div class="warning-banner" *ngIf="activites.length === 0">
-        <span class="material-icons">warning</span>
-        <span>Vous devez créer au moins une activité avant de pouvoir démarrer le projet.</span>
-      </div>
-
-      <!-- Add Activity Button -->
-      <div class="section-actions">
-        <button class="btn-primary" (click)="toggleNewActivityForm()">
-          <span class="material-icons">add</span>
-          {{ showNewActivityForm ? 'Annuler' : 'Nouvelle activité' }}
+      <!-- Header -->
+      <div class="page-header">
+        <button class="back-btn" (click)="goBack()">
+          <span class="material-icons">arrow_back</span>
+          Retour
         </button>
+        <h1 class="page-title">Démarrer le Projet</h1>
+        <p class="page-subtitle">{{projet.nom}}</p>
       </div>
 
-      <!-- New Activity Form -->
-      <div class="form-card" *ngIf="showNewActivityForm">
-        <h3 class="form-title">Nouvelle activité</h3>
-        <div class="form-grid">
-          <div class="form-field">
-            <label>Nom de l'activité *</label>
-            <input type="text" [(ngModel)]="newActivity.nom" placeholder="Ex: Analyse des besoins">
+      <div class="content-wrapper">
+        <!-- Infos générales -->
+        <section class="section-info">
+          <div class="info-grid">
+            <div><label>NOM DU PROJET</label><p>{{projet.nom}}</p></div>
+            <div><label>DESCRIPTION</label><p>{{projet.description}}</p></div>
+            <div><label>CLIENT</label><p>{{projet.client?.prenom}} {{projet.client?.nom}}</p></div>
+            <div><label>STATUT</label><span class="badge">{{projet.statut}}</span></div>
+            <div><label>PROGRESSION</label><p>{{projet.progression}}%</p></div>
+            <div><label>ÉCHÉANCE</label><p>{{projet.dateLimite | date:'dd/MM/yyyy'}}</p></div>
           </div>
-          <div class="form-field full-width">
-            <label>Description</label>
-            <textarea [(ngModel)]="newActivity.description" rows="3" placeholder="Description de l'activité..."></textarea>
-          </div>
-          <div class="form-field">
-            <label>Date de début</label>
-            <input type="date" [(ngModel)]="newActivity.dateDebut">
-          </div>
-          <div class="form-field">
-            <label>Date de fin</label>
-            <input type="date" [(ngModel)]="newActivity.dateFin">
-          </div>
-        </div>
+        </section>
 
-        <!-- Tasks for new activity -->
-        <div class="tasks-form-section">
-          <div class="section-header">
-            <h4>Tâches associées</h4>
-            <button class="btn-secondary" (click)="addTaskToNewActivity()">
-              <span class="material-icons">add</span>
-              Ajouter une tâche
-            </button>
+        <!-- Équipe assignée -->
+        <section class="section-equipe">
+          <h3>Équipe assignée</h3>
+          <div class="equipe-badges" *ngIf="employesDisponibles.length > 0">
+            <span class="badge-emp" 
+                  *ngFor="let emp of employesDisponibles"
+                  [class.chef]="isChef(emp.id)">
+              {{emp.prenom}} {{emp.nom}}
+              <span *ngIf="isChef(emp.id)">(Chef de projet)</span>
+            </span>
           </div>
-          
-          <div class="task-forms-list" *ngIf="newActivity.taches.length > 0">
-            <div class="task-form-item" *ngFor="let tache of newActivity.taches; let i = index">
-              <div class="task-form-header">
-                <span>Tâche {{ i + 1 }}</span>
-                <button class="btn-icon" (click)="removeTaskFromNewActivity(i)">
-                  <span class="material-icons">delete</span>
-                </button>
-              </div>
-              <div class="form-grid">
-                <div class="form-field">
-                  <input type="text" [(ngModel)]="tache.nom" placeholder="Nom de la tâche">
-                </div>
-                <div class="form-field full-width">
-                  <textarea [(ngModel)]="tache.description" rows="2" placeholder="Description..."></textarea>
-                </div>
-                <div class="form-field">
-                  <input type="date" [(ngModel)]="tache.dateDebut" placeholder="Date début">
-                </div>
-                <div class="form-field">
-                  <input type="date" [(ngModel)]="tache.dateFin" placeholder="Date fin">
-                </div>
-              </div>
+        </section>
+
+        <!-- FORMULAIRE ACTIVITÉS -->
+        <section class="section-activites">
+          <h3>Diviser en Activités</h3>
+          <p>Définissez les activités principales. Chaque activité peut être divisée en tâches.</p>
+
+          <form [formGroup]="form" (ngSubmit)="onSubmit()">
+            <!-- Message d'erreur global -->
+            <div *ngIf="errorMessage" class="error-message">
+              <span class="material-icons">error</span>
+              {{ errorMessage }}
             </div>
-          </div>
-        </div>
 
-        <div class="form-actions">
-          <button class="btn-secondary" (click)="toggleNewActivityForm()">Annuler</button>
-          <button class="btn-primary" (click)="createActivity()" [disabled]="!newActivity.nom">
-            Créer l'activité
+            <div *ngIf="form" formArrayName="activites">
+
+              <div *ngFor="let act of activites.controls; let i = index"
+                   [formGroupName]="i"
+                   class="activite-block">
+
+                <div class="activite-header">
+                  <span>Activité {{i+1}}</span>
+                  <button type="button" (click)="removeActivite(i)" 
+                          *ngIf="activites.length > 1">×</button>
+                </div>
+
+                <!-- Nom activité -->
+                <div class="form-group">
+                  <label>Nom de l'activité *</label>
+                  <input type="text" formControlName="nom"
+                         placeholder="Ex: Phase de conception">
+                </div>
+
+                <!-- Description activité -->
+                <div class="form-group">
+                  <label>Description</label>
+                  <textarea formControlName="description"
+                            placeholder="Décrivez cette activité..."></textarea>
+                </div>
+
+                <!-- Dates activité -->
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Date début</label>
+                    <input type="date" 
+                           formControlName="dateDebut"
+                           [min]="getActivityMinDate()"
+                           [max]="getActivityMaxDate()">
+                    <div *ngIf="activites.at(i).errors?.['activityStartBeforeProject']" 
+                         class="error-message">
+                      <span class="material-icons">error</span>
+                      {{ getActivityErrorMessage(i, 'activityStartBeforeProject') }}
+                    </div>
+                    <div *ngIf="activites.at(i).errors?.['activityStartAfterEnd']" 
+                         class="error-message">
+                      <span class="material-icons">error</span>
+                      {{ getActivityErrorMessage(i, 'activityStartAfterEnd') }}
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label>Date fin</label>
+                    <input type="date" 
+                           formControlName="dateFin"
+                           [min]="getActivityMinDate()"
+                           [max]="getActivityMaxDate()">
+                    <div *ngIf="activites.at(i).errors?.['activityEndAfterProject']" 
+                         class="error-message">
+                      <span class="material-icons">error</span>
+                      {{ getActivityErrorMessage(i, 'activityEndAfterProject') }}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Employés activité -->
+                <div class="assign-section">
+                  <label>Assigner des employés à cette activité</label>
+                  <p class="hint">Seuls les employés affectés au projet sont disponibles</p>
+                  <div class="employes-list">
+                    <label class="emp-check" *ngFor="let emp of employesDisponibles">
+                      <input type="checkbox"
+                             [checked]="isActiviteEmployeChecked(i, emp.id)"
+                             (change)="onActiviteEmployeToggle(i, emp.id, $event)">
+                      {{emp.prenom}} {{emp.nom}}
+                      <span *ngIf="isChef(emp.id)">(Chef de projet)</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- TÂCHES -->
+                <div class="taches-section">
+                  <div class="taches-header">
+                    <span>Tâches de l'activité</span>
+                    <button type="button" class="btn-add-tache"
+                            (click)="addTache(i)">
+                      + Ajouter une tâche
+                    </button>
+                  </div>
+
+                  <!-- État vide -->
+                  <div class="no-taches" *ngIf="getTaches(i).length === 0">
+                    <p>Aucune tâche pour cette activité</p>
+                    <span>Cliquez sur "Ajouter une tâche" pour commencer</span>
+                  </div>
+
+                  <!-- FormArray tâches -->
+                  <div formArrayName="taches">
+                    <div *ngFor="let t of getTaches(i).controls; let j = index"
+                         [formGroupName]="j"
+                         class="tache-block">
+
+                      <div class="tache-header">
+                        <span>Tâche {{j+1}}</span>
+                        <button type="button" (click)="removeTache(i, j)">×</button>
+                      </div>
+
+                      <div class="form-group">
+                        <label>Nom de la tâche *</label>
+                        <input type="text" formControlName="nom"
+                               placeholder="Ex: Rédiger le cahier des charges">
+                      </div>
+
+                      <div class="form-group">
+                        <label>Description</label>
+                        <textarea formControlName="description"
+                                  placeholder="Décrivez cette tâche..."></textarea>
+                      </div>
+
+                      <div class="form-row">
+                        <div class="form-group">
+                          <label>Date début</label>
+                          <input type="date" 
+                                 formControlName="dateDebut"
+                                 [min]="getTaskMinDate(i)"
+                                 [max]="getTaskMaxDate(i)">
+                          <div *ngIf="getTaches(i).at(j).errors?.['taskStartBeforeActivity']" 
+                               class="error-message">
+                            <span class="material-icons">error</span>
+                            {{ getTaskErrorMessage(i, j, 'taskStartBeforeActivity') }}
+                          </div>
+                          <div *ngIf="getTaches(i).at(j).errors?.['taskStartAfterEnd']" 
+                               class="error-message">
+                            <span class="material-icons">error</span>
+                            {{ getTaskErrorMessage(i, j, 'taskStartAfterEnd') }}
+                          </div>
+                        </div>
+                        <div class="form-group">
+                          <label>Date fin</label>
+                          <input type="date" 
+                                 formControlName="dateFin"
+                                 [min]="getTaskMinDate(i)"
+                                 [max]="getTaskMaxDate(i)">
+                          <div *ngIf="getTaches(i).at(j).errors?.['taskEndAfterActivity']" 
+                               class="error-message">
+                            <span class="material-icons">error</span>
+                            {{ getTaskErrorMessage(i, j, 'taskEndAfterActivity') }}
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Employés tâche -->
+                      <div class="assign-section">
+                        <label>Assigner des employés à cette tâche</label>
+                        <div class="employes-list">
+                          <label class="emp-check" *ngFor="let emp of getEmployesDisponiblesPourTache(i)">
+                            <input type="checkbox"
+                                   [checked]="isTacheEmployeChecked(i, j, emp.id)"
+                                   (change)="onTacheEmployeToggle(i, j, emp.id, $event)">
+                            {{emp.prenom}} {{emp.nom}}
+                            <span *ngIf="isChef(emp.id)">(Chef de projet)</span>
+                          </label>
+                          <div *ngIf="getEmployesDisponiblesPourTache(i).length === 0" class="no-employes-message">
+                            <p>Aucun employé assigné à cette activité</p>
+                            <small>Veuillez d'abord assigner des employés à l'activité ci-dessus</small>
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+          </form>
+
+          <!-- Bouton ajouter activité -->
+          <button type="button" class="btn-add-activite" (click)="addActivite()">
+            + Ajouter une activité
+          </button>
+
+        </section>
+
+        <!-- FOOTER -->
+        <div class="page-footer">
+          <button class="btn-cancel" (click)="goBack()">Annuler</button>
+          <button class="btn-submit" 
+                  [disabled]="form.invalid"
+                  (click)="onSubmit()">
+            Démarrer le Projet
           </button>
         </div>
-      </div>
 
-      <!-- Existing Activities -->
-      <section class="section" *ngIf="activites.length > 0">
-        <h2 class="section-title">
-          Activités créées
-          <span class="badge-count">{{ activites.length }}</span>
-        </h2>
-
-        <div class="activities-list">
-          <div class="activity-card" *ngFor="let activite of activites">
-            <div class="card-header">
-              <div class="card-title-section">
-                <h3 class="card-title">{{ activite.nom }}</h3>
-                <p class="card-description">{{ activite.description }}</p>
-              </div>
-              <div class="card-actions">
-                <button class="btn-icon danger" (click)="deleteActivity(activite.id)">
-                  <span class="material-icons">delete</span>
-                </button>
-              </div>
-            </div>
-
-            <div class="card-meta">
-              <span class="meta-item">
-                <span class="material-icons">calendar_today</span>
-                {{ formatDate(activite.dateDebut) }} - {{ formatDate(activite.dateFin) }}
-              </span>
-            </div>
-
-            <!-- Tasks Section -->
-            <div class="tasks-section">
-              <div class="section-header">
-                <h4>
-                  Tâches
-                  <span class="badge-count">{{ activite.taches.length || 0 }}</span>
-                </h4>
-                <button class="btn-secondary" (click)="toggleNewTaskForm(activite.id)">
-                  <span class="material-icons">add</span>
-                  {{ newTaskForActivity[activite.id].show ? 'Annuler' : 'Ajouter une tâche' }}
-                </button>
-              </div>
-
-              <!-- New Task Form for this Activity -->
-              <div class="task-form-inline" *ngIf="newTaskForActivity[activite.id].show">
-                <div class="form-grid">
-                  <div class="form-field">
-                    <input type="text" [(ngModel)]="newTaskForActivity[activite.id].task.nom" placeholder="Nom de la tâche">
-                  </div>
-                  <div class="form-field">
-                    <input type="date" [(ngModel)]="newTaskForActivity[activite.id].task.dateDebut">
-                  </div>
-                  <div class="form-field">
-                    <input type="date" [(ngModel)]="newTaskForActivity[activite.id].task.dateFin">
-                  </div>
-                </div>
-                <div class="form-field full-width">
-                  <textarea [(ngModel)]="newTaskForActivity[activite.id].task.description" rows="2" placeholder="Description de la tâche..."></textarea>
-                </div>
-                <div class="form-actions">
-                  <button class="btn-secondary" (click)="toggleNewTaskForm(activite.id)">Annuler</button>
-                  <button class="btn-primary" (click)="createTask(activite.id)" 
-                          [disabled]="!newTaskForActivity[activite.id].task.nom">
-                    Créer la tâche
-                  </button>
-                </div>
-              </div>
-
-              <!-- Tasks List -->
-              <div class="tasks-list" *ngIf="activite.taches && activite.taches.length > 0">
-                <div class="task-item" *ngFor="let tache of activite.taches">
-                  <div class="task-content">
-                    <div class="task-main">
-                      <span class="task-name">{{ tache.nom }}</span>
-                      <span class="task-description">{{ tache.description }}</span>
-                    </div>
-                    <div class="task-meta">
-                      <span class="meta-item">
-                        <span class="material-icons">calendar_today</span>
-                        {{ formatDate(tache.dateDebut) }} - {{ formatDate(tache.dateFin) }}
-                      </span>
-                    </div>
-                  </div>
-                  <button class="btn-icon danger" (click)="deleteTask(tache.id)">
-                    <span class="material-icons">delete</span>
-                  </button>
-                </div>
-              </div>
-
-              <div class="empty-tasks" *ngIf="!activite.taches || activite.taches.length === 0">
-                <p>Aucune tâche créée pour cette activité</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div class="empty-state" *ngIf="activites.length === 0 && !showNewActivityForm">
-        <span class="material-icons">assignment</span>
-        <p>Aucune activité n'a été créée pour ce projet</p>
-        <p class="sub-text">Cliquez sur "Nouvelle activité" pour commencer</p>
       </div>
     </div>
   </div>

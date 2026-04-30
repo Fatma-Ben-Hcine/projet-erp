@@ -167,6 +167,17 @@ public class ProjetService {
                 
                 travaillerProjetRepository.saveAll(travaillerProjets);
                 log.info("{} employés assignés au projet {}", travaillerProjets.size(), saved.getId());
+
+                // Désigner le chef de projet si spécifié
+                if (request.getChefDeProjetId() != null) {
+                    travaillerProjetRepository
+                        .findByEmployeIdAndProjetId(request.getChefDeProjetId(), saved.getId())
+                        .ifPresent(tp -> {
+                            tp.setEstChef(true);
+                            travaillerProjetRepository.save(tp);
+                            log.info("Employé {} désigné comme chef du projet {}", request.getChefDeProjetId(), saved.getId());
+                        });
+                }
             }
             // Gérer les activités et leurs tâches
             if (request.getActivites() != null && !request.getActivites().isEmpty()) {
@@ -372,6 +383,23 @@ public class ProjetService {
                 
                 travaillerProjetRepository.saveAll(nouvellesRelations);
                 log.info("Créé {} nouvelles relations employé-projet", nouvellesRelations.size());
+
+                // Désigner le chef de projet si spécifié
+                if (request.getChefDeProjetId() != null) {
+                    // Remettre tous les est_chef à false pour ce projet
+                    List<TravaillerProjet> tpList = travaillerProjetRepository.findByProjetId(projet.getId());
+                    tpList.forEach(tp -> tp.setEstChef(false));
+                    travaillerProjetRepository.saveAll(tpList);
+
+                    // Désigner uniquement l'employé choisi
+                    travaillerProjetRepository
+                        .findByEmployeIdAndProjetId(request.getChefDeProjetId(), projet.getId())
+                        .ifPresent(tp -> {
+                            tp.setEstChef(true);
+                            travaillerProjetRepository.save(tp);
+                            log.info("Employé {} désigné comme chef du projet {}", request.getChefDeProjetId(), projet.getId());
+                        });
+                }
             } else {
                 log.info("Aucun employé à assigner au projet {}", id);
             }
@@ -762,5 +790,22 @@ public class ProjetService {
         }
         
         log.info("Fin de la vérification : {} projets mis à jour en retard", count);
+    }
+
+    @Transactional
+    public ProjetResponse updateStatut(Long id, String statut) {
+        Projet projet = projetRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Projet non trouvé avec l'id: " + id));
+
+        try {
+            StatutProjet nouveauStatut = StatutProjet.valueOf(statut);
+            projet.setStatut(nouveauStatut);
+            projetRepository.save(projet);
+            log.info("Statut du projet {} mis à jour à {}", id, statut);
+            return mapToResponse(projet);
+        } catch (IllegalArgumentException e) {
+            log.error("Statut invalide: {}", statut);
+            throw new RuntimeException("Statut invalide: " + statut);
+        }
     }
 }

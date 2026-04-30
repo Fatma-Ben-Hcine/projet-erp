@@ -17,7 +17,7 @@ export class ProjectCardComponent {
   @Output() start = new EventEmitter<string>();
 
   get isProjectManager(): boolean {
-    return this.currentUserId === this.project.projectManager;
+    return this.project.isChef === true;
   }
 
   get daysRemaining(): number {

@@ -1,0 +1,70 @@
+<div class="ressource-form-container">
+  <div class="header">
+    <h1>{{ isEditMode ? 'Modifier' : 'Nouvelle' }} Ressource</h1>
+    <button class="btn btn-secondary" routerLink="/admin/ressources">
+      <i class="icon-arrow-left"></i> Retour
+    </button>
+  </div>
+
+  <div class="loading" *ngIf="loading">
+    <p>Chargement...</p>
+  </div>
+
+  <div class="error" *ngIf="error">
+    <p>{{ error }}</p>
+  </div>
+
+  <form *ngIf="!loading" (ngSubmit)="onSubmit()" class="form-container">
+    <!-- Champs obligatoires -->
+    <fieldset class="form-section">
+      <legend>Informations obligatoires</legend>
+
+      <div class="form-group">
+        <label for="nom">Nom *</label>
+        <input
+          type="text"
+          id="nom"
+          name="nom"
+          [(ngModel)]="ressource.nom"
+          required
+          class="form-control"
+          placeholder="Nom de la ressource"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="description">Description</label>
+        <textarea
+          id="description"
+          name="description"
+          [(ngModel)]="ressource.description"
+          rows="3"
+          class="form-control"
+          placeholder="Description de la ressource"
+        ></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="type">Type</label>
+        <input
+          type="text"
+          id="type"
+          name="type"
+          [(ngModel)]="ressource.type"
+          class="form-control"
+          placeholder="Type de la ressource (ex: matériel, logiciel, véhicule...)"
+        />
+      </div>
+    </fieldset>
+
+    <!-- Actions -->
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" [disabled]="saving">
+        {{ saving ? 'Enregistrement...' : (isEditMode ? 'Mettre à jour' : 'Créer') }}
+      </button>
+      <button type="button" class="btn btn-secondary" routerLink="/admin/ressources">
+        Annuler
+      </button>
+    </div>
+  </form>
+</div>

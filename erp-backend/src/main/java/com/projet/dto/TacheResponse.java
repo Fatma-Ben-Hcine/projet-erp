@@ -33,6 +33,7 @@ public class TacheResponse {
         private Long id;
         private String nom;
         private String description;
+        private Long projetId;  // Ajout pour faciliter la vérification du chef de projet
     }
 
     @Data

@@ -227,6 +227,10 @@ public class TacheService {
         activiteInfo.setId(tache.getActivite().getId());
         activiteInfo.setNom(tache.getActivite().getNom());
         activiteInfo.setDescription(tache.getActivite().getDescription());
+        // Ajout du projetId pour faciliter la vérification du chef de projet
+        if (tache.getActivite().getProjet() != null) {
+            activiteInfo.setProjetId(tache.getActivite().getProjet().getId());
+        }
         response.setActivite(activiteInfo);
 
         // Info employés assignés

@@ -59,6 +59,21 @@
       </div>
     </div>
 
+    <!-- Resources Dropdown -->
+    <div class="nav-dropdown">
+      <div class="dropdown-toggle" (click)="toggleDropdown('resources')" [class.open]="resourcesOpen">
+        <span class="material-icons">inventory_2</span>
+        <span class="nav-label">Ressources</span>
+        <span class="material-icons dropdown-arrow">{{ resourcesOpen ? 'expand_less' : 'expand_more' }}</span>
+      </div>
+      <div class="dropdown-menu" *ngIf="resourcesOpen">
+        <a routerLink="/admin/ressources" routerLinkActive="active" class="dropdown-item">
+          <span class="material-icons">list</span>
+          Gestion des Ressources
+        </a>
+      </div>
+    </div>
+
     <!-- Clients Dropdown -->
     <div class="nav-dropdown">
       <div class="dropdown-toggle" (click)="toggleDropdown('clients')" [class.open]="clientsOpen">

@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { EmployeSidebarComponent } from '../shared/sidebar/sidebar.component';
 import { KanbanColumnComponent } from '../shared/kanban-column/kanban-column.component';
+import { DemarrerProjetModalComponent } from '../projets/demarrer-projet-modal/demarrer-projet-modal.component';
 import { Project, ProjectStatus } from '../../core/models/project.model';
 import { ProjetResponse } from '../../core/models/projet.model';
 import { EmployeProjetService } from '../../core/services/employe-projet.service';
@@ -12,7 +13,7 @@ import { mockEmployees } from '../../core/data/mock-data';
 @Component({
   selector: 'app-employe-dashboard',
   standalone: true,
-  imports: [CommonModule, EmployeSidebarComponent, KanbanColumnComponent],
+  imports: [CommonModule, EmployeSidebarComponent, KanbanColumnComponent, DemarrerProjetModalComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
@@ -25,10 +26,18 @@ export class EmployeDashboardComponent implements OnInit {
   selectedProject: Project | null = null;
   showDetailsModal = false;
 
+  // Modal Démarrer Projet
+  showDemarrerModal = false;
+  projetPourDemarrer: ProjetResponse | null = null;
+
+  // Store original projet responses for modal
+  private projetResponses: Map<string, ProjetResponse> = new Map();
+
   constructor(
     private router: Router,
     private projetService: EmployeProjetService,
-    private authService: AuthService
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   get newProjects()        { return this.projects.filter(p => p.status === 'new'); }
@@ -47,7 +56,23 @@ export class EmployeDashboardComponent implements OnInit {
   loadProjects(): void {
     this.projetService.getMesProjets().subscribe({
       next: (projets) => {
+        // Store original responses for modal
+        this.projetResponses.clear();
+        projets.forEach(p => this.projetResponses.set(p.id.toString(), p));
+
         this.projects = projets.map(p => this.mapProjetResponseToProject(p));
+
+        // Vérifier is-chef pour chaque projet individuellement
+        this.projects.forEach(project => {
+          this.projetService.isChefDeProjet(parseInt(project.id)).subscribe({
+            next: (result: boolean) => {
+              project.isChef = result === true;
+            },
+            error: () => {
+              project.isChef = false;
+            }
+          });
+        });
       },
       error: (err) => {
         console.error('Erreur lors du chargement des projets:', err);
@@ -99,7 +124,7 @@ export class EmployeDashboardComponent implements OnInit {
   }
 
   isProjectManager(project: Project): boolean {
-    return project.projectManager === this.currentUserId;
+    return project.isChef === true;
   }
 
   handleViewDetails(projectId: string): void {
@@ -113,8 +138,34 @@ export class EmployeDashboardComponent implements OnInit {
   }
 
   handleStart(projectId: string): void {
-    // Navigate to project start/configure page
-    this.router.navigate(['/employe/projets', projectId, 'start']);
+    console.log('handleStart called with projectId:', projectId);
+    console.log('projetResponses Map:', this.projetResponses);
+    console.log('Map keys:', Array.from(this.projetResponses.keys()));
+
+    // Get the original projet response
+    const projet = this.projetResponses.get(projectId);
+    console.log('Found projet:', projet);
+
+    if (projet) {
+      this.projetPourDemarrer = projet;
+      this.showDemarrerModal = true;
+      this.cdr.detectChanges(); // Force change detection
+      console.log('Modal opened, showDemarrerModal:', this.showDemarrerModal);
+    } else {
+      console.error('Project not found in projetResponses Map');
+    }
+  }
+
+  onDemarrerModalClosed(): void {
+    this.showDemarrerModal = false;
+    this.projetPourDemarrer = null;
+  }
+
+  onProjectStarted(): void {
+    // Refresh projects list after project is started
+    this.loadProjects();
+    this.showDemarrerModal = false;
+    this.projetPourDemarrer = null;
   }
 
   closeModal(): void {

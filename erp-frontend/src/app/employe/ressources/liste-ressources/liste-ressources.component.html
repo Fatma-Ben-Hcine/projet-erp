@@ -1,0 +1,120 @@
+<div class="ressources-container">
+  <div class="header">
+    <h1>Ressources Disponibles</h1>
+  </div>
+
+  <!-- Messages -->
+  <div class="alert alert-success" *ngIf="successMessage">
+    {{ successMessage }}
+  </div>
+
+  <div class="alert alert-error" *ngIf="error">
+    {{ error }}
+  </div>
+
+  <!-- Loading -->
+  <div class="loading" *ngIf="loading">
+    <p>Chargement des ressources...</p>
+  </div>
+
+  <!-- Section 1: Ressources disponibles -->
+  <div class="section" *ngIf="!loading">
+    <h2>Ressources disponibles</h2>
+    
+    <div class="ressources-grid" *ngIf="ressourcesDisponibles.length > 0">
+      <div class="ressource-card" 
+           *ngFor="let ressource of ressourcesDisponibles"
+           [class.disabled]="!isDisponiblePourMoi(ressource)"
+           [class.ma-demande]="isMaDemande(ressource)">
+        
+        <div class="ressource-header">
+          <h3>{{ ressource.nom }}</h3>
+          <span class="badge" 
+                [ngClass]="ressource.statut === 'ACTIVE' ? 'badge-success' : 'badge-danger'">
+            {{ ressource.statut === 'ACTIVE' ? 'Actif' : 'Inactif' }}
+          </span>
+        </div>
+
+        <div class="ressource-content">
+          <p class="description" *ngIf="ressource.description">{{ ressource.description }}</p>
+          <p class="type" *ngIf="ressource.type">
+            <strong>Type:</strong> {{ ressource.type }}
+          </p>
+
+          <div class="situation-info">
+            <!-- Badge situation -->
+            <span class="badge" 
+                  [ngClass]="ressource.situation === 'DISPONIBLE' ? 'badge-info' : 'badge-warning'">
+              {{ ressource.situation === 'DISPONIBLE' ? 'Disponible' : 'Demandé' }}
+            </span>
+
+            <!-- Info employé demandeur -->
+            <div class="demandeur-info" *ngIf="ressource.employeDemandeur">
+              <small>
+                <strong>Demandé par:</strong> 
+                {{ ressource.employeDemandeur.prenom }} {{ ressource.employeDemandeur.nom }}
+              </small>
+              <br>
+              <small><strong>Date:</strong> {{ formatDate(ressource.dateDemande) }}</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="ressource-actions">
+          <!-- Si c'est ma demande -->
+          <button class="btn btn-warning" 
+                  *ngIf="isMaDemande(ressource)"
+                  (click)="annulerDemande(ressource)">
+            <i class="icon-cancel"></i> Annuler ma demande
+          </button>
+
+          <!-- Si demandé par quelqu'un d'autre -->
+          <div class="demande-autre" *ngIf="ressource.situation === 'DEMANDE' && !isMaDemande(ressource)">
+            <span class="badge badge-secondary">Non disponible</span>
+            <small>Demandé par un autre employé</small>
+          </div>
+
+          <!-- Si disponible pour moi -->
+          <button class="btn btn-primary" 
+                  *ngIf="isDisponiblePourMoi(ressource)"
+                  (click)="demanderRessource(ressource)">
+            <i class="icon-check"></i> Demander cette ressource
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="ressourcesDisponibles.length === 0">
+      <p>Aucune ressource active disponible.</p>
+    </div>
+  </div>
+
+  <!-- Section 2: Mes demandes -->
+  <div class="section" *ngIf="!loading">
+    <h2>Mes demandes en cours</h2>
+    
+    <div class="demandes-list" *ngIf="mesDemandes.length > 0">
+      <div class="demande-item" *ngFor="let demande of mesDemandes">
+        <div class="demande-content">
+          <h4>{{ demande.nom }}</h4>
+          <p class="description" *ngIf="demande.description">{{ demande.description }}</p>
+          <p class="type" *ngIf="demande.type">
+            <strong>Type:</strong> {{ demande.type }}
+          </p>
+          <p class="date-demande">
+            <strong>Demandé le:</strong> {{ formatDate(demande.dateDemande) }}
+          </p>
+        </div>
+        <div class="demande-actions">
+          <button class="btn btn-warning btn-sm" (click)="annulerDemande(demande)">
+            <i class="icon-cancel"></i> Annuler
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="mesDemandes.length === 0">
+      <p>Vous n'avez aucune demande en cours.</p>
+    </div>
+  </div>
+</div>

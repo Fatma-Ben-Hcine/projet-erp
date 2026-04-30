@@ -30,7 +30,10 @@ public interface ActiviteRepository extends JpaRepository<Activite, Long> {
     
     @Query("SELECT ta.employe FROM TravaillerActivite ta WHERE ta.id.activiteId = :activiteId")
     List<com.projet.entity.Employe> findEmployesByActiviteId(@Param("activiteId") Long activiteId);
-    
+
+    @Query("SELECT a FROM Activite a JOIN FETCH a.projet WHERE a.id = :id")
+    Optional<Activite> findByIdWithProjet(@Param("id") Long id);
+
     boolean existsByIdAndProjetId(Long id, Long projetId);
     
     void deleteByProjetId(Long projetId);

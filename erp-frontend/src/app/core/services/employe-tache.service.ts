@@ -71,21 +71,48 @@ export class EmployeTacheService {
     return this.http.get<{ count: number }>(`${this.baseUrl}/employe/${employeId}/terminees/count`);
   }
 
-  // Dépôt de tâche
+  // Dépôt de tâche - POST /soumettre pour éviter les problèmes de PATCH
   deposerTache(id: number, depotData: { type: 'lien' | 'fichier', value: string | File }): Observable<TacheResponse> {
-    const url = `${this.baseUrl}/${id}/depot`;
-    
-    const formData = new FormData();
-    formData.append('type', depotData.type);
+    const url = `${this.baseUrl}/${id}/soumettre`;
 
-    if (depotData.type === 'lien') {
-      formData.append('lien', depotData.value as string);
-    } else if (depotData.type === 'fichier') {
-      formData.append('file', depotData.value as File);
-      formData.append('nomFichier', (depotData.value as File).name);
+    // Log pour débugger
+    console.log('=== deposerTache ===');
+    console.log('depotData reçu:', depotData);
+    console.log('depotData.type:', depotData?.type);
+    console.log('depotData.value:', depotData?.value);
+    console.log('depotData.value instanceof File:', depotData?.value instanceof File);
+
+    // Validation
+    if (!depotData || !depotData.type) {
+      console.error('ERREUR: depotData.type est manquant!');
+      throw new Error('Type de dépôt non défini');
     }
 
-    return this.http.patch<TacheResponse>(url, formData);
+    // Toujours utiliser FormData (multipart)
+    const formData = new FormData();
+
+    // ⚠️ OBLIGATOIRE — ajouter 'type' en premier
+    formData.append('type', depotData.type);
+    console.log('FormData: type ajouté =', depotData.type);
+
+    // Ajouter fichier ou lien selon le type
+    if (depotData.type === 'fichier' && depotData.value instanceof File) {
+      formData.append('fichier', depotData.value);
+      console.log('FormData: fichier ajouté =', depotData.value.name);
+    } else if (depotData.type === 'lien' && depotData.value) {
+      formData.append('lien', String(depotData.value));
+      console.log('FormData: lien ajouté =', depotData.value);
+    }
+
+    // Vérification finale du FormData
+    console.log('=== FormData entries ===');
+    formData.forEach((value, key) => {
+      console.log(key, ':', value);
+    });
+
+    // POST au lieu de PATCH - évite les problèmes de parsing Spring
+    // ⚠️ Pas de headers — Angular gère Content-Type automatiquement
+    return this.http.post<TacheResponse>(url, formData);
   }
 
   // Vérification de dépôt

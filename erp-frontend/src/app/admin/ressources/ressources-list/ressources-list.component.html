@@ -1,0 +1,97 @@
+<div class="ressources-container">
+  <div class="header">
+    <h1>Gestion des Ressources</h1>
+    <button class="btn btn-primary" routerLink="/admin/ressources/nouveau">
+      <i class="icon-plus"></i> Nouvelle Ressource
+    </button>
+  </div>
+
+  <div class="loading" *ngIf="loading">
+    <p>Chargement des ressources...</p>
+  </div>
+
+  <div class="error" *ngIf="error">
+    <p>{{ error }}</p>
+  </div>
+
+  <div class="table-container" *ngIf="!loading && !error">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Nom</th>
+          <th>Type</th>
+          <th>Statut</th>
+          <th>Situation</th>
+          <th>Employé demandeur</th>
+          <th>Date de demande</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let ressource of ressources">
+          <td>
+            <strong>{{ ressource.nom }}</strong>
+            <p class="description" *ngIf="ressource.description">{{ ressource.description }}</p>
+          </td>
+          <td>
+            <span class="badge badge-secondary">{{ ressource.type || 'Non défini' }}</span>
+          </td>
+          <td>
+            <span class="badge" [ngClass]="getStatutClass(ressource.statut)">
+              {{ formatStatut(ressource.statut) }}
+            </span>
+          </td>
+          <td>
+            <span class="badge" [ngClass]="getSituationClass(ressource.situation)">
+              {{ formatSituation(ressource.situation) }}
+            </span>
+          </td>
+          <td>
+            <span *ngIf="ressource.employeDemandeur" class="badge badge-info">
+              {{ ressource.employeDemandeur.prenom }} {{ ressource.employeDemandeur.nom }}
+            </span>
+            <span *ngIf="!ressource.employeDemandeur" class="text-muted">-</span>
+          </td>
+          <td>
+            <span *ngIf="ressource.dateDemande">{{ formatDate(ressource.dateDemande) }}</span>
+            <span *ngIf="!ressource.dateDemande" class="text-muted">-</span>
+          </td>
+          <td class="actions">
+            <button class="btn btn-sm btn-secondary" [routerLink]="['/admin/ressources/edit', ressource.id]">
+              <i class="icon-edit"></i> Modifier
+            </button>
+            
+            <!-- Toggle statut -->
+            <button class="btn btn-sm" 
+                    [ngClass]="ressource.statut === 'ACTIVE' ? 'btn-warning' : 'btn-success'"
+                    (click)="changerStatut(ressource.id, ressource.statut === 'ACTIVE' ? 'NON_ACTIVE' : 'ACTIVE')"
+                    title="Changer le statut">
+              <i class="icon-power"></i> 
+              {{ ressource.statut === 'ACTIVE' ? 'Désactiver' : 'Activer' }}
+            </button>
+            
+            <!-- Bouton libérer (si demandé) -->
+            <button class="btn btn-sm btn-info" 
+                    *ngIf="ressource.situation === 'DEMANDE'"
+                    (click)="libererRessource(ressource.id)"
+                    title="Libérer la ressource">
+              <i class="icon-check"></i> Libérer
+            </button>
+            
+            <!-- Bouton supprimer (si disponible) -->
+            <button class="btn btn-sm btn-danger" 
+                    *ngIf="ressource.situation === 'DISPONIBLE'"
+                    (click)="deleteRessource(ressource.id)"
+                    title="Supprimer la ressource">
+              <i class="icon-delete"></i> Supprimer
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="empty-state" *ngIf="ressources.length === 0">
+      <p>Aucune ressource trouvée.</p>
+    </div>
+  </div>
+</div>

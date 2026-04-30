@@ -6,15 +6,22 @@ import com.projet.entity.TravaillerProjet;
 import com.projet.entity.Utilisateur;
 import com.projet.repository.ProjetRepository;
 import com.projet.repository.TravaillerProjetRepository;
+import com.projet.security.EmployeeProjectSecurityService;
 import com.projet.service.ProjetService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -28,6 +35,7 @@ public class EmployeProjetController {
     private final ProjetService projetService;
     private final ProjetRepository projetRepository;
     private final TravaillerProjetRepository travaillerProjetRepository;
+    private final EmployeeProjectSecurityService securityService;
 
     /**
      * Get current authenticated user ID from security context
@@ -111,7 +119,113 @@ public class EmployeProjetController {
             return ResponseEntity.status(401).build();
         }
 
-        boolean isChef = projetRepository.isChefDeProjet(id, currentUserId);
+        // Vérifier via la table travailler_projet avec le champ est_chef
+        Optional<TravaillerProjet> tp = travaillerProjetRepository
+            .findByEmployeIdAndProjetId(currentUserId, id);
+
+        boolean isChef = tp.isPresent() && tp.get().isEstChef() != null && tp.get().isEstChef();
         return ResponseEntity.ok(isChef);
+    }
+
+    /**
+     * Deposit a project (file or link) - POST /soumettre pour éviter les problèmes de PATCH
+     */
+    @PostMapping(value = "/{id}/soumettre",
+                 consumes = {MediaType.MULTIPART_FORM_DATA_VALUE,
+                            MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+                            MediaType.ALL_VALUE})
+    public ResponseEntity<?> soumettreDepotProjet(
+            @PathVariable Long id,
+            @RequestParam(value = "type", required = false) String type,
+            @RequestParam(value = "lien", required = false) String lien,
+            @RequestPart(value = "fichier", required = false) MultipartFile fichier) {
+
+        System.out.println("=== POST SOUMETTRE PROJET ID: " + id + " ===");
+        System.out.println("Type: " + type);
+        System.out.println("Lien: " + lien);
+        System.out.println("Fichier: " + (fichier != null ? fichier.getOriginalFilename() : "null"));
+
+        // Déterminer le type automatiquement si non fourni
+        if (type == null) {
+            type = (fichier != null) ? "fichier" : (lien != null ? "lien" : null);
+            System.out.println("Type auto-détecté: " + type);
+        }
+
+        try {
+            // Check if user is chef de projet for this project
+            securityService.checkCurrentUserIsChefDeProjet(id);
+
+            com.projet.dto.DepotRequest depotRequest = new com.projet.dto.DepotRequest();
+            depotRequest.setType(type);
+            depotRequest.setLien(lien);
+            depotRequest.setNomFichier(fichier != null ? fichier.getOriginalFilename() : null);
+
+            ProjetResponse updated = projetService.deposerProjet(id, depotRequest, fichier);
+            System.out.println("=== DÉPÔT PROJET RÉUSSI ===");
+            return ResponseEntity.ok(updated);
+        } catch (SecurityException e) {
+            log.warn("Security violation: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        } catch (RuntimeException e) {
+            log.error("Erreur lors du dépôt du projet: {}", e.getMessage());
+            return ResponseEntity.notFound().build();
+        } catch (IOException e) {
+            log.error("Erreur IO lors du dépôt du projet: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("Erreur lors du traitement du fichier");
+        } catch (Exception e) {
+            log.error("Erreur inattendue lors du dépôt du projet: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("Erreur lors du dépôt du projet");
+        }
+    }
+
+    /**
+     * Check if a project has a depot
+     */
+    @GetMapping("/{id}/depot-exists")
+    public ResponseEntity<Map<String, Object>> hasDepot(@PathVariable Long id) {
+        log.info("GET /api/employe/projets/{}/depot-exists - Vérification dépôt", id);
+
+        try {
+            boolean hasDepot = projetService.hasDepot(id);
+            Map<String, Object> response = new HashMap<>();
+            response.put("hasDepot", hasDepot);
+            response.put("projetId", id);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Erreur lors de la vérification du dépôt: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    /**
+     * Update project status
+     */
+    @PatchMapping("/{id}/statut")
+    public ResponseEntity<?> updateStatut(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> request) {
+        log.info("PATCH /api/employe/projets/{}/statut - Mise à jour du statut", id);
+
+        try {
+            // Check if user is chef de projet for this project
+            securityService.checkCurrentUserIsChefDeProjet(id);
+
+            String statut = request.get("statut");
+            if (statut == null || statut.isEmpty()) {
+                return ResponseEntity.badRequest().body("Le statut est requis");
+            }
+
+            ProjetResponse updated = projetService.updateStatut(id, statut);
+            return ResponseEntity.ok(updated);
+        } catch (SecurityException e) {
+            log.warn("Security violation: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        } catch (RuntimeException e) {
+            log.error("Erreur lors de la mise à jour du statut: {}", e.getMessage());
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            log.error("Erreur inattendue lors de la mise à jour du statut: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("Erreur lors de la mise à jour du statut");
+        }
     }
 }
