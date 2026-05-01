@@ -1,76 +1,55 @@
-<div class="demande-ressources-container">
-  <div class="header">
-    <h1>Demande de Ressources</h1>
-    <p class="subtitle">Sélectionnez les ressources dont vous avez besoin</p>
+<div class="container">
+  <h1>Demande de Ressources</h1>
+  <p>Sélectionnez les ressources dont vous avez besoin</p>
+
+  <div *ngIf="successMessage" class="alert alert-success">
+    {{ successMessage }}
+  </div>
+  <div *ngIf="errorMessage" class="alert alert-danger">
+    {{ errorMessage }}
   </div>
 
-  <div class="alerts">
-    <div class="alert alert-success" *ngIf="success">
-      {{ success }}
-    </div>
-    <div class="alert alert-error" *ngIf="error">
-      {{ error }}
-    </div>
-  </div>
-
-  <div class="loading" *ngIf="loading">
+  <div *ngIf="isLoading" class="loading-state">
     <p>Chargement des ressources disponibles...</p>
   </div>
 
-  <div class="content" *ngIf="!loading">
-    <div class="empty-state" *ngIf="ressources.length === 0">
-      <p>Aucune ressource disponible pour le moment.</p>
-    </div>
+  <div *ngIf="!isLoading && ressources.length === 0" class="empty-state">
+    Aucune ressource disponible pour le moment.
+  </div>
 
-    <div class="ressources-grid" *ngIf="ressources.length > 0">
-      <div
-        class="ressource-card"
-        *ngFor="let ressource of ressources"
-        [class.selected]="isSelected(ressource.id)"
-        (click)="toggleSelection(ressource.id)"
-      >
-        <div class="ressource-checkbox">
-          <input
-            type="checkbox"
-            [id]="'ressource-' + ressource.id"
-            [disabled]="submitting || ressource.situation !== 'DISPONIBLE'"
-            [checked]="isSelected(ressource.id)"
-            (click)="$event.stopPropagation()"
-            (change)="toggleSelection(ressource.id)"
-          />
-        </div>
+  <div class="ressources-grid">
+    <div *ngFor="let ressource of ressources"
+         class="ressource-card"
+         [class.selected]="isSelected(ressource.id)"
+         [class.deja-demande]="ressource.dejaDemandeParMoi">
 
-        <div class="ressource-content">
-          <h3>{{ ressource.nom }}</h3>
-          <p class="description" *ngIf="ressource.description">{{ ressource.description }}</p>
+      <div class="card-header">
+        <input
+          type="checkbox"
+          [checked]="isSelected(ressource.id)"
+          [disabled]="ressource.dejaDemandeParMoi"
+          (change)="toggleSelection(ressource.id)"
+        />
+        <span *ngIf="ressource.dejaDemandeParMoi" class="badge badge-deja">
+          Déjà demandé
+        </span>
+      </div>
 
-          <div class="situation-info">
-            <span class="badge" [class]="getSituationClass(ressource.situation)">
-              {{ ressource.situation === 'DISPONIBLE' ? 'Disponible' : 'Demandé' }}
-            </span>
-            <div class="demandeur-info" *ngIf="ressource.employeDemandeur">
-              <small>Demandé par: {{ ressource.employeDemandeur.prenom }} {{ ressource.employeDemandeur.nom }}</small>
-            </div>
-          </div>
-
-          <div class="type-info" *ngIf="ressource.type">
-            <span class="badge badge-info">{{ ressource.type }}</span>
-          </div>
-        </div>
+      <div class="card-body">
+        <h3>{{ ressource.nom }}</h3>
+        <p>{{ ressource.description }}</p>
+        <span class="prix">{{ ressource.prix | number:'1.0-0' }} TND</span>
       </div>
     </div>
+  </div>
 
-    <div class="actions" *ngIf="ressources.length > 0">
-      <p class="selection-count" *ngIf="selectedRessources.size > 0">
-        {{ selectedRessources.size }} ressource(s) sélectionnée(s)
-      </p>
-      <button
-        class="btn btn-primary"
-        [disabled]="selectedRessources.size === 0 || submitting"
-        (click)="soumettreDemande()"
-      >
-        {{ submitting ? 'Envoi en cours...' : 'Soumettre la demande' }}
-      </button>
-    </div>
+  <div *ngIf="!isLoading && ressources.length > 0" class="submit-area">
+    <p>{{ selectedIds.length }} ressource(s) sélectionnée(s)</p>
+    <button
+      [disabled]="selectedIds.length === 0"
+      (click)="soumettreDemande()"
+      class="btn btn-primary">
+      Soumettre la demande
+    </button>
   </div>
 </div>

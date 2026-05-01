@@ -7,6 +7,7 @@ import com.projet.entity.Employe;
 import com.projet.entity.Ressource;
 import com.projet.enums.SituationRessource;
 import com.projet.enums.StatutRessource;
+import com.projet.enums.StatutDemande;
 import com.projet.repository.DemandeRessourceRepository;
 import com.projet.repository.EmployeRepository;
 import com.projet.repository.RessourceRepository;
@@ -15,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -48,20 +50,25 @@ public class DemandeRessourceService {
             throw new RuntimeException("Cette ressource n'est pas disponible (statut: " + ressource.getStatut() + ")");
         }
 
-        // Vérifier si une demande existe déjà pour cet employé et cette ressource
-        demandeRepository.findByRessourceAndEmploye(ressource, employe).ifPresent(d -> {
-            throw new RuntimeException("Vous avez déjà demandé cette ressource");
-        });
+        if (ressource.getSituation() != SituationRessource.NON_DEMANDE) {
+            throw new RuntimeException("Cette ressource n'est pas disponible (situation: " + ressource.getSituation() + ")");
+        }
 
         // Créer la demande
         DemandeRessource demande = new DemandeRessource();
         demande.setRessource(ressource);
         demande.setEmploye(employe);
-        demande.setDateDemande(LocalDate.now());
-        demande.setEstTraitee(false);
+        demande.setDateDemande(LocalDateTime.now());
+        demande.setStatutDemande(StatutDemande.EN_ATTENTE);
 
         // Sauvegarder la demande
         DemandeRessource savedDemande = demandeRepository.save(demande);
+
+        // Mettre à jour la ressource
+        ressource.setSituation(SituationRessource.DEMANDE);
+        ressource.setEmployeDemandeur(employe);
+        ressource.setDateDemande(LocalDateTime.now());
+        ressourceRepository.save(ressource);
 
         log.info("Demande de ressource créée avec succès - ID: {}, Employé: {}, Ressource: {}", 
                 savedDemande.getId(), employe.getEmail(), ressource.getNom());
@@ -98,13 +105,13 @@ public class DemandeRessourceService {
     }
 
     /**
-     * Récupérer les demandes non traitées
+     * Récupérer les demandes en attente
      */
     @Transactional(readOnly = true)
-    public List<DemandeRessourceResponse> getDemandesNonTraitees() {
-        log.debug("Récupération des demandes non traitées");
+    public List<DemandeRessourceResponse> getDemandesEnAttente() {
+        log.debug("Récupération des demandes en attente");
 
-        List<DemandeRessource> demandes = demandeRepository.findByEstTraiteeFalse();
+        List<DemandeRessource> demandes = demandeRepository.findByStatutDemande(StatutDemande.EN_ATTENTE);
 
         return demandes.stream()
                 .map(this::mapToResponse)
@@ -112,38 +119,71 @@ public class DemandeRessourceService {
     }
 
     /**
-     * Marquer une demande comme traitée
+     * Approuver une demande (admin)
      */
     @Transactional
-    public DemandeRessourceResponse marquerDemandeTraitee(Long demandeId) {
-        log.info("Marquage de la demande {} comme traitée", demandeId);
+    public DemandeRessourceResponse approuverDemande(Long demandeId) {
+        log.info("Approbation de la demande {}", demandeId);
 
         DemandeRessource demande = demandeRepository.findById(demandeId)
                 .orElseThrow(() -> new RuntimeException("Demande non trouvée avec l'id: " + demandeId));
 
-        demande.setEstTraitee(true);
+        demande.setStatutDemande(StatutDemande.APPROUVEE);
         DemandeRessource updated = demandeRepository.save(demande);
 
+        log.info("Demande approuvée: {}", demandeId);
         return mapToResponse(updated);
     }
 
     /**
-     * Supprimer une demande
+     * Annuler une demande (employé)
      */
     @Transactional
-    public void deleteDemande(Long demandeId) {
-        log.info("Suppression de la demande ID: {}", demandeId);
+    public void annulerDemande(Long demandeId, Long employeId) {
+        log.info("Annulation de la demande {} par l'employé {}", demandeId, employeId);
 
         DemandeRessource demande = demandeRepository.findById(demandeId)
                 .orElseThrow(() -> new RuntimeException("Demande non trouvée avec l'id: " + demandeId));
 
-        // Remettre la ressource en situation "non demandé"
+        // Vérifier que l'employé est bien le propriétaire de la demande
+        if (!demande.getEmploye().getId().equals(employeId)) {
+            throw new RuntimeException("Vous ne pouvez annuler que vos propres demandes");
+        }
+
+        demande.setStatutDemande(StatutDemande.ANNULEE);
+        demandeRepository.save(demande);
+
+        // Libérer la ressource
         Ressource ressource = demande.getRessource();
         ressource.setSituation(SituationRessource.NON_DEMANDE);
+        ressource.setEmployeDemandeur(null);
+        ressource.setDateDemande(null);
         ressourceRepository.save(ressource);
 
-        demandeRepository.delete(demande);
-        log.info("Demande supprimée: {}", demandeId);
+        log.info("Demande annulée et ressource libérée: {}", demandeId);
+    }
+
+    /**
+     * Libérer une ressource (admin)
+     */
+    @Transactional
+    public void libererRessourceParDemande(Long demandeId) {
+        log.info("Libération de la ressource via demande {}", demandeId);
+
+        DemandeRessource demande = demandeRepository.findById(demandeId)
+                .orElseThrow(() -> new RuntimeException("Demande non trouvée avec l'id: " + demandeId));
+
+        demande.setStatutDemande(StatutDemande.APPROUVEE);
+        demandeRepository.save(demande);
+
+        // Libérer la ressource
+        Ressource ressource = demande.getRessource();
+        ressource.setSituation(SituationRessource.NON_DEMANDE);
+        ressource.setEmployeDemandeur(null);
+        ressource.setDateDemande(null);
+        ressourceRepository.save(ressource);
+
+        log.info("Ressource libérée via demande: {}", demandeId);
     }
 
     // ========================
@@ -154,7 +194,7 @@ public class DemandeRessourceService {
         DemandeRessourceResponse response = new DemandeRessourceResponse();
         response.setId(demande.getId());
         response.setDateDemande(demande.getDateDemande());
-        response.setEstTraitee(demande.isEstTraitee());
+        response.setStatutDemande(demande.getStatutDemande());
 
         // Informations de la ressource
         if (demande.getRessource() != null) {
@@ -162,7 +202,9 @@ public class DemandeRessourceService {
             ressourceInfo.setId(demande.getRessource().getId());
             ressourceInfo.setNom(demande.getRessource().getNom());
             ressourceInfo.setDescription(demande.getRessource().getDescription());
-            ressourceInfo.setPrix(demande.getRessource().getPrix().doubleValue());
+            ressourceInfo.setPrix(demande.getRessource().getPrix());
+            ressourceInfo.setDateDebut(demande.getRessource().getDateDebut());
+            ressourceInfo.setDateFin(demande.getRessource().getDateFin());
             response.setRessource(ressourceInfo);
         }
 
@@ -176,5 +218,24 @@ public class DemandeRessourceService {
         }
 
         return response;
+    }
+
+    /**
+     * Vérifier si un employé a déjà demandé une ressource
+     */
+    @Transactional(readOnly = true)
+    public boolean checkIfAlreadyRequested(Long ressourceId, Long employeId) {
+        log.debug("Vérification si l'employé {} a déjà demandé la ressource {}", employeId, ressourceId);
+        
+        // Récupérer la ressource
+        Ressource ressource = ressourceRepository.findById(ressourceId)
+                .orElseThrow(() -> new RuntimeException("Ressource non trouvée: " + ressourceId));
+        
+        // Récupérer l'employé
+        Employe employe = employeRepository.findById(employeId)
+                .orElseThrow(() -> new RuntimeException("Employé non trouvé: " + employeId));
+        
+        // Vérifier si une demande existe pour cette ressource et cet employé
+        return demandeRepository.findByRessourceAndEmploye(ressource, employe).isPresent();
     }
 }

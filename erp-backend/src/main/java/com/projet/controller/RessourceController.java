@@ -4,6 +4,8 @@ import com.projet.dto.RessourceRequest;
 import com.projet.dto.RessourceResponse;
 import com.projet.dto.RessourceDisponibleDTO;
 import com.projet.service.RessourceService;
+import com.projet.repository.RessourceRepository;
+import com.projet.entity.Ressource;
 import com.projet.entity.Employe;
 import com.projet.repository.EmployeRepository;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -28,22 +30,33 @@ import java.util.stream.Collectors;
 public class RessourceController {
 
     private final RessourceService ressourceService;
+    private final RessourceRepository ressourceRepository;
     private final EmployeRepository employeRepository;
 
     // ========================
     // CRUD — ADMIN UNIQUEMENT
     // ========================
 
+    // ========================
+    // CRUD — ADMIN UNIQUEMENT
+    // ========================
+
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<RessourceResponse>> getAllRessources() {
+        log.info("GET /api/ressources - Liste de toutes les ressources pour admin");
+        List<RessourceResponse> ressources = ressourceService.getAllForAdmin();
+        return ResponseEntity.ok(ressources);
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RessourceResponse> createRessource(@Valid @RequestBody RessourceRequest request) {
         log.info("POST /api/ressources - Création d'une ressource");
         log.info("Payload reçu: {}", request);
-        log.info("Nom: {}, Description: {}, Statut: {}, Prix: {}", 
-                request.getNom(), request.getDescription(), request.getStatut(), request.getPrix());
-        log.info("Date début: {}, Date fin: {}, Statut forcé manuel: {}, Projet ID: {}", 
-                request.getDateDebutAbonnement(), request.getDateFinAbonnement(), 
-                request.getStatutForceManuel(), request.getProjetId());
+        log.info("Nom: {}, Description: {}, Prix: {}, Date début: {}, Date fin: {}", 
+                request.getNom(), request.getDescription(), request.getPrix(), 
+                request.getDateDebut(), request.getDateFin());
         
         try {
             RessourceResponse created = ressourceService.createRessource(request);
@@ -53,14 +66,6 @@ public class RessourceController {
             log.error("Erreur lors de la création de la ressource: {}", e.getMessage(), e);
             throw e;
         }
-    }
-
-    @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<RessourceResponse>> getAllRessources() {
-        log.info("GET /api/ressources - Liste de toutes les ressources");
-        List<RessourceResponse> ressources = ressourceService.getAllRessources();
-        return ResponseEntity.ok(ressources);
     }
 
     @GetMapping("/{id}")
@@ -89,26 +94,7 @@ public class RessourceController {
         return ResponseEntity.noContent().build();
     }
 
-    // ========================
-    // ENDPOINTS POUR EMPLOYÉS
-    // ========================
-
-    @GetMapping("/disponibles")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYE')")
-    public ResponseEntity<List<RessourceDisponibleDTO>> getRessourcesDisponibles(
-            @AuthenticationPrincipal UserDetails userDetails) {
-        
-        String email = userDetails.getUsername();
-        log.info("GET /api/ressources/disponibles - Ressources disponibles pour l'employé: {}", email);
-        
-        // Récupérer l'employé par son email
-        Employe employe = employeRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Employé non trouvé avec l'email: " + email));
-        
-        List<RessourceDisponibleDTO> ressources = ressourceService.getRessourcesDisponiblesPourEmploye(employe);
-        return ResponseEntity.ok(ressources);
-    }
-
+    
     // Handler global pour les erreurs de validation
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<String> handleValidationExceptions(MethodArgumentNotValidException ex) {
@@ -122,5 +108,30 @@ public class RessourceController {
         
         log.error("Champs en erreur: {}", errors);
         return ResponseEntity.badRequest().body("Erreur de validation: " + errors);
+    }
+
+    // ========================
+    // MAPPING DTO
+    // ========================
+
+    private RessourceDisponibleDTO mapToDisponibleDTO(Ressource ressource) {
+        RessourceDisponibleDTO dto = new RessourceDisponibleDTO();
+        dto.setId(ressource.getId());
+        dto.setNom(ressource.getNom());
+        dto.setDescription(ressource.getDescription());
+        dto.setStatut(ressource.getStatut().name());
+        dto.setSituation(ressource.getSituation().name());
+        dto.setPrix(ressource.getPrix());
+        dto.setDateDebut(ressource.getDateDebut());
+        dto.setDateFin(ressource.getDateFin());
+        
+        // Informations sur l'employé demandeur si applicable
+        if (ressource.getEmployeDemandeur() != null) {
+            dto.setEmployeDemandeur(ressource.getEmployeDemandeur().getPrenom() + " " + ressource.getEmployeDemandeur().getNom());
+        }
+        
+        dto.setDateDemande(ressource.getDateDemande());
+        
+        return dto;
     }
 }

@@ -7,7 +7,7 @@ import { Ressource } from '../models/ressource.model';
   providedIn: 'root'
 })
 export class EmployeRessourceService {
-  private baseUrl = '/api/employe/ressources';
+  private baseUrl = 'http://localhost:8080/api/employe/ressources';
 
   constructor(private http: HttpClient) {}
 

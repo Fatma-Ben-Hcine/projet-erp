@@ -37,10 +37,7 @@
 
         <div class="ressource-content">
           <p class="description" *ngIf="ressource.description">{{ ressource.description }}</p>
-          <p class="type" *ngIf="ressource.type">
-            <strong>Type:</strong> {{ ressource.type }}
-          </p>
-
+          
           <div class="situation-info">
             <!-- Badge situation -->
             <span class="badge" 
@@ -49,10 +46,10 @@
             </span>
 
             <!-- Info employé demandeur -->
-            <div class="demandeur-info" *ngIf="ressource.employeDemandeur">
+            <div class="demandeur-info" *ngIf="ressource.employeDemandeurNom">
               <small>
                 <strong>Demandé par:</strong> 
-                {{ ressource.employeDemandeur.prenom }} {{ ressource.employeDemandeur.nom }}
+                {{ ressource.employeDemandeurNom }}
               </small>
               <br>
               <small><strong>Date:</strong> {{ formatDate(ressource.dateDemande) }}</small>

@@ -4,20 +4,20 @@ import com.projet.dto.RessourceRequest;
 import com.projet.dto.RessourceResponse;
 import com.projet.dto.RessourceDisponibleDTO;
 import com.projet.entity.Ressource;
-import com.projet.entity.Projet;
 import com.projet.entity.Employe;
 import com.projet.entity.DemandeRessource;
 import com.projet.enums.StatutRessource;
 import com.projet.enums.SituationRessource;
 import com.projet.repository.RessourceRepository;
-import com.projet.repository.ProjetRepository;
 import com.projet.repository.DemandeRessourceRepository;
+import com.projet.repository.EmployeRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,6 +28,7 @@ public class RessourceService {
 
     private final RessourceRepository ressourceRepository;
     private final DemandeRessourceRepository demandeRessourceRepository;
+    private final EmployeRepository employeRepository;
 
     // ========================
     // CRUD OPÉRATIONS
@@ -41,18 +42,10 @@ public class RessourceService {
         ressource.setNom(request.getNom());
         ressource.setDescription(request.getDescription());
         ressource.setPrix(request.getPrix());
-        ressource.setStatut(request.getStatut());
+        ressource.setDateDebut(request.getDateDebut());
+        ressource.setDateFin(request.getDateFin());
+        ressource.setStatut(StatutRessource.ACTIVE); // Valeur par défaut
         ressource.setSituation(SituationRessource.NON_DEMANDE); // Valeur par défaut
-        ressource.setStatutForceManuel(request.getStatutForceManuel());
-
-        // Dates d'abonnement (optionnelles)
-        ressource.setDateDebutAbonnement(request.getDateDebutAbonnement());
-        ressource.setDateFinAbonnement(request.getDateFinAbonnement());
-
-        // Calcul automatique du statut si dates renseignées
-        if (ressource.isEstAbonne() && !ressource.isStatutForceManuel()) {
-            updateStatutBasedOnDates(ressource);
-        }
 
         Ressource saved = ressourceRepository.save(ressource);
         log.info("Ressource créée avec ID: {}", saved.getId());
@@ -69,25 +62,9 @@ public class RessourceService {
         ressource.setNom(request.getNom());
         ressource.setDescription(request.getDescription());
         ressource.setPrix(request.getPrix());
-        ressource.setStatutForceManuel(request.getStatutForceManuel());
-
-        // Si l'admin force manuellement le statut
-        if (Boolean.TRUE.equals(request.getStatutForceManuel())) {
-            ressource.setStatut(request.getStatut());
-            log.info("Statut forcé manuellement pour la ressource {}", id);
-        } else {
-            // Sinon, réinitialiser le flag et appliquer la logique automatique
-            ressource.setStatut(request.getStatut());
-        }
-
-        // Mise à jour des dates
-        ressource.setDateDebutAbonnement(request.getDateDebutAbonnement());
-        ressource.setDateFinAbonnement(request.getDateFinAbonnement());
-
-        // Recalculer le statut si dates renseignées et pas de forçage manuel
-        if (ressource.isEstAbonne() && !ressource.isStatutForceManuel()) {
-            updateStatutBasedOnDates(ressource);
-        }
+        ressource.setDateDebut(request.getDateDebut());
+        ressource.setDateFin(request.getDateFin());
+        // Ne pas modifier statut et situation - gérés par les actions dédiées
 
         Ressource updated = ressourceRepository.save(ressource);
         log.info("Ressource mise à jour: {}", updated.getId());
@@ -100,9 +77,6 @@ public class RessourceService {
 
         List<Ressource> ressources = ressourceRepository.findAll();
 
-        // Recalculer les statuts avant de renvoyer
-        ressources.forEach(this::recalculateStatutIfNeeded);
-
         return ressources.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -114,9 +88,6 @@ public class RessourceService {
 
         Ressource ressource = ressourceRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Ressource non trouvée avec l'id: " + id));
-
-        // Recalculer le statut avant de renvoyer
-        recalculateStatutIfNeeded(ressource);
 
         return mapToResponse(ressource);
     }
@@ -133,107 +104,156 @@ public class RessourceService {
     }
 
     // ========================
-    // LOGIQUE MÉTIER — STATUT AUTOMATIQUE
+    // ACTIONS MÉTIER
     // ========================
 
-    /**
-     * Met à jour le statut automatiquement selon les dates d'abonnement.
-     * Ne s'applique que si le statut n'est pas forcé manuellement.
-     */
-    private void updateStatutBasedOnDates(Ressource ressource) {
-        if (ressource.isStatutForceManuel()) {
-            log.debug("Statut manuellement forcé pour la ressource {}, pas de recalcul", ressource.getId());
-            return;
-        }
-
-        if (!ressource.isEstAbonne()) {
-            return; // Pas de dates, pas de recalcul
-        }
-
-        LocalDate now = LocalDate.now();
-
-        if (now.isBefore(ressource.getDateDebutAbonnement())) {
-            // Abonnement pas encore commencé
-            ressource.setStatut(StatutRessource.NON_ACTIVE);
-            log.debug("Ressource {} : abonnement futur, statut = NON_ACTIVE", ressource.getId());
-        } else if (now.isAfter(ressource.getDateFinAbonnement())) {
-            // Abonnement expiré
-            ressource.setStatut(StatutRessource.NON_ACTIVE);
-            log.debug("Ressource {} : abonnement expiré, statut = NON_ACTIVE", ressource.getId());
-        } else {
-            // Abonnement en cours
-            ressource.setStatut(StatutRessource.ACTIVE);
-            log.debug("Ressource {} : abonnement en cours, statut = ACTIVE", ressource.getId());
-        }
-    }
-
-    /**
-     * Recalculer le statut si nécessaire (dates renseignées et pas de forçage manuel)
-     */
-    private void recalculateStatutIfNeeded(Ressource ressource) {
-        if (ressource.isEstAbonne() && !ressource.isStatutForceManuel()) {
-            updateStatutBasedOnDates(ressource);
-        }
-    }
-
-    // ========================
-    // CRON JOB — MISE À JOUR QUOTIDIENNE
-    // ========================
-
-    /**
-     * Job planifié quotidien à 00:01 pour mettre à jour les statuts des ressources.
-     * S'exécute uniquement sur les ressources avec dates d'abonnement renseignées
-     * et sans forçage manuel du statut.
-     */
-    @Scheduled(cron = "0 1 0 * * ?") // Tous les jours à 00:01
     @Transactional
-    public void scheduledStatutUpdate() {
-        log.info("=== DÉBUT DU CRON JOB : Mise à jour des statuts de ressources ===");
+    public void activerRessource(Long id) {
+        log.info("Activation de la ressource ID: {}", id);
+        
+        Ressource ressource = ressourceRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ressource non trouvée avec l'id: " + id));
+        
+        ressource.setStatut(StatutRessource.ACTIVE);
+        ressourceRepository.save(ressource);
+        log.info("Ressource activée: {}", id);
+    }
 
-        List<Ressource> ressources = ressourceRepository.findAllWithAbonnementDates();
-        log.info("Nombre de ressources avec abonnement : {}", ressources.size());
+    @Transactional
+    public void desactiverRessource(Long id) {
+        log.info("Désactivation de la ressource ID: {}", id);
+        
+        Ressource ressource = ressourceRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ressource non trouvée avec l'id: " + id));
+        
+        ressource.setStatut(StatutRessource.NON_ACTIVE);
+        ressourceRepository.save(ressource);
+        log.info("Ressource désactivée: {}", id);
+    }
 
-        int updatedCount = 0;
-        for (Ressource ressource : ressources) {
-            if (!ressource.isStatutForceManuel()) {
-                StatutRessource oldStatut = ressource.getStatut();
-                updateStatutBasedOnDates(ressource);
+    @Transactional
+    public void changerStatutRessource(Long id, StatutRessource nouveauStatut) {
+        log.info("Changement de statut de la ressource ID: {} vers {}", id, nouveauStatut);
+        
+        Ressource ressource = ressourceRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ressource non trouvée avec l'id: " + id));
+        
+        ressource.setStatut(nouveauStatut);
+        ressourceRepository.save(ressource);
+        log.info("Statut de la ressource {} changé vers {}", id, nouveauStatut);
+    }
 
-                if (oldStatut != ressource.getStatut()) {
-                    updatedCount++;
-                    log.info("Ressource {} : statut changé de {} à {}",
-                            ressource.getId(), oldStatut, ressource.getStatut());
-                }
-            }
-        }
-
-        ressourceRepository.saveAll(ressources);
-        log.info("=== FIN DU CRON JOB : {} ressources mises à jour ===", updatedCount);
+    @Transactional
+    public void libererRessource(Long id) {
+        log.info("Libération de la ressource ID: {}", id);
+        
+        Ressource ressource = ressourceRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ressource non trouvée avec l'id: " + id));
+        
+        ressource.setSituation(SituationRessource.NON_DEMANDE);
+        ressource.setEmployeDemandeur(null);
+        ressource.setDateDemande(null);
+        ressourceRepository.save(ressource);
+        log.info("Ressource libérée: {}", id);
     }
 
     // ========================
-    // RECHERCHE AVANCÉE
+    // MÉTHODES MÉTIER SPÉCIFIQUES
     // ========================
 
     @Transactional(readOnly = true)
-    public List<RessourceDisponibleDTO> getRessourcesDisponiblesPourEmploye(Employe employe) {
-        log.debug("Récupération des ressources disponibles pour l'employé: {}", employe.getEmail());
-
-        // Toutes les ressources actives (sans filtre sur situation)
-        List<Ressource> ressources = ressourceRepository.findByStatut(StatutRessource.ACTIVE);
-
-        return ressources.stream()
+    public List<RessourceDisponibleDTO> getRessourcesDisponibles(String emailEmploye) {
+        log.info("Récupération des ressources disponibles pour l'employé: {}", emailEmploye);
+        
+        // Récupérer l'employé
+        Employe employe = employeRepository.findByEmail(emailEmploye)
+                .orElseThrow(() -> new RuntimeException("Employé non trouvé: " + emailEmploye));
+        
+        // Récupérer toutes les ressources avec statut = ACTIVE
+        List<Ressource> ressourcesActives = ressourceRepository.findAll()
+                .stream()
+                .filter(r -> r.getStatut() == StatutRessource.ACTIVE)
+                .collect(Collectors.toList());
+        
+        // Mapper vers DTO avec informations calculées
+        return ressourcesActives.stream()
                 .map(ressource -> {
-                    RessourceDisponibleDTO dto = mapToDisponibleDTO(ressource);
+                    RessourceDisponibleDTO dto = new RessourceDisponibleDTO();
+                    dto.setId(ressource.getId());
+                    dto.setNom(ressource.getNom());
+                    dto.setDescription(ressource.getDescription());
+                    dto.setPrix(ressource.getPrix());
+                    dto.setStatut(ressource.getStatut().name());
+                    dto.setSituation(ressource.getSituation().name());
+                    
+                    // Dates de ressource (pas d'abonnement)
+                    dto.setDateDebutAbonnement(ressource.getDateDebut() != null ? 
+                            ressource.getDateDebut().format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE) : null);
+                    dto.setDateFinAbonnement(ressource.getDateFin() != null ? 
+                            ressource.getDateFin().format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE) : null);
+                    dto.setEstAbonne(ressource.getDateDebut() != null && 
+                                   ressource.getDateFin() != null);
                     
                     // Vérifier si cet employé a déjà demandé cette ressource
-                    boolean dejaDemande = demandeRessourceRepository
-                            .existsByEmployeAndRessource(employe, ressource);
-                    dto.setDejaDemandeParMoi(dejaDemande);
+                    boolean dejaDemandeParMoi = demandeRessourceRepository
+                            .findByRessourceAndEmploye(ressource, employe)
+                            .isPresent();
+                    dto.setDejaDemandeParMoi(dejaDemandeParMoi);
+                    
+                    // Calculer le nombre total de demandes
+                    int nombreDemandes = demandeRessourceRepository.findByRessourceId(ressource.getId()).size();
+                    dto.setNombreDemandes(nombreDemandes);
                     
                     return dto;
                 })
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<RessourceResponse> getAllForAdmin() {
+        log.info("Récupération de toutes les ressources pour l'admin");
+        
+        List<Ressource> ressources = ressourceRepository.findAll();
+        
+        return ressources.stream()
+                .map(ressource -> {
+                    RessourceResponse response = mapToResponse(ressource);
+                    
+                    // Ajouter le nombre de demandes
+                    int nombreDemandes = demandeRessourceRepository.findByRessourceId(ressource.getId()).size();
+                    response.setNombreDemandes(nombreDemandes);
+                    
+                    return response;
+                })
+                .collect(Collectors.toList());
+    }
+
+    // ========================
+    // CALCUL AUTOMATIQUE STATUT
+    // ========================
+
+    @Transactional
+    public void updateStatutsByDate() {
+        log.info("Mise à jour automatique des statuts par date de ressource");
+        
+        List<Ressource> ressources = ressourceRepository.findAll();
+        LocalDate today = LocalDate.now();
+        
+        for (Ressource ressource : ressources) {
+            // Vérifier si la date de fin de ressource est expirée
+            if (ressource.getDateFin() != null 
+                && today.isAfter(ressource.getDateFin())) {
+                
+                if (ressource.getStatut() != StatutRessource.NON_ACTIVE) {
+                    ressource.setStatut(StatutRessource.NON_ACTIVE);
+                    ressourceRepository.save(ressource);
+                    log.info("Ressource {} marquée comme NON_ACTIVE (date de fin expirée le {})", 
+                            ressource.getId(), ressource.getDateFin());
+                }
+            }
+        }
+        
+        log.info("Mise à jour automatique des statuts terminée");
     }
 
     // ========================
@@ -248,45 +268,17 @@ public class RessourceService {
         response.setSituation(ressource.getSituation());
         response.setStatut(ressource.getStatut());
         response.setPrix(ressource.getPrix());
-        response.setDateDebutAbonnement(ressource.getDateDebutAbonnement());
-        response.setDateFinAbonnement(ressource.getDateFinAbonnement());
-        response.setEstAbonne(ressource.isEstAbonne());
-        response.setStatutForceManuel(ressource.isStatutForceManuel());
-
-        // Informations calculées
-        response.setAbonnementExpire(ressource.isAbonnementExpire());
-        response.setAbonnementEnCours(ressource.isAbonnementEnCours());
-        response.setAbonnementFutur(ressource.isAbonnementFutur());
-
-        // Informations du projet (si présent)
-        if (ressource.getProjet() != null) {
-            RessourceResponse.ProjetInfo projetInfo = new RessourceResponse.ProjetInfo();
-            projetInfo.setId(ressource.getProjet().getId());
-            projetInfo.setNom(ressource.getProjet().getNom());
-            response.setProjet(projetInfo);
-        }
-
-        return response;
-    }
-
-    private RessourceDisponibleDTO mapToDisponibleDTO(Ressource ressource) {
-        RessourceDisponibleDTO dto = new RessourceDisponibleDTO();
-        dto.setId(ressource.getId());
-        dto.setNom(ressource.getNom());
-        dto.setDescription(ressource.getDescription());
-        dto.setType(ressource.getType());
-        dto.setPrix(ressource.getPrix());
-        dto.setStatut(ressource.getStatut().name());
-        dto.setDateDebut(ressource.getDateDebutAbonnement());
-        dto.setDateFin(ressource.getDateFinAbonnement());
-        dto.setStatutForceManuel(ressource.isStatutForceManuel() ? "OUI" : "NON");
-        dto.setAbonnementEnCours(ressource.isAbonnementEnCours());
-        dto.setAbonnementFutur(ressource.isAbonnementFutur());
-        dto.setSituation(ressource.getSituation().name());
+        response.setDateDebut(ressource.getDateDebut());
+        response.setDateFin(ressource.getDateFin());
         
-        // Le flag dejaDemandeParMoi sera set par la méthode appelante
-        dto.setDejaDemandeParMoi(false);
-
-        return dto;
+        // Informations sur l'employé demandeur si applicable
+        if (ressource.getEmployeDemandeur() != null) {
+            response.setEmployeDemandeurNom(ressource.getEmployeDemandeur().getPrenom() + " " + ressource.getEmployeDemandeur().getNom());
+        }
+        
+        response.setDateDemande(ressource.getDateDemande());
+        response.setDejaDemandeParMoi(false); // Sera géré dans le service employé
+        
+        return response;
     }
 }

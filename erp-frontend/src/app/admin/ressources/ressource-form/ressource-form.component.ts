@@ -19,11 +19,15 @@ export class RessourceFormComponent implements OnInit {
   saving = false;
   error: string | null = null;
 
-  // Form data - nouvelle structure simplifiée
+  // Form data - nouvelle structure selon la logique métier
   ressource: RessourceRequest = {
     nom: '',
     description: '',
-    type: ''
+    prix: 0,
+    statut: 'ACTIVE',
+    dateDebutAbonnement: null,
+    dateFinAbonnement: null,
+    statutForceManuel: false
   };
 
   constructor(
@@ -42,19 +46,23 @@ export class RessourceFormComponent implements OnInit {
 
   loadRessource(id: number): void {
     this.loading = true;
-    this.adminRessourceService.getAllRessources().subscribe({
-      next: (ressources) => {
+    this.adminRessourceService.getAll().subscribe({
+      next: (ressources: any[]) => {
         const ressource = ressources.find(r => r.id === id);
         if (ressource) {
           this.ressource = {
             nom: ressource.nom,
             description: ressource.description || '',
-            type: ressource.type || ''
+            prix: ressource.prix,
+            statut: ressource.statut || 'ACTIVE',
+            dateDebutAbonnement: ressource.dateDebutAbonnement || null,
+            dateFinAbonnement: ressource.dateFinAbonnement || null,
+            statutForceManuel: ressource.statutForceManuel || false
           };
         }
         this.loading = false;
       },
-      error: (err) => {
+      error: (err: any) => {
         this.error = 'Erreur lors du chargement de la ressource';
         this.loading = false;
         console.error(err);
@@ -71,26 +79,49 @@ export class RessourceFormComponent implements OnInit {
     this.saving = true;
     this.error = null;
 
-    // Payload final avec la nouvelle structure simplifiée
+    // Payload final avec la nouvelle structure selon la logique métier
     const payload: RessourceRequest = {
       nom: this.ressource.nom,
       description: this.ressource.description,
-      type: this.ressource.type
+      prix: this.ressource.prix,
+      statut: this.ressource.statut,
+      dateDebutAbonnement: this.ressource.dateDebutAbonnement,
+      dateFinAbonnement: this.ressource.dateFinAbonnement,
+      statutForceManuel: this.ressource.statutForceManuel
     };
 
     const observable = this.isEditMode && this.ressourceId
-      ? this.adminRessourceService.updateRessource(this.ressourceId, payload)
-      : this.adminRessourceService.createRessource(payload);
+      ? this.adminRessourceService.update(this.ressourceId, payload)
+      : this.adminRessourceService.create(payload);
 
     observable.subscribe({
       next: () => {
         this.router.navigate(['/admin/ressources']);
       },
-      error: (err) => {
+      error: (err: any) => {
         this.error = 'Erreur lors de la sauvegarde de la ressource';
         this.saving = false;
         console.error(err);
       }
     });
+  }
+
+  // Méthodes pour la validation des dates d'abonnement
+  onDateAbonnementChange(): void {
+    // Logique pour valider les dates d'abonnement si nécessaire
+    console.log('Dates d\'abonnement modifiées:', {
+      debut: this.ressource.dateDebutAbonnement,
+      fin: this.ressource.dateFinAbonnement
+    });
+  }
+
+  isDateFinAbonnementInPast(): boolean {
+    if (!this.ressource.dateFinAbonnement) {
+      return false;
+    }
+    const dateFin = new Date(this.ressource.dateFinAbonnement);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Ignorer l'heure
+    return dateFin < today;
   }
 }

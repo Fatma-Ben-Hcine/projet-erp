@@ -3,6 +3,7 @@ package com.projet.repository;
 import com.projet.entity.DemandeRessource;
 import com.projet.entity.Employe;
 import com.projet.entity.Ressource;
+import com.projet.enums.StatutDemande;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -21,6 +22,9 @@ public interface DemandeRessourceRepository extends JpaRepository<DemandeRessour
     // Vérifier si une demande existe déjà pour cette ressource par cet employé
     Optional<DemandeRessource> findByRessourceAndEmploye(Ressource ressource, Employe employe);
 
-    // Demandes non traitées
-    List<DemandeRessource> findByEstTraiteeFalse();
+    // Demandes par statut
+    List<DemandeRessource> findByStatutDemande(StatutDemande statutDemande);
+
+    // Compter les demandes pour une ressource avec un statut spécifique
+    long countByRessourceIdAndStatutDemande(Long ressourceId, StatutDemande statut);
 }

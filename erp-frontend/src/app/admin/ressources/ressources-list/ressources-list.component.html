@@ -1,97 +1,317 @@
 <div class="ressources-container">
-  <div class="header">
-    <h1>Gestion des Ressources</h1>
-    <button class="btn btn-primary" routerLink="/admin/ressources/nouveau">
-      <i class="icon-plus"></i> Nouvelle Ressource
+  <!-- En-tête de page -->
+  <div class="page-header">
+    <h1 class="page-title">Gestion des Ressources</h1>
+    <button class="btn-primary" (click)="ouvrirModalCreation()">
+      + Nouvelle Ressource
     </button>
   </div>
 
-  <div class="loading" *ngIf="loading">
-    <p>Chargement des ressources...</p>
+  <!-- Cartes de statistiques -->
+  <div class="stats-grid" *ngIf="!loading && !error && ressources.length > 0">
+    <div class="stat-card">
+      <div class="stat-icon">📦</div>
+      <div class="stat-info">
+        <span class="stat-number">{{ totalRessources }}</span>
+        <span class="stat-label">Total ressources</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-green">
+      <div class="stat-icon">✅</div>
+      <div class="stat-info">
+        <span class="stat-number">{{ ressourcesActives }}</span>
+        <span class="stat-label">Actives</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-blue">
+      <div class="stat-icon">🔵</div>
+      <div class="stat-info">
+        <span class="stat-number">{{ ressourcesDisponibles }}</span>
+        <span class="stat-label">Disponibles</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-orange">
+      <div class="stat-icon">🟠</div>
+      <div class="stat-info">
+        <span class="stat-number">{{ ressourcesDemandees }}</span>
+        <span class="stat-label">Demandées</span>
+      </div>
+    </div>
   </div>
 
+  <!-- Barre de filtres -->
+  <div class="filters-bar" *ngIf="!loading && !error">
+    <!-- Recherche -->
+    <div class="search-box">
+      <input 
+        type="text" 
+        placeholder="Rechercher par nom..."
+        [(ngModel)]="searchTerm"
+        (input)="filterRessources($any($event).target?.value || '')"
+      >
+    </div>
+
+    <!-- Filtres statut -->
+    <div class="filter-group">
+      <button 
+        [class.active]="currentFilter === 'all'"
+        (click)="setFilter('all')"
+      >
+        Tous
+      </button>
+      <button 
+        [class.active]="currentFilter === 'actives'"
+        (click)="setFilter('actives')"
+      >
+        Actifs
+      </button>
+      <button 
+        [class.active]="currentFilter === 'non-actifs'"
+        (click)="setFilter('non-actifs')"
+      >
+        Non actifs
+      </button>
+    </div>
+
+    <!-- Filtres situation -->
+    <div class="filter-group">
+      <button 
+        [class.active]="currentFilter === 'all'"
+        (click)="setFilter('all')"
+      >
+        Tous
+      </button>
+      <button 
+        [class.active]="currentFilter === 'disponibles'"
+        (click)="setFilter('disponibles')"
+      >
+        Disponibles
+      </button>
+      <button 
+        [class.active]="currentFilter === 'demandees'"
+        (click)="setFilter('demandees')"
+      >
+        Demandées
+      </button>
+    </div>
+  </div>
+
+  <!-- État de chargement -->
+  <div class="loading" *ngIf="loading">
+    <p>Chargement...</p>
+  </div>
+
+  <!-- Message d'erreur -->
   <div class="error" *ngIf="error">
     <p>{{ error }}</p>
   </div>
 
-  <div class="table-container" *ngIf="!loading && !error">
-    <table class="data-table">
+  <!-- Tableau des ressources -->
+  <div class="table-container" *ngIf="!loading && !error && filteredRessources.length > 0">
+    <table class="resources-table">
       <thead>
         <tr>
           <th>Nom</th>
-          <th>Type</th>
+          <th>Description</th>
+          <th>Prix</th>
+          <th>Date début</th>
+          <th>Date fin</th>
           <th>Statut</th>
           <th>Situation</th>
-          <th>Employé demandeur</th>
-          <th>Date de demande</th>
+          <th>Nb Demandes</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let ressource of ressources">
+        <tr *ngFor="let ressource of filteredRessources">
           <td>
             <strong>{{ ressource.nom }}</strong>
-            <p class="description" *ngIf="ressource.description">{{ ressource.description }}</p>
           </td>
+          <td>{{ ressource.description || '-' }}</td>
+          <td>{{ ressource.prix ? ressource.prix + ' TND' : '-' }}</td>
+          <td>{{ ressource.dateDebut ? formatDate(ressource.dateDebut) : '-' }}</td>
+          <td>{{ ressource.dateFin ? formatDate(ressource.dateFin) : '-' }}</td>
           <td>
-            <span class="badge badge-secondary">{{ ressource.type || 'Non défini' }}</span>
-          </td>
-          <td>
-            <span class="badge" [ngClass]="getStatutClass(ressource.statut)">
-              {{ formatStatut(ressource.statut) }}
+            <span [class]="ressource.statut === 'ACTIVE' 
+                           ? 'badge badge-active' 
+                           : 'badge badge-inactive'">
+              {{ ressource.statut === 'ACTIVE' ? 'Active' : 'Non active' }}
             </span>
           </td>
           <td>
-            <span class="badge" [ngClass]="getSituationClass(ressource.situation)">
-              {{ formatSituation(ressource.situation) }}
+            <span [class]="ressource.situation === 'DISPONIBLE'
+                           ? 'badge badge-disponible'
+                           : 'badge badge-demande'">
+              {{ ressource.situation === 'DISPONIBLE' 
+                 ? 'Disponible' : 'Demandé' }}
             </span>
           </td>
           <td>
-            <span *ngIf="ressource.employeDemandeur" class="badge badge-info">
-              {{ ressource.employeDemandeur.prenom }} {{ ressource.employeDemandeur.nom }}
+            <!-- Nb Demandes calculé -->
+            <span class="compteur-demandes"
+                  [class.compteur-zero]="(ressource.nombreDemandes || 0) === 0"
+                  [class.compteur-nonzero]="(ressource.nombreDemandes || 0) > 0">
+              👥 {{ ressource.nombreDemandes || 0 }}
+              {{ (ressource.nombreDemandes || 0) <= 1 ? 'demande' : 'demandes' }}
             </span>
-            <span *ngIf="!ressource.employeDemandeur" class="text-muted">-</span>
           </td>
-          <td>
-            <span *ngIf="ressource.dateDemande">{{ formatDate(ressource.dateDemande) }}</span>
-            <span *ngIf="!ressource.dateDemande" class="text-muted">-</span>
-          </td>
-          <td class="actions">
-            <button class="btn btn-sm btn-secondary" [routerLink]="['/admin/ressources/edit', ressource.id]">
-              <i class="icon-edit"></i> Modifier
-            </button>
-            
-            <!-- Toggle statut -->
-            <button class="btn btn-sm" 
-                    [ngClass]="ressource.statut === 'ACTIVE' ? 'btn-warning' : 'btn-success'"
-                    (click)="changerStatut(ressource.id, ressource.statut === 'ACTIVE' ? 'NON_ACTIVE' : 'ACTIVE')"
-                    title="Changer le statut">
-              <i class="icon-power"></i> 
-              {{ ressource.statut === 'ACTIVE' ? 'Désactiver' : 'Activer' }}
-            </button>
-            
-            <!-- Bouton libérer (si demandé) -->
-            <button class="btn btn-sm btn-info" 
-                    *ngIf="ressource.situation === 'DEMANDE'"
-                    (click)="libererRessource(ressource.id)"
-                    title="Libérer la ressource">
-              <i class="icon-check"></i> Libérer
-            </button>
-            
-            <!-- Bouton supprimer (si disponible) -->
-            <button class="btn btn-sm btn-danger" 
-                    *ngIf="ressource.situation === 'DISPONIBLE'"
-                    (click)="deleteRessource(ressource.id)"
-                    title="Supprimer la ressource">
-              <i class="icon-delete"></i> Supprimer
-            </button>
+          <td class="actions-cell">
+            <div class="action-buttons">
+              <!-- Modifier -->
+              <button class="btn-icon btn-edit"
+                      (click)="ouvrirModification(ressource)"
+                      title="Modifier">
+                ✏️
+              </button>
+
+              <!-- Supprimer -->
+              <button class="btn-icon btn-delete"
+                      (click)="supprimerRessource(ressource.id, ressource.situation)"
+                      title="Supprimer">
+                🗑️
+              </button>
+
+              <!-- Libérer si DEMANDE -->
+              <button *ngIf="ressource.situation === 'DEMANDE'"
+                      class="btn-icon btn-liberer"
+                      (click)="libererRessource(ressource.id)"
+                      title="Libérer">
+                🔓
+              </button>
+
+              <!-- Toggle Activer/Désactiver -->
+              <label class="toggle-switch" title="Activer/Désactiver">
+                <input type="checkbox"
+                       [checked]="ressource.statut === 'ACTIVE'"
+                       (change)="changerStatut(
+                         ressource.id,
+                         ressource.statut === 'ACTIVE' 
+                           ? 'NON_ACTIVE' : 'ACTIVE')">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
           </td>
         </tr>
       </tbody>
     </table>
+  </div>
 
-    <div class="empty-state" *ngIf="ressources.length === 0">
-      <p>Aucune ressource trouvée.</p>
+  <!-- État vide -->
+  <div class="empty-state" *ngIf="!loading && !error && filteredRessources.length === 0">
+    <div class="empty-icon">
+      <i class="icon-inbox"></i>
+    </div>
+    <h3>Aucune ressource trouvée</h3>
+    <p>Cliquez sur "Nouvelle Ressource" pour commencer</p>
+  </div>
+</div>
+
+<!-- Notifications Toast -->
+<div class="toast-container">
+  <div class="toast toast-success" *ngIf="notification" 
+       [class.show]="notification.type === 'success'"
+       [class.hide]="notification.type !== 'success'">
+    <div class="toast-icon">✅</div>
+    <div class="toast-message">{{ notification.message }}</div>
+    <button class="toast-close" (click)="clearNotification()">×</button>
+  </div>
+  
+  <div class="toast toast-error" *ngIf="notification" 
+       [class.show]="notification.type === 'error'"
+       [class.hide]="notification.type !== 'error'">
+    <div class="toast-icon">❌</div>
+    <div class="toast-message">{{ notification.message }}</div>
+    <button class="toast-close" (click)="clearNotification()">×</button>
+  </div>
+</div>
+
+<!-- Modal création/modification -->
+<div class="modal-overlay" *ngIf="showModal" (click)="fermerModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ ressourceEnEdition ? 'Modifier la Ressource' : 'Nouvelle Ressource' }}</h2>
+      <button class="modal-close" (click)="fermerModal()">
+        <i class="icon-close"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <form (ngSubmit)="enregistrerRessource()" class="resource-form">
+        <div class="form-group">
+          <label for="nom">Nom *</label>
+          <input 
+            type="text" 
+            id="nom" 
+            name="nom" 
+            [(ngModel)]="ressourceForm.nom"
+            required
+            class="form-control"
+            placeholder="Nom de la ressource"
+          >
+        </div>
+        
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea 
+            id="description" 
+            name="description" 
+            [(ngModel)]="ressourceForm.description"
+            rows="3"
+            class="form-control"
+            placeholder="Description de la ressource"
+          ></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label for="prix">Prix (TND)</label>
+          <input 
+            type="number" 
+            id="prix" 
+            name="prix" 
+            [(ngModel)]="ressourceForm.prix"
+            class="form-control"
+            placeholder="Prix en TND"
+            step="0.01"
+            min="0"
+          >
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="dateDebut">Date début</label>
+            <input 
+              type="date" 
+              id="dateDebut" 
+              name="dateDebut" 
+              [(ngModel)]="ressourceForm.dateDebut"
+              class="form-control"
+            >
+          </div>
+          
+          <div class="form-group">
+            <label for="dateFin">Date fin</label>
+            <input 
+              type="date" 
+              id="dateFin" 
+              name="dateFin" 
+              [(ngModel)]="ressourceForm.dateFin"
+              class="form-control"
+            >
+          </div>
+        </div>
+        
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="fermerModal()">
+            Annuler
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!ressourceForm.nom">
+            {{ ressourceEnEdition ? 'Mettre à jour' : 'Créer' }}
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </div>

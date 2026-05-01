@@ -45,18 +45,81 @@
       </div>
 
       <div class="form-group">
-        <label for="type">Type</label>
+        <label for="prix">Prix *</label>
         <input
-          type="text"
-          id="type"
-          name="type"
-          [(ngModel)]="ressource.type"
+          type="number"
+          id="prix"
+          name="prix"
+          [(ngModel)]="ressource.prix"
           class="form-control"
-          placeholder="Type de la ressource (ex: matériel, logiciel, véhicule...)"
+          placeholder="Prix de la ressource"
+          step="0.01"
+          min="0"
+          required
         />
+      </div>
+
+      <div class="form-group">
+        <label for="statut">Statut *</label>
+        <select
+          id="statut"
+          name="statut"
+          [(ngModel)]="ressource.statut"
+          class="form-control"
+          required
+        >
+          <option value="ACTIVE">Active</option>
+          <option value="NON_ACTIVE">Non active</option>
+        </select>
+        <small class="form-help">Statut par défaut : Active</small>
       </div>
     </fieldset>
 
+    <!-- Champs d'abonnement (optionnels) -->
+    <fieldset class="form-section">
+      <legend>Abonnement (optionnel)</legend>
+
+      <div class="form-group">
+        <label for="dateDebutAbonnement">Date début abonnement</label>
+        <input
+          type="date"
+          id="dateDebutAbonnement"
+          name="dateDebutAbonnement"
+          [(ngModel)]="ressource.dateDebutAbonnement"
+          class="form-control"
+          (change)="onDateAbonnementChange()"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="dateFinAbonnement">Date fin abonnement</label>
+        <input
+          type="date"
+          id="dateFinAbonnement"
+          name="dateFinAbonnement"
+          [(ngModel)]="ressource.dateFinAbonnement"
+          class="form-control"
+          (change)="onDateAbonnementChange()"
+        />
+        <div class="warning-message" *ngIf="isDateFinAbonnementInPast()">
+          ⚠️ Attention : La date de fin est dans le passé. La ressource sera marquée comme expirée.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            name="statutForceManuel"
+            [(ngModel)]="ressource.statutForceManuel"
+          />
+          Forcer le statut manuellement (empêche la désactivation automatique)
+        </label>
+        <small class="form-help">Si coché, le statut ne changera pas automatiquement à l'expiration de l'abonnement</small>
+      </div>
+    </fieldset>
+
+    
     <!-- Actions -->
     <div class="form-actions">
       <button type="submit" class="btn btn-primary" [disabled]="saving">

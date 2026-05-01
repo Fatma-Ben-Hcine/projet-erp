@@ -1,5 +1,6 @@
 package com.projet.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -55,19 +56,23 @@ public class Projet {
 
     // Relations avec les employés via TravaillerProjet
     @OneToMany(mappedBy = "projet", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private Set<TravaillerProjet> travaillerProjets = new HashSet<>();
 
     // Chef de projet
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chef_projet_id")
+    @JsonIgnore
     private Employe chefProjet;
 
     // Client
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "client_id")
+    @JsonIgnore
     private Client client;
 
     // Activites du projet
     @OneToMany(mappedBy = "projet", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private Set<Activite> activites = new HashSet<>();
 }

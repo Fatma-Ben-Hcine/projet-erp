@@ -7,37 +7,64 @@ import { Ressource, RessourceRequest } from '../models/ressource.model';
   providedIn: 'root'
 })
 export class AdminRessourceService {
-  private baseUrl = '/api/admin/ressources';
+  private apiUrl = 'http://localhost:8080/api';
 
   constructor(private http: HttpClient) {}
 
-  // Créer une ressource
-  createRessource(request: RessourceRequest): Observable<Ressource> {
-    return this.http.post<Ressource>(this.baseUrl, request);
+  // CRUD de base
+  getAll(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/admin/ressources`);
   }
 
-  // Lire toutes les ressources (admin voit tout)
-  getAllRessources(): Observable<Ressource[]> {
-    return this.http.get<Ressource[]>(this.baseUrl);
+  // Méthodes de compatibilité pour les composants existants
+  getAllRessources(): Observable<any[]> {
+    return this.getAll();
   }
 
-  // Modifier une ressource (nom, description, type)
-  updateRessource(id: number, request: RessourceRequest): Observable<Ressource> {
-    return this.http.put<Ressource>(`${this.baseUrl}/${id}`, request);
+  createRessource(request: RessourceRequest): Observable<any> {
+    return this.create(request);
   }
 
-  // Supprimer une ressource
-  deleteRessource(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  updateRessource(id: number, request: RessourceRequest): Observable<any> {
+    return this.update(id, request);
   }
 
-  // Changer le statut ACTIVE/NON_ACTIVE
-  changerStatut(id: number, statut: 'ACTIVE' | 'NON_ACTIVE'): Observable<Ressource> {
-    return this.http.patch<Ressource>(`${this.baseUrl}/${id}/statut`, { statut });
+  deleteRessource(id: number): Observable<any> {
+    return this.delete(id);
   }
 
-  // Remettre la situation à DISPONIBLE (demande traitée)
-  libererRessource(id: number): Observable<Ressource> {
-    return this.http.patch<Ressource>(`${this.baseUrl}/${id}/liberer`, {});
+  libererRessource(id: number): Observable<any> {
+    return this.liberer(id);
+  }
+
+  // Nouvelles méthodes standardisées
+  create(data: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/admin/ressources`, data);
+  }
+
+  update(id: number, data: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/admin/ressources/${id}`, data);
+  }
+
+  delete(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/admin/ressources/${id}`);
+  }
+
+  // Actions spécifiques
+  changerStatut(id: number, statut: string): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/admin/ressources/${id}/statut`, { statut });
+  }
+
+  liberer(id: number): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/admin/ressources/${id}/liberer`, {});
+  }
+
+  // Nouveaux endpoints
+  activer(id: number): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/admin/ressources/${id}/activer`, {});
+  }
+
+  desactiver(id: number): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/admin/ressources/${id}/desactiver`, {});
   }
 }

@@ -1,10 +1,14 @@
 package com.projet.controller;
 
-import com.projet.dto.AdminRessourceRequest;
+import com.projet.dto.RessourceRequest;
+import com.projet.dto.RessourceResponse;
 import com.projet.entity.Ressource;
 import com.projet.enums.SituationRessource;
 import com.projet.enums.StatutRessource;
+import com.projet.enums.StatutDemande;
+import com.projet.service.RessourceService;
 import com.projet.repository.RessourceRepository;
+import com.projet.repository.DemandeRessourceRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,9 +16,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin/ressources")
@@ -23,59 +28,70 @@ import java.util.Map;
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class AdminRessourceController {
 
+    private final RessourceService ressourceService;
     private final RessourceRepository ressourceRepository;
+    private final DemandeRessourceRepository demandeRessourceRepository;
 
     // Créer une ressource
     // statut = ACTIVE, situation = DISPONIBLE par défaut
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Ressource> creerRessource(@Valid @RequestBody AdminRessourceRequest request) {
+    public ResponseEntity<RessourceResponse> creerRessource(@Valid @RequestBody RessourceRequest request) {
         log.info("POST /api/admin/ressources - Création d'une ressource");
         
-        Ressource ressource = new Ressource();
-        ressource.setNom(request.getNom());
-        ressource.setDescription(request.getDescription());
-        ressource.setType(request.getType());
-        ressource.setStatut(StatutRessource.ACTIVE);       // toujours ACTIVE à la création
-        ressource.setSituation(SituationRessource.DISPONIBLE); // toujours DISPONIBLE à la création
-        ressource.setDateCreation(LocalDateTime.now());
+        RessourceResponse response = ressourceService.createRessource(request);
+        log.info("Ressource créée avec succès");
         
-        Ressource saved = ressourceRepository.save(ressource);
-        log.info("Ressource créée avec ID: {}", saved.getId());
-        
-        return ResponseEntity.ok(saved);
+        return ResponseEntity.ok(response);
     }
 
     // Lire toutes les ressources (admin voit tout)
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<Ressource>> getAllRessources() {
+    public ResponseEntity<?> getAllRessources() {
         log.info("GET /api/admin/ressources - Récupération de toutes les ressources");
+        
         List<Ressource> ressources = ressourceRepository.findAll();
-        return ResponseEntity.ok(ressources);
+
+        List<Map<String, Object>> response = ressources.stream()
+            .map(r -> {
+                Map<String, Object> dto = new HashMap<>();
+                dto.put("id", r.getId());
+                dto.put("nom", r.getNom());
+                dto.put("description", r.getDescription());
+                dto.put("statut", r.getStatut());
+                dto.put("situation", r.getSituation());
+                dto.put("prix", r.getPrix());
+                dto.put("dateDebut", r.getDateDebut());
+                dto.put("dateFin", r.getDateFin());
+
+                // ← CALCUL DEPUIS LA TABLE demande_ressource
+                long nombreDemandes = demandeRessourceRepository
+                    .countByRessourceIdAndStatutDemande(
+                        r.getId(),
+                        StatutDemande.EN_ATTENTE);
+                dto.put("nombreDemandes", nombreDemandes);
+
+                return dto;
+            })
+            .collect(Collectors.toList());
+
+        return ResponseEntity.ok(response);
     }
 
-    // Modifier une ressource (nom, description, type)
+    // Modifier une ressource (nom, description, prix, dates)
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Ressource> modifierRessource(
+    public ResponseEntity<RessourceResponse> modifierRessource(
             @PathVariable Long id,
-            @Valid @RequestBody AdminRessourceRequest request) {
+            @Valid @RequestBody RessourceRequest request) {
         
         log.info("PUT /api/admin/ressources/{} - Modification d'une ressource", id);
         
-        Ressource ressource = ressourceRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ressource non trouvée avec ID: " + id));
-        
-        ressource.setNom(request.getNom());
-        ressource.setDescription(request.getDescription());
-        ressource.setType(request.getType());
-        // NE PAS modifier statut ni situation ici
-        
-        Ressource saved = ressourceRepository.save(ressource);
+        RessourceResponse response = ressourceService.updateRessource(id, request);
         log.info("Ressource {} modifiée avec succès", id);
         
-        return ResponseEntity.ok(saved);
+        return ResponseEntity.ok(response);
     }
 
     // Supprimer une ressource
@@ -84,65 +100,77 @@ public class AdminRessourceController {
     public ResponseEntity<Void> supprimerRessource(@PathVariable Long id) {
         log.info("DELETE /api/admin/ressources/{} - Suppression d'une ressource", id);
         
-        Ressource ressource = ressourceRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ressource non trouvée avec ID: " + id));
-        
-        // Vérifier que la ressource n'est pas demandée
-        if (ressource.getSituation() == SituationRessource.DEMANDE) {
-            return ResponseEntity.badRequest().build();
-        }
-        
-        ressourceRepository.deleteById(id);
+        ressourceService.deleteRessource(id);
         log.info("Ressource {} supprimée avec succès", id);
         
         return ResponseEntity.ok().build();
     }
 
-    // Changer le statut ACTIVE/NON_ACTIVE
+    // Activer une ressource
+    @PatchMapping("/{id}/activer")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> activerRessource(@PathVariable Long id) {
+        log.info("PATCH /api/admin/ressources/{}/activer - Activation d'une ressource", id);
+        
+        ressourceService.activerRessource(id);
+        log.info("Ressource {} activée avec succès", id);
+        
+        return ResponseEntity.ok().build();
+    }
+
+    // Désactiver une ressource
+    @PatchMapping("/{id}/desactiver")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> desactiverRessource(@PathVariable Long id) {
+        log.info("PATCH /api/admin/ressources/{}/desactiver - Désactivation d'une ressource", id);
+        
+        ressourceService.desactiverRessource(id);
+        log.info("Ressource {} désactivée avec succès", id);
+        
+        return ResponseEntity.ok().build();
+    }
+
+    // Changer le statut d'une ressource
     @PatchMapping("/{id}/statut")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Ressource> changerStatut(
-            @PathVariable Long id,
-            @RequestBody Map<String, String> body) {
+    public ResponseEntity<Void> changerStatutRessource(
+            @PathVariable Long id, 
+            @RequestBody Map<String, String> request) {
         
-        log.info("PATCH /api/admin/ressources/{}/statut - Changement de statut", id);
-        
-        Ressource ressource = ressourceRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ressource non trouvée avec ID: " + id));
-        
-        String nouveauStatut = body.get("statut");
-        if (nouveauStatut == null) {
-            return ResponseEntity.badRequest().build();
-        }
+        String nouveauStatut = request.get("statut");
+        log.info("PATCH /api/admin/ressources/{}/statut - Changement de statut vers {}", id, nouveauStatut);
         
         try {
-            StatutRessource statut = StatutRessource.valueOf(nouveauStatut.toUpperCase());
-            ressource.setStatut(statut);
-            Ressource saved = ressourceRepository.save(ressource);
-            log.info("Statut de la ressource {} changé en {}", id, statut);
-            return ResponseEntity.ok(saved);
+            StatutRessource statut = StatutRessource.valueOf(nouveauStatut);
+            ressourceService.changerStatutRessource(id, statut);
+            log.info("Statut de la ressource {} changé avec succès vers {}", id, nouveauStatut);
+            
+            return ResponseEntity.ok().build();
         } catch (IllegalArgumentException e) {
             log.error("Statut invalide: {}", nouveauStatut);
             return ResponseEntity.badRequest().build();
         }
     }
 
-    // Remettre la situation à DISPONIBLE (demande traitée)
+    // Libérer une ressource (remettre la situation à DISPONIBLE)
     @PatchMapping("/{id}/liberer")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Ressource> libererRessource(@PathVariable Long id) {
+    public ResponseEntity<Void> libererRessource(@PathVariable Long id) {
         log.info("PATCH /api/admin/ressources/{}/liberer - Libération d'une ressource", id);
         
-        Ressource ressource = ressourceRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ressource non trouvée avec ID: " + id));
-        
-        ressource.setSituation(SituationRessource.DISPONIBLE);
-        ressource.setEmployeDemandeur(null);
-        ressource.setDateDemande(null);
-        
-        Ressource saved = ressourceRepository.save(ressource);
+        ressourceService.libererRessource(id);
         log.info("Ressource {} libérée avec succès", id);
         
-        return ResponseEntity.ok(saved);
+        return ResponseEntity.ok().build();
+    }
+
+    // Obtenir les détails d'une ressource
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<RessourceResponse> getRessourceById(@PathVariable Long id) {
+        log.info("GET /api/admin/ressources/{} - Récupération d'une ressource", id);
+        
+        RessourceResponse response = ressourceService.getRessourceById(id);
+        return ResponseEntity.ok(response);
     }
 }

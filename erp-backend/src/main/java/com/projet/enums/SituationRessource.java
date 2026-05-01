@@ -6,6 +6,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public enum SituationRessource {
     @JsonProperty("disponible")
     DISPONIBLE("disponible"),
+    @JsonProperty("non demandé")
+    NON_DEMANDE("non demandé"),
     @JsonProperty("demandé")
     DEMANDE("demandé");
 
@@ -27,6 +29,7 @@ public enum SituationRessource {
         
         return switch (value.toLowerCase().replace(" ", "_")) {
             case "disponible" -> DISPONIBLE;
+            case "non_demande", "non demandé" -> NON_DEMANDE;
             case "demande", "demandé" -> DEMANDE;
             default -> throw new IllegalArgumentException("Situation inconnue: " + value);
         };

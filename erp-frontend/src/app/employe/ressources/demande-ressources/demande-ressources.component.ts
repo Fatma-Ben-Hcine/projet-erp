@@ -1,28 +1,32 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { EmployeRessourceService } from '../../../core/services/employe-ressource.service';
+import { HttpClient } from '@angular/common/http';
+import { RessourcesDisponiblesService } from '../../../core/services/ressources-disponibles.service';
 import { DemandeRessourceService } from '../../../core/services/demande-ressource.service';
 import { AuthService } from '../../../auth/auth.service';
-import { Ressource, DemandeRessourceRequest } from '../../../core/models/ressource.model';
+import { EmployeSidebarComponent } from '../../shared/sidebar/sidebar.component';
+import { RessourceDisponible, DemandeRessourceRequest, DemandeMultipleRequest } from '../../../core/models/ressource.model';
 
 @Component({
   selector: 'app-demande-ressources',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, EmployeSidebarComponent],
   templateUrl: './demande-ressources.component.html',
   styleUrls: ['./demande-ressources.component.scss']
 })
 export class DemandeRessourcesComponent implements OnInit {
-  ressources: Ressource[] = [];
-  selectedRessources: Set<number> = new Set();
-  loading = false;
-  submitting = false;
-  error: string | null = null;
-  success: string | null = null;
+  ressources: any[] = [];
+  selectedIds: number[] = [];
+  isLoading = false;
+  errorMessage = '';
+  successMessage = '';
+  error = '';
+  success = '';
 
   constructor(
-    private employeRessourceService: EmployeRessourceService,
+    private http: HttpClient,
+    private ressourcesDisponiblesService: RessourcesDisponiblesService,
     private demandeService: DemandeRessourceService,
     private authService: AuthService
   ) {}
@@ -32,87 +36,124 @@ export class DemandeRessourcesComponent implements OnInit {
   }
 
   loadRessourcesDisponibles(): void {
-    this.loading = true;
-    this.employeRessourceService.getRessourcesActives().subscribe({
-      next: (ressources) => {
+    this.isLoading = true;
+    this.ressourcesDisponiblesService.getRessourcesDisponibles().subscribe({
+      next: (ressources: RessourceDisponible[]) => {
         this.ressources = ressources;
-        this.loading = false;
+        this.isLoading = false;
+        console.log('Ressources disponibles chargées:', ressources.length, 'éléments');
       },
-      error: (err) => {
-        this.error = 'Erreur lors du chargement des ressources disponibles';
-        this.loading = false;
-        console.error(err);
+      error: (err: any) => {
+        this.isLoading = false;
+        console.error('=== ERREUR DÉTAILLÉE ===');
+        console.error('URL appelée:', err.url);
+        console.error('Status:', err.status);
+        console.error('Status Text:', err.statusText);
+        console.error('Message:', err.message);
+        console.error('Erreur complète:', err);
+        
+        if (err.status === 0) {
+          this.error = 'Impossible de contacter le serveur backend. Vérifiez que le backend est démarré sur http://localhost:8080';
+        } else if (err.status === 404) {
+          this.error = `Endpoint non trouvé: ${err.url}. Vérifiez que l'URL est correcte dans le backend.`;
+        } else if (err.status === 500) {
+          this.error = `Erreur serveur (500): ${err.message}. Consultez les logs du backend pour plus de détails.`;
+        } else {
+          this.error = `Erreur (${err.status}): ${err.message || 'Erreur inconnue'}`;
+        }
       }
     });
   }
 
-  toggleSelection(ressourceId: number): void {
-    if (this.selectedRessources.has(ressourceId)) {
-      this.selectedRessources.delete(ressourceId);
-    } else {
-      this.selectedRessources.add(ressourceId);
-    }
-  }
-
-  isSelected(ressourceId: number): boolean {
-    return this.selectedRessources.has(ressourceId);
-  }
-
-  getSituationClass(situation: string): string {
-    return situation === 'DISPONIBLE' ? 'badge-success' : 'badge-warning';
-  }
-
-  formatDate(dateStr: string | null | undefined): string {
-    if (!dateStr) return '---';
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return '---';
-    return date.toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric'
+  demanderRessource(ressource: any): void {
+    this.http.post(
+      `http://localhost:8080/api/employe/ressources/${ressource.id}/demander`,
+      {}
+    ).subscribe({
+      next: () => {
+        ressource.situation = 'DEMANDE';
+        ressource.dejaDemandeParMoi = true;
+        this.showSuccess('Ressource demandée avec succès !');
+      },
+      error: (err) => {
+        this.showError(
+          err.error?.erreur || 'Erreur lors de la demande');
+      }
     });
   }
 
-  // Helper pour vérifier si la ressource est demandée par moi
-  isMaDemande(ressource: Ressource): boolean {
-    return ressource.situation === 'DEMANDE' && !!ressource.employeDemandeur;
+  annulerDemande(ressource: any): void {
+    this.http.delete(
+      `http://localhost:8080/api/employe/ressources/${ressource.id}/annuler` 
+    ).subscribe({
+      next: () => {
+        ressource.situation = 'DISPONIBLE';
+        ressource.dejaDemandeParMoi = false;
+        this.showSuccess('Demande annulée avec succès');
+      },
+      error: (err) => {
+        this.showError(
+          err.error?.erreur || 'Erreur lors de l\'annulation');
+      }
+    });
+  }
+
+  formatDate(dateStr: string): string {
+    if (!dateStr) return '-';
+    return new Date(dateStr).toLocaleDateString('fr-FR');
+  }
+
+  showSuccess(msg: string): void {
+    this.successMessage = msg;
+    this.success = msg;
+    this.error = '';
+    this.errorMessage = '';
+    setTimeout(() => {
+      this.successMessage = '';
+      this.success = '';
+    }, 3000);
+  }
+
+  isSelected(id: number): boolean {
+    return this.selectedIds.includes(id);
+  }
+
+  toggleSelection(id: number): void {
+    if (this.isSelected(id)) {
+      this.selectedIds = this.selectedIds.filter(x => x !== id);
+    } else {
+      this.selectedIds.push(id);
+    }
   }
 
   soumettreDemande(): void {
-    const ressourcesDisponibles = Array.from(this.selectedRessources).filter(ressourceId => {
-      const ressource = this.ressources.find(r => r.id === ressourceId);
-      return ressource && ressource.situation === 'DISPONIBLE';
-    });
-
-    if (ressourcesDisponibles.length === 0) {
-      this.error = 'Aucune nouvelle ressource à demander (toutes déjà demandées)';
-      return;
-    }
-
-    this.submitting = true;
-    this.error = null;
-    this.success = null;
-
-    let completedRequests = 0;
-    const totalRequests = ressourcesDisponibles.length;
-
-    ressourcesDisponibles.forEach((ressourceId: number) => {
-      this.employeRessourceService.demanderRessource(ressourceId).subscribe({
+    if (this.selectedIds.length === 0) return;
+    
+    this.isLoading = true;
+    this.demandeService.createDemandesMultiples({ ressourceIds: this.selectedIds })
+      .subscribe({
         next: () => {
-          completedRequests++;
-          if (completedRequests === totalRequests) {
-            this.success = 'Demande(s) soumise(s) avec succès';
-            this.selectedRessources.clear();
-            this.loadRessourcesDisponibles();
-            this.submitting = false;
-          }
+          this.successMessage = 
+            `${this.selectedIds.length} ressource(s) demandée(s) avec succès`;
+          this.selectedIds = [];
+          this.loadRessourcesDisponibles();
+          this.isLoading = false;
         },
-        error: (err) => {
-          this.error = 'Erreur lors de la soumission de la demande';
-          this.submitting = false;
-          console.error(err);
+        error: () => {
+          this.errorMessage = 'Erreur lors de la soumission';
+          this.isLoading = false;
         }
       });
-    });
+  }
+
+  showError(msg: string): void {
+    this.errorMessage = msg;
+    this.error = msg;
+    this.success = '';
+    this.successMessage = '';
+    setTimeout(() => {
+      this.errorMessage = '';
+      this.error = '';
+    }, 5000);
   }
 }

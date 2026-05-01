@@ -31,7 +31,7 @@ import { HeuresSupplementairesListComponent } from './admin/heures-supplementair
 import { HeuresSupplementaireFormComponent } from './admin/heures-supplementaires/heures-supplementaire-form/heures-supplementaire-form.component';
 
 // Ressources imports
-import { RessourcesListComponent } from './admin/ressources/ressources-list/ressources-list.component';
+import { AdminRessourcesComponent } from './admin/ressources/admin-ressources.component';
 import { RessourceFormComponent } from './admin/ressources/ressource-form/ressource-form.component';
 import { DemandeRessourcesComponent } from './employe/ressources/demande-ressources/demande-ressources.component';
 
@@ -180,7 +180,7 @@ export const routes: Routes = [
   // Admin Ressources routes
   {
     path: 'admin/ressources',
-    component: RessourcesListComponent,
+    component: AdminRessourcesComponent,
     canActivate: [AuthGuard, AdminGuard],
     title: 'Gestion des Ressources'
   },

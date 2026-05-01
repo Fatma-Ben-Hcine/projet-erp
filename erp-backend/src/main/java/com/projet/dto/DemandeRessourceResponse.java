@@ -1,10 +1,12 @@
 package com.projet.dto;
 
+import com.projet.enums.StatutDemande;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Data
 @NoArgsConstructor
@@ -13,7 +15,7 @@ public class DemandeRessourceResponse {
 
     private Long id;
     private LocalDateTime dateDemande;
-    private boolean estTraitee;
+    private StatutDemande statutDemande;
 
     // Informations de la ressource
     private RessourceInfo ressource;
@@ -28,7 +30,9 @@ public class DemandeRessourceResponse {
         private Long id;
         private String nom;
         private String description;
-        private double prix;
+        private Double prix;
+        private LocalDate dateDebut;
+        private LocalDate dateFin;
     }
 
     @Data

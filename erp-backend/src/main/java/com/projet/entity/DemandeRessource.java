@@ -1,5 +1,7 @@
 package com.projet.entity;
 
+import com.projet.enums.StatutDemande;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,7 +11,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "demandes_ressources")
+@Table(name = "demande_ressource")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,17 +22,20 @@ public class DemandeRessource {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ressource_id", nullable = false)
-    private Ressource ressource;
-
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "employe_id", nullable = false)
     private Employe employe;
 
-    @Column(name = "date_demande", nullable = false)
-    private LocalDateTime dateDemande = LocalDateTime.now();
+    @ManyToOne
+    @JoinColumn(name = "ressource_id", nullable = false)
+    @JsonIgnore
+    private Ressource ressource;
 
-    @Column(name = "est_traitee", nullable = false)
-    private boolean estTraitee = false;
+    @Column(name = "date_demande")
+    private LocalDateTime dateDemande;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "statut_demande")
+    private StatutDemande statutDemande;
+    // EN_ATTENTE, APPROUVEE, ANNULEE
 }

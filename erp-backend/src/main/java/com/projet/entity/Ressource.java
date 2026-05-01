@@ -2,12 +2,14 @@ package com.projet.entity;
 
 import com.projet.enums.SituationRessource;
 import com.projet.enums.StatutRessource;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -15,45 +17,47 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(exclude = {"demandes", "projets"})
+@EqualsAndHashCode(exclude = {"employeDemandeur"})
 public class Ressource {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(name = "nom", nullable = false)
     private String nom;
 
+    @Column(name = "description")
     private String description;
 
-    private String type;
-
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private SituationRessource situation = SituationRessource.DISPONIBLE;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "statut")
     private StatutRessource statut = StatutRessource.ACTIVE;
+    // ACTIVE, NON_ACTIVE
 
-    // Employé qui a demandé la ressource (nullable)
-    @ManyToOne
+    @Enumerated(EnumType.STRING)
+    @Column(name = "situation")
+    private SituationRessource situation = SituationRessource.NON_DEMANDE;
+    // NON_DEMANDE, DEMANDE
+
+    @Column(name = "prix")
+    private Double prix;
+
+    // Anciens champs conservés pour compatibilité (à supprimer plus tard)
+    @Column(name = "date_debut", nullable = true)
+    private LocalDate dateDebut;
+
+    @Column(name = "date_fin", nullable = true)
+    private LocalDate dateFin;
+
+    // Pour savoir qui a demandé actuellement
+    // Non visible dans le diagramme mais nécessaire
+    // pour la logique situation DEMANDE
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employe_demandeur_id", nullable = true)
+    @JsonIgnore
     private Employe employeDemandeur;
 
     @Column(name = "date_demande", nullable = true)
     private LocalDateTime dateDemande;
-
-    @Column(name = "date_creation", nullable = false)
-    private LocalDateTime dateCreation;
-
-    // Relation avec les demandes de ressources
-    @OneToMany(mappedBy = "ressource", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<DemandeRessource> demandes = new HashSet<>();
-
-    // Relation avec les projets (0..* - 1)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "projet_id")
-    private Projet projet;
 }
