@@ -1,8 +1,25 @@
+/* Layout CSS - Copié du dashboard employé */
+.layout { 
+  display: flex; 
+  min-height: 100vh; 
+  position: relative; 
+  background: #f3f4f6 !important; 
+}
+
+.main-content {
+  margin-left: 260px;
+  flex: 1;
+  padding: 2rem;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+  background: transparent !important;
+}
+
 /* Container principal */
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
 }
 
 h1 {

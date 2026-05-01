@@ -27,4 +27,10 @@ public interface DemandeRessourceRepository extends JpaRepository<DemandeRessour
 
     // Compter les demandes pour une ressource avec un statut spécifique
     long countByRessourceIdAndStatutDemande(Long ressourceId, StatutDemande statut);
+
+    // Vérifier si cet employé a déjà une demande EN_ATTENTE pour cette ressource
+    boolean existsByRessourceIdAndEmployeIdAndStatutDemande(Long ressourceId, Long employeId, StatutDemande statut);
+
+    // Trouver la demande EN_ATTENTE d'un employé pour une ressource
+    Optional<DemandeRessource> findByRessourceIdAndEmployeIdAndStatutDemande(Long ressourceId, Long employeId, StatutDemande statut);
 }

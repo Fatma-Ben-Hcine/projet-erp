@@ -45,7 +45,7 @@ public class RessourceService {
         ressource.setDateDebut(request.getDateDebut());
         ressource.setDateFin(request.getDateFin());
         ressource.setStatut(StatutRessource.ACTIVE); // Valeur par défaut
-        ressource.setSituation(SituationRessource.NON_DEMANDE); // Valeur par défaut
+        ressource.setSituation(SituationRessource.DISPONIBLE); // Valeur par défaut
 
         Ressource saved = ressourceRepository.save(ressource);
         log.info("Ressource créée avec ID: {}", saved.getId());
@@ -98,6 +98,13 @@ public class RessourceService {
 
         Ressource ressource = ressourceRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Ressource non trouvée avec l'id: " + id));
+
+        // Supprimer d'abord toutes les demandes associées à cette ressource
+        List<DemandeRessource> demandes = demandeRessourceRepository.findByRessourceId(id);
+        if (!demandes.isEmpty()) {
+            demandeRessourceRepository.deleteAll(demandes);
+            log.info("Supprimé {} demande(s) associée(s) à la ressource {}", demandes.size(), id);
+        }
 
         ressourceRepository.delete(ressource);
         log.info("Ressource supprimée: {}", id);

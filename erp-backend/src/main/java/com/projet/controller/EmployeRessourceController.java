@@ -1,6 +1,7 @@
 package com.projet.controller;
 
 import com.projet.dto.DemandeRessourceRequest;
+import com.projet.entity.DemandeRessource;
 import com.projet.entity.Employe;
 import com.projet.entity.Ressource;
 import com.projet.enums.SituationRessource;
@@ -60,7 +61,7 @@ public class EmployeRessourceController {
 
             System.out.println("Ressources trouvées: " + ressources.size());
 
-            // 3. Mapper avec flag dejaDemandeParMoi
+            // 3. Mapper avec flag dejaDemandeParMoi et nombre de demandes
             List<Map<String, Object>> response = ressources.stream()
                 .map(r -> {
                     Map<String, Object> dto = new HashMap<>();
@@ -73,13 +74,18 @@ public class EmployeRessourceController {
                     dto.put("dateDebut", r.getDateDebut());
                     dto.put("dateFin", r.getDateFin());
 
-                    // Flag : est-ce MOI qui ai demandé ?
-                    boolean dejaDemandeParMoi = false;
-                    if (r.getSituation() == SituationRessource.DEMANDE
-                        && r.getEmployeDemandeur() != null) {
-                        dejaDemandeParMoi = r.getEmployeDemandeur()
-                            .getId().equals(employe.getId());
-                    }
+                    // Nombre de demandes EN_ATTENTE pour cette ressource
+                    long nombreDemandes = demandeRessourceRepository
+                        .countByRessourceIdAndStatutDemande(
+                            r.getId(), com.projet.enums.StatutDemande.EN_ATTENTE);
+                    dto.put("nombreDemandes", nombreDemandes);
+
+                    // Est-ce que CET employé a déjà demandé ?
+                    boolean dejaDemandeParMoi = demandeRessourceRepository
+                        .existsByRessourceIdAndEmployeIdAndStatutDemande(
+                            r.getId(),
+                            employe.getId(),
+                            com.projet.enums.StatutDemande.EN_ATTENTE);
                     dto.put("dejaDemandeParMoi", dejaDemandeParMoi);
 
                     return dto;
@@ -100,24 +106,64 @@ public class EmployeRessourceController {
     // Demander une ressource
     @PostMapping("/{id}/demander")
     @PreAuthorize("hasRole('EMPLOYE')")
-    public ResponseEntity<Map<String, String>> demanderRessource(
+    public ResponseEntity<?> demanderRessource(
             @PathVariable Long id,
             Authentication authentication) {
 
         log.info("POST /api/employe/ressources/{}/demander - Demande de ressource", id);
 
-        String email = authentication.getName();
-        Employe employe = employeRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Employé non trouvé: " + email));
-
-        DemandeRessourceRequest request = new DemandeRessourceRequest();
-        request.setRessourceId(id);
-
         try {
-            demandeService.createDemande(request, employe.getId());
+            String email = authentication.getName();
+            Employe employe = employeRepository
+                .findByEmail(email).orElseThrow();
+
+            Ressource ressource = ressourceRepository
+                .findById(id).orElseThrow();
+
+            // Vérification 1 : ressource active
+            if (ressource.getStatut() != StatutRessource.ACTIVE) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("erreur", "Ressource non active"));
+            }
+
+            // Vérification 2 : cet employé n'a pas déjà demandé
+            boolean dejaDemandeParMoi = demandeRessourceRepository
+                .existsByRessourceIdAndEmployeIdAndStatutDemande(
+                    id,
+                    employe.getId(),
+                    com.projet.enums.StatutDemande.EN_ATTENTE);
+
+            if (dejaDemandeParMoi) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("erreur",
+                        "Vous avez déjà demandé cette ressource"));
+            }
+
+            // Créer la demande dans l'historique
+            DemandeRessource demande = new DemandeRessource();
+            demande.setRessource(ressource);
+            demande.setEmploye(employe);
+            demande.setDateDemande(java.time.LocalDateTime.now());
+            demande.setStatutDemande(com.projet.enums.StatutDemande.EN_ATTENTE);
+            demandeRessourceRepository.save(demande);
+
+            // Mettre à jour situation → DEMANDE
+            // (car au moins 1 demande existe maintenant)
+            ressource.setSituation(SituationRessource.DEMANDE);
+            ressourceRepository.save(ressource);
+
+            // Calculer le nouveau nombreDemandes
+            long nombreDemandes = demandeRessourceRepository
+                .countByRessourceIdAndStatutDemande(
+                    id, com.projet.enums.StatutDemande.EN_ATTENTE);
+
             log.info("Ressource {} demandée par l'employé {}", id, employe.getId());
-            return ResponseEntity.ok(Map.of("message", "Ressource demandée avec succès"));
-        } catch (RuntimeException e) {
+            return ResponseEntity.ok(Map.of(
+                "message", "Ressource demandée avec succès",
+                "nombreDemandes", nombreDemandes
+            ));
+
+        } catch (Exception e) {
             log.warn("Erreur lors de la demande de ressource {}: {}", id, e.getMessage());
             return ResponseEntity.badRequest()
                     .body(Map.of("erreur", e.getMessage()));
@@ -127,21 +173,49 @@ public class EmployeRessourceController {
     // Annuler sa propre demande
     @DeleteMapping("/{id}/annuler")
     @PreAuthorize("hasRole('EMPLOYE')")
-    public ResponseEntity<Map<String, String>> annulerDemande(
+    public ResponseEntity<?> annulerDemande(
             @PathVariable Long id,
             Authentication authentication) {
 
         log.info("DELETE /api/employe/ressources/{}/annuler - Annulation de demande", id);
 
-        String email = authentication.getName();
-        Employe employe = employeRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Employé non trouvé: " + email));
-
         try {
-            demandeService.annulerDemande(id, employe.getId());
+            String email = authentication.getName();
+            Employe employe = employeRepository
+                .findByEmail(email).orElseThrow();
+
+            // Trouver la demande EN_ATTENTE de cet employé
+            DemandeRessource demande = demandeRessourceRepository
+                .findByRessourceIdAndEmployeIdAndStatutDemande(
+                    id,
+                    employe.getId(),
+                    com.projet.enums.StatutDemande.EN_ATTENTE)
+                .orElseThrow(() -> new RuntimeException(
+                    "Aucune demande en attente trouvée"));
+
+            // Annuler la demande
+            demande.setStatutDemande(com.projet.enums.StatutDemande.ANNULEE);
+            demandeRessourceRepository.save(demande);
+
+            // Compter les demandes restantes EN_ATTENTE
+            long restantes = demandeRessourceRepository
+                .countByRessourceIdAndStatutDemande(
+                    id, com.projet.enums.StatutDemande.EN_ATTENTE);
+
+            // Si plus aucune demande → situation = DISPONIBLE
+            Ressource ressource = demande.getRessource();
+            if (restantes == 0) {
+                ressource.setSituation(SituationRessource.DISPONIBLE);
+                ressourceRepository.save(ressource);
+            }
+
             log.info("Demande de la ressource {} annulée par l'employé {}", id, employe.getId());
-            return ResponseEntity.ok(Map.of("message", "Demande annulée avec succès"));
-        } catch (RuntimeException e) {
+            return ResponseEntity.ok(Map.of(
+                "message", "Demande annulée avec succès",
+                "nombreDemandes", restantes
+            ));
+
+        } catch (Exception e) {
             log.warn("Erreur lors de l'annulation de la demande {}: {}", id, e.getMessage());
             return ResponseEntity.badRequest()
                     .body(Map.of("erreur", e.getMessage()));

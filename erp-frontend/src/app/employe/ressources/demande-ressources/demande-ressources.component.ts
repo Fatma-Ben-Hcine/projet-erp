@@ -65,39 +65,7 @@ export class DemandeRessourcesComponent implements OnInit {
     });
   }
 
-  demanderRessource(ressource: any): void {
-    this.http.post(
-      `http://localhost:8080/api/employe/ressources/${ressource.id}/demander`,
-      {}
-    ).subscribe({
-      next: () => {
-        ressource.situation = 'DEMANDE';
-        ressource.dejaDemandeParMoi = true;
-        this.showSuccess('Ressource demandée avec succès !');
-      },
-      error: (err) => {
-        this.showError(
-          err.error?.erreur || 'Erreur lors de la demande');
-      }
-    });
-  }
-
-  annulerDemande(ressource: any): void {
-    this.http.delete(
-      `http://localhost:8080/api/employe/ressources/${ressource.id}/annuler` 
-    ).subscribe({
-      next: () => {
-        ressource.situation = 'DISPONIBLE';
-        ressource.dejaDemandeParMoi = false;
-        this.showSuccess('Demande annulée avec succès');
-      },
-      error: (err) => {
-        this.showError(
-          err.error?.erreur || 'Erreur lors de l\'annulation');
-      }
-    });
-  }
-
+  
   formatDate(dateStr: string): string {
     if (!dateStr) return '-';
     return new Date(dateStr).toLocaleDateString('fr-FR');
@@ -132,10 +100,12 @@ export class DemandeRessourcesComponent implements OnInit {
     this.isLoading = true;
     this.demandeService.createDemandesMultiples({ ressourceIds: this.selectedIds })
       .subscribe({
-        next: () => {
+        next: (response) => {
           this.successMessage = 
             `${this.selectedIds.length} ressource(s) demandée(s) avec succès`;
           this.selectedIds = [];
+          
+          // Recharger les données pour voir le compteur mis à jour
           this.loadRessourcesDisponibles();
           this.isLoading = false;
         },
@@ -146,7 +116,60 @@ export class DemandeRessourcesComponent implements OnInit {
       });
   }
 
-  showError(msg: string): void {
+  demanderRessource(ressource: any): void {
+  const apiUrl = 'http://localhost:8080/api';
+  this.http.post(
+    `${apiUrl}/employe/ressources/${ressource.id}/demander`,
+    {}
+  ).subscribe({
+    next: (response: any) => {
+      // Mettre à jour localement
+      ressource.dejaDemandeParMoi = true;
+      ressource.situation = 'DEMANDE';
+      // Utiliser le nombre retourné par le backend
+      if (response.nombreDemandes !== undefined) {
+        ressource.nombreDemandes = response.nombreDemandes;
+      } else {
+        ressource.nombreDemandes += 1;
+      }
+      this.showSuccess('Ressource demandée avec succès !');
+    },
+    error: (err) => {
+      this.showError(
+        err.error?.erreur || 'Erreur lors de la demande');
+    }
+  });
+}
+
+annulerDemande(ressource: any): void {
+  const apiUrl = 'http://localhost:8080/api';
+  this.http.delete(
+    `${apiUrl}/employe/ressources/${ressource.id}/annuler` 
+  ).subscribe({
+    next: (response: any) => {
+      // Mettre à jour localement
+      ressource.dejaDemandeParMoi = false;
+      // Utiliser le nombre retourné par le backend
+      if (response.nombreDemandes !== undefined) {
+        ressource.nombreDemandes = response.nombreDemandes;
+      } else {
+        ressource.nombreDemandes = Math.max(
+          0, ressource.nombreDemandes - 1);
+      }
+      // Si plus aucune demande → DISPONIBLE
+      if (ressource.nombreDemandes === 0) {
+        ressource.situation = 'DISPONIBLE';
+      }
+      this.showSuccess('Demande annulée avec succès');
+    },
+    error: (err) => {
+      this.showError(
+        err.error?.erreur || 'Erreur lors de l\'annulation');
+    }
+  });
+}
+
+showError(msg: string): void {
     this.errorMessage = msg;
     this.error = msg;
     this.success = '';
