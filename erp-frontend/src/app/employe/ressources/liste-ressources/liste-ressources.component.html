@@ -45,16 +45,7 @@
               {{ ressource.situation === 'DISPONIBLE' ? 'Disponible' : 'Demandé' }}
             </span>
 
-            <!-- Info employé demandeur -->
-            <div class="demandeur-info" *ngIf="ressource.employeDemandeurNom">
-              <small>
-                <strong>Demandé par:</strong> 
-                {{ ressource.employeDemandeurNom }}
-              </small>
-              <br>
-              <small><strong>Date:</strong> {{ formatDate(ressource.dateDemande) }}</small>
-            </div>
-          </div>
+                      </div>
         </div>
 
         <div class="ressource-actions">

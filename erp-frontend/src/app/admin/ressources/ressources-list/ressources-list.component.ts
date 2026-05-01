@@ -23,8 +23,8 @@ export class RessourcesListComponent implements OnInit {
     nom: '',
     description: '',
     prix: null,
-    dateDebut: '',
-    dateFin: ''
+    dateDebutAbonnement: '',
+    dateFinAbonnement: ''
   };
   currentFilter = 'all';
   searchTerm = '';
@@ -82,12 +82,6 @@ export class RessourcesListComponent implements OnInit {
       case 'non-actifs':
         filtered = filtered.filter(r => r.statut === 'NON_ACTIVE');
         break;
-      case 'disponibles':
-        filtered = filtered.filter(r => r.situation === 'NON_DEMANDE');
-        break;
-      case 'demandees':
-        filtered = filtered.filter(r => r.situation === 'DEMANDE');
-        break;
       // 'all' ne filtre rien
     }
 
@@ -103,18 +97,15 @@ export class RessourcesListComponent implements OnInit {
     return statut === 'ACTIVE' ? 'badge-success' : 'badge-danger';
   }
 
-  getSituationClass(situation: string): string {
-    return situation === 'DEMANDE' ? 'badge-warning' : 'badge-info';
-  }
-
+  
   ouvrirModalCreation(): void {
     this.ressourceEnEdition = null;
     this.ressourceForm = {
       nom: '',
       description: '',
       prix: null,
-      dateDebut: '',
-      dateFin: ''
+      dateDebutAbonnement: '',
+      dateFinAbonnement: ''
     };
     this.showModal = true;
   }
@@ -125,8 +116,8 @@ export class RessourcesListComponent implements OnInit {
       nom: ressource.nom,
       description: ressource.description || '',
       prix: ressource.prix || null,
-      dateDebut: ressource.dateDebut || '',
-      dateFin: ressource.dateFin || ''
+      dateDebutAbonnement: ressource.dateDebutAbonnement || '',
+      dateFinAbonnement: ressource.dateFinAbonnement || ''
     };
     this.showModal = true;
   }
@@ -156,12 +147,8 @@ export class RessourcesListComponent implements OnInit {
     });
   }
 
-  supprimerRessource(id: number, situation: string): void {
+  supprimerRessource(id: number): void {
     let message = 'Êtes-vous sûr de vouloir supprimer cette ressource ?';
-    
-    if (situation === 'DEMANDE') {
-      message = '⚠️ Cette ressource est actuellement demandée. La supprimer affectera l\'employé demandeur. Continuer ?';
-    }
     
     if (confirm(message)) {
       this.adminRessourceService.delete(id).subscribe({
@@ -177,25 +164,25 @@ export class RessourcesListComponent implements OnInit {
   changerStatut(id: number, nouveauStatut: string): void {
     this.adminRessourceService.changerStatut(id, nouveauStatut).subscribe({
       next: () => {
+        // MISE À JOUR LOCALE IMMÉDIATE (sans recharger toute la liste)
+        const ressource = this.ressources.find(r => r.id === id);
+        if (ressource) {
+          ressource.statut = nouveauStatut as 'ACTIVE' | 'NON_ACTIVE';
+        }
+        
+        // Mettre aussi à jour dans la liste filtrée
+        const ressourceFiltree = this.filteredRessources.find(r => r.id === id);
+        if (ressourceFiltree) {
+          ressourceFiltree.statut = nouveauStatut as 'ACTIVE' | 'NON_ACTIVE';
+        }
+        
         this.showSuccess('Statut modifié');
-        this.loadRessources();
       },
       error: () => this.showError('Erreur changement statut')
     });
   }
 
-  libererRessource(id: number): void {
-    if (confirm('Libérer cette ressource ?')) {
-      this.adminRessourceService.liberer(id).subscribe({
-        next: () => {
-          this.showSuccess('Ressource libérée');
-          this.loadRessources();
-        },
-        error: () => this.showError('Erreur libération')
-      });
-    }
-  }
-
+  
   formatDate(dateStr: string): string {
     if (!dateStr) return '-';
     return new Date(dateStr).toLocaleDateString('fr-FR');
@@ -206,21 +193,12 @@ export class RessourcesListComponent implements OnInit {
     return this.ressources.length;
   }
 
-  get ressourcesActives(): number {
+  get nombreActives(): number {
     return this.ressources
       .filter(r => r.statut === 'ACTIVE').length;
   }
 
-  get ressourcesDisponibles(): number {
-    return this.ressources
-      .filter(r => r.situation === 'DISPONIBLE').length;
-  }
-
-  get ressourcesDemandees(): number {
-    return this.ressources
-      .filter(r => r.situation === 'DEMANDE').length;
-  }
-
+  
   private showSuccess(message: string): void {
     this.notification = { type: 'success', message };
     if (this.notificationTimeout) {

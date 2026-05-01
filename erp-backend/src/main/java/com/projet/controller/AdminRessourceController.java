@@ -3,7 +3,6 @@ package com.projet.controller;
 import com.projet.dto.RessourceRequest;
 import com.projet.dto.RessourceResponse;
 import com.projet.entity.Ressource;
-import com.projet.enums.SituationRessource;
 import com.projet.enums.StatutRessource;
 import com.projet.enums.StatutDemande;
 import com.projet.service.RessourceService;
@@ -33,7 +32,7 @@ public class AdminRessourceController {
     private final DemandeRessourceRepository demandeRessourceRepository;
 
     // Créer une ressource
-    // statut = ACTIVE, situation = DISPONIBLE par défaut
+    // statut = ACTIVE par défaut
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RessourceResponse> creerRessource(@Valid @RequestBody RessourceRequest request) {
@@ -60,10 +59,9 @@ public class AdminRessourceController {
                 dto.put("nom", r.getNom());
                 dto.put("description", r.getDescription());
                 dto.put("statut", r.getStatut());
-                dto.put("situation", r.getSituation());
                 dto.put("prix", r.getPrix());
-                dto.put("dateDebut", r.getDateDebut());
-                dto.put("dateFin", r.getDateFin());
+                dto.put("dateDebutAbonnement", r.getDateDebutAbonnement());
+                dto.put("dateFinAbonnement", r.getDateFinAbonnement());
 
                 // ← CALCUL DEPUIS LA TABLE demande_ressource
                 long nombreDemandes = demandeRessourceRepository
@@ -106,34 +104,11 @@ public class AdminRessourceController {
         return ResponseEntity.ok().build();
     }
 
-    // Activer une ressource
-    @PatchMapping("/{id}/activer")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> activerRessource(@PathVariable Long id) {
-        log.info("PATCH /api/admin/ressources/{}/activer - Activation d'une ressource", id);
-        
-        ressourceService.activerRessource(id);
-        log.info("Ressource {} activée avec succès", id);
-        
-        return ResponseEntity.ok().build();
-    }
-
-    // Désactiver une ressource
-    @PatchMapping("/{id}/desactiver")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> desactiverRessource(@PathVariable Long id) {
-        log.info("PATCH /api/admin/ressources/{}/desactiver - Désactivation d'une ressource", id);
-        
-        ressourceService.desactiverRessource(id);
-        log.info("Ressource {} désactivée avec succès", id);
-        
-        return ResponseEntity.ok().build();
-    }
-
+    
     // Changer le statut d'une ressource
     @PatchMapping("/{id}/statut")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> changerStatutRessource(
+    public ResponseEntity<Map<String, Object>> changerStatutRessource(
             @PathVariable Long id, 
             @RequestBody Map<String, String> request) {
         
@@ -145,25 +120,18 @@ public class AdminRessourceController {
             ressourceService.changerStatutRessource(id, statut);
             log.info("Statut de la ressource {} changé avec succès vers {}", id, nouveauStatut);
             
-            return ResponseEntity.ok().build();
+            // Retourner le nouveau statut pour confirmation
+            return ResponseEntity.ok(Map.of(
+                "message", "Statut mis à jour avec succès",
+                "statut", statut.name()
+            ));
         } catch (IllegalArgumentException e) {
             log.error("Statut invalide: {}", nouveauStatut);
             return ResponseEntity.badRequest().build();
         }
     }
 
-    // Libérer une ressource (remettre la situation à DISPONIBLE)
-    @PatchMapping("/{id}/liberer")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> libererRessource(@PathVariable Long id) {
-        log.info("PATCH /api/admin/ressources/{}/liberer - Libération d'une ressource", id);
-        
-        ressourceService.libererRessource(id);
-        log.info("Ressource {} libérée avec succès", id);
-        
-        return ResponseEntity.ok().build();
-    }
-
+    
     // Obtenir les détails d'une ressource
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")

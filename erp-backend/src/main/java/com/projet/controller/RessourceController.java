@@ -56,7 +56,7 @@ public class RessourceController {
         log.info("Payload reçu: {}", request);
         log.info("Nom: {}, Description: {}, Prix: {}, Date début: {}, Date fin: {}", 
                 request.getNom(), request.getDescription(), request.getPrix(), 
-                request.getDateDebut(), request.getDateFin());
+                request.getDateDebutAbonnement(), request.getDateFinAbonnement());
         
         try {
             RessourceResponse created = ressourceService.createRessource(request);
@@ -120,18 +120,11 @@ public class RessourceController {
         dto.setNom(ressource.getNom());
         dto.setDescription(ressource.getDescription());
         dto.setStatut(ressource.getStatut().name());
-        dto.setSituation(ressource.getSituation().name());
         dto.setPrix(ressource.getPrix());
-        dto.setDateDebut(ressource.getDateDebut());
-        dto.setDateFin(ressource.getDateFin());
+        dto.setDateDebut(ressource.getDateDebutAbonnement());
+        dto.setDateFin(ressource.getDateFinAbonnement());
         
-        // Informations sur l'employé demandeur si applicable
-        if (ressource.getEmployeDemandeur() != null) {
-            dto.setEmployeDemandeur(ressource.getEmployeDemandeur().getPrenom() + " " + ressource.getEmployeDemandeur().getNom());
-        }
-        
-        dto.setDateDemande(ressource.getDateDemande());
-        
+                
         return dto;
     }
 }

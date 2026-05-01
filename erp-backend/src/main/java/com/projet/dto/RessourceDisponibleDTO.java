@@ -1,12 +1,10 @@
 package com.projet.dto;
 
-import com.projet.enums.SituationRessource;
 import com.projet.enums.StatutRessource;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
-import java.time.LocalDateTime;
 import java.time.LocalDate;
 
 @Data
@@ -19,9 +17,8 @@ public class RessourceDisponibleDTO {
     private String description;
     private Double prix;
     
-    // Statut et situation
+    // Statut
     private String statut;          // "ACTIVE" / "NON_ACTIVE"
-    private String situation;       // "DEMANDE" / "NON_DEMANDE"
     
     // Dates d'abonnement
     private String dateDebutAbonnement;  // nullable, format "yyyy-MM-dd"
@@ -35,6 +32,4 @@ public class RessourceDisponibleDTO {
     // Anciens champs pour compatibilité (à supprimer plus tard)
     private LocalDate dateDebut;
     private LocalDate dateFin;
-    private String employeDemandeur;
-    private LocalDateTime dateDemande;
 }

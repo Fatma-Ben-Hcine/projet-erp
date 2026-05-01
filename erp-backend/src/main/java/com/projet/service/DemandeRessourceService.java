@@ -5,7 +5,6 @@ import com.projet.dto.DemandeRessourceResponse;
 import com.projet.entity.DemandeRessource;
 import com.projet.entity.Employe;
 import com.projet.entity.Ressource;
-import com.projet.enums.SituationRessource;
 import com.projet.enums.StatutRessource;
 import com.projet.enums.StatutDemande;
 import com.projet.repository.DemandeRessourceRepository;
@@ -50,10 +49,7 @@ public class DemandeRessourceService {
             throw new RuntimeException("Cette ressource n'est pas disponible (statut: " + ressource.getStatut() + ")");
         }
 
-        if (ressource.getSituation() != SituationRessource.NON_DEMANDE) {
-            throw new RuntimeException("Cette ressource n'est pas disponible (situation: " + ressource.getSituation() + ")");
-        }
-
+        
         // Créer la demande
         DemandeRessource demande = new DemandeRessource();
         demande.setRessource(ressource);
@@ -63,12 +59,6 @@ public class DemandeRessourceService {
 
         // Sauvegarder la demande
         DemandeRessource savedDemande = demandeRepository.save(demande);
-
-        // Mettre à jour la ressource
-        ressource.setSituation(SituationRessource.DEMANDE);
-        ressource.setEmployeDemandeur(employe);
-        ressource.setDateDemande(LocalDateTime.now());
-        ressourceRepository.save(ressource);
 
         log.info("Demande de ressource créée avec succès - ID: {}, Employé: {}, Ressource: {}", 
                 savedDemande.getId(), employe.getEmail(), ressource.getNom());
@@ -155,37 +145,12 @@ public class DemandeRessourceService {
 
         // Libérer la ressource
         Ressource ressource = demande.getRessource();
-        ressource.setSituation(SituationRessource.NON_DEMANDE);
-        ressource.setEmployeDemandeur(null);
-        ressource.setDateDemande(null);
         ressourceRepository.save(ressource);
 
         log.info("Demande annulée et ressource libérée: {}", demandeId);
     }
 
-    /**
-     * Libérer une ressource (admin)
-     */
-    @Transactional
-    public void libererRessourceParDemande(Long demandeId) {
-        log.info("Libération de la ressource via demande {}", demandeId);
-
-        DemandeRessource demande = demandeRepository.findById(demandeId)
-                .orElseThrow(() -> new RuntimeException("Demande non trouvée avec l'id: " + demandeId));
-
-        demande.setStatutDemande(StatutDemande.APPROUVEE);
-        demandeRepository.save(demande);
-
-        // Libérer la ressource
-        Ressource ressource = demande.getRessource();
-        ressource.setSituation(SituationRessource.NON_DEMANDE);
-        ressource.setEmployeDemandeur(null);
-        ressource.setDateDemande(null);
-        ressourceRepository.save(ressource);
-
-        log.info("Ressource libérée via demande: {}", demandeId);
-    }
-
+    
     // ========================
     // MAPPING DTO
     // ========================
@@ -203,8 +168,8 @@ public class DemandeRessourceService {
             ressourceInfo.setNom(demande.getRessource().getNom());
             ressourceInfo.setDescription(demande.getRessource().getDescription());
             ressourceInfo.setPrix(demande.getRessource().getPrix());
-            ressourceInfo.setDateDebut(demande.getRessource().getDateDebut());
-            ressourceInfo.setDateFin(demande.getRessource().getDateFin());
+            ressourceInfo.setDateDebut(demande.getRessource().getDateDebutAbonnement());
+            ressourceInfo.setDateFin(demande.getRessource().getDateFinAbonnement());
             response.setRessource(ressourceInfo);
         }
 

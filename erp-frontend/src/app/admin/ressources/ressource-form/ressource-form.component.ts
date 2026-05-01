@@ -26,8 +26,7 @@ export class RessourceFormComponent implements OnInit {
     prix: 0,
     statut: 'ACTIVE',
     dateDebutAbonnement: null,
-    dateFinAbonnement: null,
-    statutForceManuel: false
+    dateFinAbonnement: null
   };
 
   constructor(
@@ -56,8 +55,7 @@ export class RessourceFormComponent implements OnInit {
             prix: ressource.prix,
             statut: ressource.statut || 'ACTIVE',
             dateDebutAbonnement: ressource.dateDebutAbonnement || null,
-            dateFinAbonnement: ressource.dateFinAbonnement || null,
-            statutForceManuel: ressource.statutForceManuel || false
+            dateFinAbonnement: ressource.dateFinAbonnement || null
           };
         }
         this.loading = false;
@@ -86,8 +84,7 @@ export class RessourceFormComponent implements OnInit {
       prix: this.ressource.prix,
       statut: this.ressource.statut,
       dateDebutAbonnement: this.ressource.dateDebutAbonnement,
-      dateFinAbonnement: this.ressource.dateFinAbonnement,
-      statutForceManuel: this.ressource.statutForceManuel
+      dateFinAbonnement: this.ressource.dateFinAbonnement
     };
 
     const observable = this.isEditMode && this.ressourceId

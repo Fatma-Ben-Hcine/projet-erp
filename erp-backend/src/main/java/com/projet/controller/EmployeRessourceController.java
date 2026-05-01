@@ -4,7 +4,6 @@ import com.projet.dto.DemandeRessourceRequest;
 import com.projet.entity.DemandeRessource;
 import com.projet.entity.Employe;
 import com.projet.entity.Ressource;
-import com.projet.enums.SituationRessource;
 import com.projet.enums.StatutRessource;
 import com.projet.repository.EmployeRepository;
 import com.projet.repository.RessourceRepository;
@@ -68,11 +67,10 @@ public class EmployeRessourceController {
                     dto.put("id", r.getId());
                     dto.put("nom", r.getNom());
                     dto.put("description", r.getDescription());
-                    dto.put("situation", r.getSituation());
                     dto.put("statut", r.getStatut());
                     dto.put("prix", r.getPrix());
-                    dto.put("dateDebut", r.getDateDebut());
-                    dto.put("dateFin", r.getDateFin());
+                    dto.put("dateDebutAbonnement", r.getDateDebutAbonnement());
+                    dto.put("dateFinAbonnement", r.getDateFinAbonnement());
 
                     // Nombre de demandes EN_ATTENTE pour cette ressource
                     long nombreDemandes = demandeRessourceRepository
@@ -147,11 +145,6 @@ public class EmployeRessourceController {
             demande.setStatutDemande(com.projet.enums.StatutDemande.EN_ATTENTE);
             demandeRessourceRepository.save(demande);
 
-            // Mettre à jour situation → DEMANDE
-            // (car au moins 1 demande existe maintenant)
-            ressource.setSituation(SituationRessource.DEMANDE);
-            ressourceRepository.save(ressource);
-
             // Calculer le nouveau nombreDemandes
             long nombreDemandes = demandeRessourceRepository
                 .countByRessourceIdAndStatutDemande(
@@ -202,12 +195,8 @@ public class EmployeRessourceController {
                 .countByRessourceIdAndStatutDemande(
                     id, com.projet.enums.StatutDemande.EN_ATTENTE);
 
-            // Si plus aucune demande → situation = DISPONIBLE
-            Ressource ressource = demande.getRessource();
-            if (restantes == 0) {
-                ressource.setSituation(SituationRessource.DISPONIBLE);
-                ressourceRepository.save(ressource);
-            }
+            // Si plus aucune demande → ressource libérée
+            // Pas besoin de modifier la ressource, la situation n'existe plus
 
             log.info("Demande de la ressource {} annulée par l'employé {}", id, employe.getId());
             return ResponseEntity.ok(Map.of(

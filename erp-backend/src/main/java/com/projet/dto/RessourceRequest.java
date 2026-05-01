@@ -19,10 +19,10 @@ public class RessourceRequest {
     
     private Double prix;
     
-    private LocalDate dateDebut;
+    private LocalDate dateDebutAbonnement;
     
-    private LocalDate dateFin;
+    private LocalDate dateFinAbonnement;
     
-    // statut et situation gérés par la logique métier
+    // statut géré par la logique métier
     // pas dans le request de création
 }

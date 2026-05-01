@@ -33,10 +33,7 @@ export class AdminRessourceService {
     return this.delete(id);
   }
 
-  libererRessource(id: number): Observable<any> {
-    return this.liberer(id);
-  }
-
+  
   // Nouvelles méthodes standardisées
   create(data: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/admin/ressources`, data);
@@ -53,18 +50,5 @@ export class AdminRessourceService {
   // Actions spécifiques
   changerStatut(id: number, statut: string): Observable<any> {
     return this.http.patch(`${this.apiUrl}/admin/ressources/${id}/statut`, { statut });
-  }
-
-  liberer(id: number): Observable<any> {
-    return this.http.patch(`${this.apiUrl}/admin/ressources/${id}/liberer`, {});
-  }
-
-  // Nouveaux endpoints
-  activer(id: number): Observable<any> {
-    return this.http.patch(`${this.apiUrl}/admin/ressources/${id}/activer`, {});
-  }
-
-  desactiver(id: number): Observable<any> {
-    return this.http.patch(`${this.apiUrl}/admin/ressources/${id}/desactiver`, {});
   }
 }

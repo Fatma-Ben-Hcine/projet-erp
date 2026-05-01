@@ -7,7 +7,6 @@ import com.projet.entity.Ressource;
 import com.projet.entity.Employe;
 import com.projet.entity.DemandeRessource;
 import com.projet.enums.StatutRessource;
-import com.projet.enums.SituationRessource;
 import com.projet.repository.RessourceRepository;
 import com.projet.repository.DemandeRessourceRepository;
 import com.projet.repository.EmployeRepository;
@@ -42,10 +41,9 @@ public class RessourceService {
         ressource.setNom(request.getNom());
         ressource.setDescription(request.getDescription());
         ressource.setPrix(request.getPrix());
-        ressource.setDateDebut(request.getDateDebut());
-        ressource.setDateFin(request.getDateFin());
+        ressource.setDateDebutAbonnement(request.getDateDebutAbonnement());
+        ressource.setDateFinAbonnement(request.getDateFinAbonnement());
         ressource.setStatut(StatutRessource.ACTIVE); // Valeur par défaut
-        ressource.setSituation(SituationRessource.DISPONIBLE); // Valeur par défaut
 
         Ressource saved = ressourceRepository.save(ressource);
         log.info("Ressource créée avec ID: {}", saved.getId());
@@ -62,9 +60,9 @@ public class RessourceService {
         ressource.setNom(request.getNom());
         ressource.setDescription(request.getDescription());
         ressource.setPrix(request.getPrix());
-        ressource.setDateDebut(request.getDateDebut());
-        ressource.setDateFin(request.getDateFin());
-        // Ne pas modifier statut et situation - gérés par les actions dédiées
+        ressource.setDateDebutAbonnement(request.getDateDebutAbonnement());
+        ressource.setDateFinAbonnement(request.getDateFinAbonnement());
+        // Ne pas modifier statut - géré par les actions dédiées
 
         Ressource updated = ressourceRepository.save(ressource);
         log.info("Ressource mise à jour: {}", updated.getId());
@@ -114,30 +112,7 @@ public class RessourceService {
     // ACTIONS MÉTIER
     // ========================
 
-    @Transactional
-    public void activerRessource(Long id) {
-        log.info("Activation de la ressource ID: {}", id);
-        
-        Ressource ressource = ressourceRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ressource non trouvée avec l'id: " + id));
-        
-        ressource.setStatut(StatutRessource.ACTIVE);
-        ressourceRepository.save(ressource);
-        log.info("Ressource activée: {}", id);
-    }
-
-    @Transactional
-    public void desactiverRessource(Long id) {
-        log.info("Désactivation de la ressource ID: {}", id);
-        
-        Ressource ressource = ressourceRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ressource non trouvée avec l'id: " + id));
-        
-        ressource.setStatut(StatutRessource.NON_ACTIVE);
-        ressourceRepository.save(ressource);
-        log.info("Ressource désactivée: {}", id);
-    }
-
+    
     @Transactional
     public void changerStatutRessource(Long id, StatutRessource nouveauStatut) {
         log.info("Changement de statut de la ressource ID: {} vers {}", id, nouveauStatut);
@@ -150,20 +125,7 @@ public class RessourceService {
         log.info("Statut de la ressource {} changé vers {}", id, nouveauStatut);
     }
 
-    @Transactional
-    public void libererRessource(Long id) {
-        log.info("Libération de la ressource ID: {}", id);
-        
-        Ressource ressource = ressourceRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ressource non trouvée avec l'id: " + id));
-        
-        ressource.setSituation(SituationRessource.NON_DEMANDE);
-        ressource.setEmployeDemandeur(null);
-        ressource.setDateDemande(null);
-        ressourceRepository.save(ressource);
-        log.info("Ressource libérée: {}", id);
-    }
-
+    
     // ========================
     // MÉTHODES MÉTIER SPÉCIFIQUES
     // ========================
@@ -191,15 +153,13 @@ public class RessourceService {
                     dto.setDescription(ressource.getDescription());
                     dto.setPrix(ressource.getPrix());
                     dto.setStatut(ressource.getStatut().name());
-                    dto.setSituation(ressource.getSituation().name());
-                    
-                    // Dates de ressource (pas d'abonnement)
-                    dto.setDateDebutAbonnement(ressource.getDateDebut() != null ? 
-                            ressource.getDateDebut().format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE) : null);
-                    dto.setDateFinAbonnement(ressource.getDateFin() != null ? 
-                            ressource.getDateFin().format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE) : null);
-                    dto.setEstAbonne(ressource.getDateDebut() != null && 
-                                   ressource.getDateFin() != null);
+                    // Dates d'abonnement
+                    dto.setDateDebutAbonnement(ressource.getDateDebutAbonnement() != null ? 
+                            ressource.getDateDebutAbonnement().format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE) : null);
+                    dto.setDateFinAbonnement(ressource.getDateFinAbonnement() != null ? 
+                            ressource.getDateFinAbonnement().format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE) : null);
+                    dto.setEstAbonne(ressource.getDateDebutAbonnement() != null && 
+                                   ressource.getDateFinAbonnement() != null);
                     
                     // Vérifier si cet employé a déjà demandé cette ressource
                     boolean dejaDemandeParMoi = demandeRessourceRepository
@@ -247,15 +207,15 @@ public class RessourceService {
         LocalDate today = LocalDate.now();
         
         for (Ressource ressource : ressources) {
-            // Vérifier si la date de fin de ressource est expirée
-            if (ressource.getDateFin() != null 
-                && today.isAfter(ressource.getDateFin())) {
+            // Vérifier si la date de fin d'abonnement est expirée
+            if (ressource.getDateFinAbonnement() != null 
+                && today.isAfter(ressource.getDateFinAbonnement())) {
                 
                 if (ressource.getStatut() != StatutRessource.NON_ACTIVE) {
                     ressource.setStatut(StatutRessource.NON_ACTIVE);
                     ressourceRepository.save(ressource);
                     log.info("Ressource {} marquée comme NON_ACTIVE (date de fin expirée le {})", 
-                            ressource.getId(), ressource.getDateFin());
+                            ressource.getId(), ressource.getDateFinAbonnement());
                 }
             }
         }
@@ -272,19 +232,12 @@ public class RessourceService {
         response.setId(ressource.getId());
         response.setNom(ressource.getNom());
         response.setDescription(ressource.getDescription());
-        response.setSituation(ressource.getSituation());
         response.setStatut(ressource.getStatut());
         response.setPrix(ressource.getPrix());
-        response.setDateDebut(ressource.getDateDebut());
-        response.setDateFin(ressource.getDateFin());
+        response.setDateDebut(ressource.getDateDebutAbonnement());
+        response.setDateFin(ressource.getDateFinAbonnement());
         
-        // Informations sur l'employé demandeur si applicable
-        if (ressource.getEmployeDemandeur() != null) {
-            response.setEmployeDemandeurNom(ressource.getEmployeDemandeur().getPrenom() + " " + ressource.getEmployeDemandeur().getNom());
-        }
-        
-        response.setDateDemande(ressource.getDateDemande());
-        response.setDejaDemandeParMoi(false); // Sera géré dans le service employé
+                response.setDejaDemandeParMoi(false); // Sera géré dans le service employé
         
         return response;
     }

@@ -10,7 +10,6 @@ import com.projet.entity.DemandeRessource;
 import com.projet.repository.RessourceRepository;
 import com.projet.repository.DemandeRessourceRepository;
 import com.projet.enums.StatutRessource;
-import com.projet.enums.SituationRessource;
 import com.projet.entity.Employe;
 import com.projet.repository.EmployeRepository;
 import jakarta.validation.Valid;
@@ -88,12 +87,8 @@ public class DemandeRessourceController {
                 demande.setEmploye(employe);
                 demandeRessourceRepository.save(demande);
                 
-                // Si c'est la première demande pour cette ressource, mettre la situation à DEMANDE
-                List<DemandeRessource> demandesExistantes = demandeRessourceRepository.findByRessourceId(ressourceId);
-                if (demandesExistantes.size() == 1) { // Juste créée, donc c'est la première
-                    ressource.setSituation(SituationRessource.DEMANDE);
-                    ressourceRepository.save(ressource);
-                }
+                // La demande est créée, pas besoin de modifier la situation de la ressource
+                // car le champ situation n'existe plus
                 
                 successCount++;
                 log.info("Demande créée pour la ressource {} par l'employé {}", ressourceId, email);

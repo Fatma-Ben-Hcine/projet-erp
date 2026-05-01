@@ -36,41 +36,55 @@
         Aucune ressource disponible pour le moment.
       </div>
 
-      <div class="ressources-grid">
+      <div class="ressources-grid" *ngIf="!isLoading">
         <div *ngFor="let ressource of ressources"
              class="ressource-card"
-             [class.selected]="isSelected(ressource.id)"
-             [class.deja-demande]="ressource.dejaDemandeParMoi">
+             [class.card-demandee]="ressource.dejaDemandeParMoi">
 
+          <!-- En-tête : Nom + Compteur -->
           <div class="card-header">
-            <input
-              type="checkbox"
-              [checked]="isSelected(ressource.id)"
-              [disabled]="ressource.dejaDemandeParMoi"
-              (change)="toggleSelection(ressource.id)"
-            />
-            <span *ngIf="ressource.dejaDemandeParMoi" class="badge badge-deja">
-              Déjà demandé
+            <h3 class="ressource-nom">{{ ressource.nom }}</h3>
+            <span class="compteur"
+                  [class.zero]="ressource.nombreDemandes === 0"
+                  [class.nonzero]="ressource.nombreDemandes > 0">
+              👥 {{ ressource.nombreDemandes }}
+              {{ ressource.nombreDemandes <= 1 ? 'demande' : 'demandes' }}
             </span>
           </div>
 
+          <!-- Corps : Description uniquement -->
           <div class="card-body">
-            <h3>{{ ressource.nom }}</h3>
-            <p>{{ ressource.description }}</p>
-            <span class="prix">{{ ressource.prix | number:'1.0-0' }} TND</span>
+            <p class="ressource-description">
+              {{ ressource.description || 'Aucune description' }}
+            </p>
           </div>
+
+          <!-- Pied : Action -->
+          <div class="card-footer">
+
+            <!-- PAS encore demandé → case à cocher -->
+            <label *ngIf="!ressource.dejaDemandeParMoi"
+                   class="checkbox-label">
+              <input type="checkbox"
+                     [checked]="false"
+                     (change)="onCheckboxChange(ressource, $event)">
+              <span>Demander cette ressource</span>
+            </label>
+
+            <!-- Déjà demandé → annuler -->
+            <div *ngIf="ressource.dejaDemandeParMoi"
+                 class="demande-moi">
+              <span class="badge-moi">✅ Demandé par moi</span>
+              <button (click)="annulerDemande(ressource)"
+                      class="btn-annuler">
+                ✕ Annuler ma demande
+              </button>
+            </div>
+          </div>
+
         </div>
       </div>
 
-      <div *ngIf="!isLoading && ressources.length > 0" class="submit-area">
-        <p>{{ selectedIds.length }} ressource(s) sélectionnée(s)</p>
-        <button
-          [disabled]="selectedIds.length === 0"
-          (click)="soumettreDemande()"
-          class="btn btn-primary">
-          Soumettre la demande
-        </button>
-      </div>
-    </div>
+          </div>
   </main>
 </div>

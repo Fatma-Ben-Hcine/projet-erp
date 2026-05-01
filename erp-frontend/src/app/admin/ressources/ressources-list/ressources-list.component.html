@@ -20,27 +20,13 @@
     <div class="stat-card stat-green">
       <div class="stat-icon">✅</div>
       <div class="stat-info">
-        <span class="stat-number">{{ ressourcesActives }}</span>
+        <span class="stat-number">{{ nombreActives }}</span>
         <span class="stat-label">Actives</span>
       </div>
     </div>
 
-    <div class="stat-card stat-blue">
-      <div class="stat-icon">🔵</div>
-      <div class="stat-info">
-        <span class="stat-number">{{ ressourcesDisponibles }}</span>
-        <span class="stat-label">Disponibles</span>
+    
       </div>
-    </div>
-
-    <div class="stat-card stat-orange">
-      <div class="stat-icon">🟠</div>
-      <div class="stat-info">
-        <span class="stat-number">{{ ressourcesDemandees }}</span>
-        <span class="stat-label">Demandées</span>
-      </div>
-    </div>
-  </div>
 
   <!-- Barre de filtres -->
   <div class="filters-bar" *ngIf="!loading && !error">
@@ -84,19 +70,7 @@
       >
         Tous
       </button>
-      <button 
-        [class.active]="currentFilter === 'disponibles'"
-        (click)="setFilter('disponibles')"
-      >
-        Disponibles
-      </button>
-      <button 
-        [class.active]="currentFilter === 'demandees'"
-        (click)="setFilter('demandees')"
-      >
-        Demandées
-      </button>
-    </div>
+          </div>
   </div>
 
   <!-- État de chargement -->
@@ -120,7 +94,6 @@
           <th>Date début</th>
           <th>Date fin</th>
           <th>Statut</th>
-          <th>Situation</th>
           <th>Nb Demandes</th>
           <th>Actions</th>
         </tr>
@@ -132,21 +105,13 @@
           </td>
           <td>{{ ressource.description || '-' }}</td>
           <td>{{ ressource.prix ? ressource.prix + ' TND' : '-' }}</td>
-          <td>{{ ressource.dateDebut ? formatDate(ressource.dateDebut) : '-' }}</td>
-          <td>{{ ressource.dateFin ? formatDate(ressource.dateFin) : '-' }}</td>
+          <td>{{ ressource.dateDebutAbonnement ? formatDate(ressource.dateDebutAbonnement) : '-' }}</td>
+          <td>{{ ressource.dateFinAbonnement ? formatDate(ressource.dateFinAbonnement) : '-' }}</td>
           <td>
             <span [class]="ressource.statut === 'ACTIVE' 
                            ? 'badge badge-active' 
                            : 'badge badge-inactive'">
               {{ ressource.statut === 'ACTIVE' ? 'Active' : 'Non active' }}
-            </span>
-          </td>
-          <td>
-            <span [class]="ressource.situation === 'DISPONIBLE'
-                           ? 'badge badge-disponible'
-                           : 'badge badge-demande'">
-              {{ ressource.situation === 'DISPONIBLE' 
-                 ? 'Disponible' : 'Demandé' }}
             </span>
           </td>
           <td>
@@ -169,19 +134,12 @@
 
               <!-- Supprimer -->
               <button class="btn-icon btn-delete"
-                      (click)="supprimerRessource(ressource.id, ressource.situation)"
+                      (click)="supprimerRessource(ressource.id)"
                       title="Supprimer">
                 🗑️
               </button>
 
-              <!-- Libérer si DEMANDE -->
-              <button *ngIf="ressource.situation === 'DEMANDE'"
-                      class="btn-icon btn-liberer"
-                      (click)="libererRessource(ressource.id)"
-                      title="Libérer">
-                🔓
-              </button>
-
+              
               <!-- Toggle Activer/Désactiver -->
               <label class="toggle-switch" title="Activer/Désactiver">
                 <input type="checkbox"
@@ -281,23 +239,23 @@
         
         <div class="form-row">
           <div class="form-group">
-            <label for="dateDebut">Date début</label>
+            <label for="dateDebutAbonnement">Date début</label>
             <input 
               type="date" 
-              id="dateDebut" 
-              name="dateDebut" 
-              [(ngModel)]="ressourceForm.dateDebut"
+              id="dateDebutAbonnement" 
+              name="dateDebutAbonnement" 
+              [(ngModel)]="ressourceForm.dateDebutAbonnement"
               class="form-control"
             >
           </div>
           
           <div class="form-group">
-            <label for="dateFin">Date fin</label>
+            <label for="dateFinAbonnement">Date fin</label>
             <input 
               type="date" 
-              id="dateFin" 
-              name="dateFin" 
-              [(ngModel)]="ressourceForm.dateFin"
+              id="dateFinAbonnement" 
+              name="dateFinAbonnement" 
+              [(ngModel)]="ressourceForm.dateFinAbonnement"
               class="form-control"
             >
           </div>
