@@ -48,7 +48,7 @@
           <div class="details-column">
             <div class="detail-item">
               <span class="detail-label">Date Limite</span>
-              <span class="detail-value">{{ formatDate(projet.dateLimite) }}</span>
+              <span class="detail-value date-limite">{{ formatDate(projet.dateLimite) }}</span>
             </div>
             <div class="detail-item">
               <span class="detail-label">Employés Affectés au Projet ({{ projet.employes?.length || 0 }})</span>
@@ -373,10 +373,13 @@
           <span class="material-icons section-icon">check_circle</span>
           <h2 class="section-title">Dépôt du Projet</h2>
         </div>
-        <p class="depot-description">Toutes les activités doivent être déposées avant de pouvoir déposer le projet.</p>
-        <div class="depot-counter">
-          <span class="counter-text">{{ projetStats.activitesDeposees }} / {{ projetStats.activitesTotal }} activités déposées</span>
+        <div class="project-depot-content">
+          <p class="depot-description">Toutes les activités doivent être déposées avant de pouvoir déposer le projet.</p>
+          <div class="depot-counter">
+            <span class="counter-text">{{ projetStats.activitesDeposees }} / {{ projetStats.activitesTotal }} activités déposées</span>
+          </div>
         </div>
+
         <!-- Si pas encore déposé et toutes les activités OK → bouton Déposer -->
         <ng-container *ngIf="!depotProjet">
           <button 
