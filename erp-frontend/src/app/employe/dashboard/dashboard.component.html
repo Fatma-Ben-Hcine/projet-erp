@@ -176,3 +176,11 @@
     </div>
   </div>
 </div>
+
+<!-- Modal Démarrer le Projet - Outside layout to avoid z-index issues -->
+<app-demarrer-projet-modal
+  [projet]="projetPourDemarrer"
+  [isVisible]="showDemarrerModal"
+  (closed)="onDemarrerModalClosed()"
+  (projectStarted)="onProjectStarted()">
+</app-demarrer-projet-modal>

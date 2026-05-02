@@ -24,7 +24,6 @@ public class SecurityConfig {
 
     private final UserDetailsServiceImpl userDetailsService;
     private final JwtFilter jwtFilter;
-    private final RoleBasedAccessFilter roleBasedAccessFilter;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -63,18 +62,18 @@ public class SecurityConfig {
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/uploads/photos/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/conges/solde/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_EMPLOYE")
                         .requestMatchers("/api/conges/**").permitAll()
-                        .requestMatchers("/api/heures-supplementaires/**").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers("/api/employe/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_EMPLOYE")
-                        .requestMatchers("/api/employees/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_EMPLOYE")
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/employe/**").hasAnyRole("ADMIN", "EMPLOYE")
+                        .requestMatchers("/api/employees/**").hasAnyRole("ADMIN", "EMPLOYE")
+                        .requestMatchers("/api/ressources/**").hasAnyRole("ADMIN", "EMPLOYE")
+                        .requestMatchers("/api/demandes-ressources/**").hasAnyRole("ADMIN", "EMPLOYE")
+                        .requestMatchers("/api/heures-supplementaires/**").hasRole("ADMIN")
                         .requestMatchers("/api/user/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(customAuthenticationProvider())
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(roleBasedAccessFilter, JwtFilter.class);
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

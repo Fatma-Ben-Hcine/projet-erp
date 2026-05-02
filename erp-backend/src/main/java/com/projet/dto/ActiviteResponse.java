@@ -38,6 +38,16 @@ public class ActiviteResponse {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    public static class ActiviteInfo {
+        private Long id;
+        private String nom;
+        private String description;
+        private Long projetId;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class TacheInfo {
         private Long id;
         private String nom;
@@ -48,6 +58,7 @@ public class ActiviteResponse {
         private boolean estDeposé;
         private List<EmployeTacheInfo> employeTaches;
         private List<DepotResponse> depots;
+        private ActiviteInfo activite;
     }
 
     @Data

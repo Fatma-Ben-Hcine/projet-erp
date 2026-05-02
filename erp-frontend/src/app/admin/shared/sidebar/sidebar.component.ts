@@ -18,22 +18,25 @@ export class AdminSidebarComponent implements OnInit {
   projectsOpen = true;
   rhOpen = true;
   clientsOpen = true;
+  resourcesOpen: boolean = true;
 
   constructor(private authService: AuthService) {}
 
   ngOnInit(): void {
-    this.userEmail = localStorage.getItem('email') || '';
+    this.userEmail = localStorage.getItem('email') ?? '';
     this.isDarkMode = localStorage.getItem('darkMode') === 'true';
     this.applyDarkMode();
   }
 
-  toggleDropdown(section: 'projects' | 'rh' | 'clients'): void {
+  toggleDropdown(section: 'projects' | 'rh' | 'clients' | 'resources'): void {
     if (section === 'projects') {
       this.projectsOpen = !this.projectsOpen;
     } else if (section === 'rh') {
       this.rhOpen = !this.rhOpen;
     } else if (section === 'clients') {
       this.clientsOpen = !this.clientsOpen;
+    } else if (section === 'resources') {
+      this.resourcesOpen = !this.resourcesOpen;
     }
   }
 

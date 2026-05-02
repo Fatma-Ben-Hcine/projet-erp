@@ -17,7 +17,7 @@ export class ProjectCardComponent {
   @Output() start = new EventEmitter<string>();
 
   get isProjectManager(): boolean {
-    return this.currentUserId === this.project.projectManager;
+    return this.project.isChef === true;
   }
 
   get daysRemaining(): number {
@@ -36,5 +36,13 @@ export class ProjectCardComponent {
       case 'late': return 'border-red';
       default: return 'border-gray';
     }
+  }
+
+  onDepositClick(): void {
+    this.deposit.emit(this.project.id);
+  }
+
+  onViewDetailsClick(): void {
+    this.viewDetails.emit(this.project.id);
   }
 }

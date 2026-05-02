@@ -17,4 +17,8 @@ public interface ProjetRepository extends JpaRepository<Projet, Long> {
     
     @Query("SELECT p FROM Projet p LEFT JOIN FETCH p.travaillerProjets WHERE p.id = :id")
     Optional<Projet> findByIdWithEmployes(@Param("id") Long id);
+    
+    // Check if a user is chef de projet for a specific project
+    @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM Projet p WHERE p.id = :projetId AND p.chefProjet.id = :employeId")
+    boolean isChefDeProjet(@Param("projetId") Long projetId, @Param("employeId") Long employeId);
 }

@@ -1,5 +1,11 @@
 <div class="project-card" [ngClass]="borderColor">
 
+  <!-- Chef de Projet Badge -->
+  <div class="chef-badge" *ngIf="isProjectManager">
+    <span class="material-icons">star</span>
+    <span>Chef de projet</span>
+  </div>
+
   <div class="card-header">
     <span class="project-name">{{ project.name }}</span>
     <span class="project-deadline">
@@ -36,13 +42,14 @@
       Start
     </button>
 
-    <!-- Deposit button: for in-progress, late, completed -->
+    <!-- Deposit button: only for project manager + in-progress, late, completed -->
     <button
-      *ngIf="project.status === 'in-progress' ||
-             project.status === 'late' ||
-             project.status === 'completed'"
+      *ngIf="isProjectManager &&
+             (project.status === 'in-progress' ||
+              project.status === 'late' ||
+              project.status === 'completed')"
       class="btn btn-deposit"
-      (click)="deposit.emit(project.id)">
+      (click)="onDepositClick()">
       <span class="material-icons">check_circle</span>
       Dépôt
     </button>
@@ -50,7 +57,7 @@
     <!-- View details: always visible -->
     <button
       class="btn btn-details"
-      (click)="viewDetails.emit(project.id)">
+      (click)="onViewDetailsClick()">
       <span class="material-icons">visibility</span>
       Voir détails
     </button>

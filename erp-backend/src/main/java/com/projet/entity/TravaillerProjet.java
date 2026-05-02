@@ -26,8 +26,19 @@ public class TravaillerProjet {
     @JoinColumn(name = "employe_id", nullable = false)
     private Employe employe;
 
+    @Column(name = "est_chef")
+    private Boolean estChef = false;
+
     public TravaillerProjet(Projet projet, Employe employe) {
         this.projet = projet;
         this.employe = employe;
+    }
+
+    public Boolean isEstChef() {
+        return estChef;
+    }
+
+    public void setEstChef(Boolean estChef) {
+        this.estChef = estChef;
     }
 }

@@ -28,4 +28,5 @@ export interface Project {
   clientId: string;
   assignedEmployees: string[];
   activities?: Activity[];
+  isChef?: boolean; // true if current user is chef de projet for this project
 }

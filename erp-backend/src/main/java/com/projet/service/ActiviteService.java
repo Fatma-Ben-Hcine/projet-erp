@@ -267,6 +267,16 @@ public class ActiviteService {
                             .collect(Collectors.toList());
                     tacheInfo.setEmployeTaches(employeTaches);
                     
+                    // Info activité parente (nécessaire pour la modification de tâche)
+                    ActiviteResponse.ActiviteInfo parentActiviteInfo = new ActiviteResponse.ActiviteInfo();
+                    parentActiviteInfo.setId(activite.getId());
+                    parentActiviteInfo.setNom(activite.getNom());
+                    parentActiviteInfo.setDescription(activite.getDescription());
+                    if (activite.getProjet() != null) {
+                        parentActiviteInfo.setProjetId(activite.getProjet().getId());
+                    }
+                    tacheInfo.setActivite(parentActiviteInfo);
+                    
                     // Récupérer les dépôts de la tâche
                     List<Depot> depots = depotRepository.findDepotsByTacheId(tache.getId());
                     if (depots != null && !depots.isEmpty()) {

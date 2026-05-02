@@ -18,16 +18,20 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   if (token) {
     let headers = req.headers.set('Authorization', `Bearer ${token}`);
 
-    // Ne pas définir Content-Type pour GET et DELETE
-    if (req.method !== 'GET' && req.method !== 'DELETE') {
-      // Ne forcer Content-Type que s'il n'est pas déjà défini (ex: multipart/form-data)
-      if (!req.headers.has('Content-Type')) {
+    // ⚠️ Ne pas définir Content-Type pour FormData (multipart/form-data)
+    // Le navigateur doit gérer automatiquement le boundary
+    const isFormData = req.body instanceof FormData;
+
+    // Ne pas définir Content-Type pour GET, DELETE, ou FormData
+    if (req.method !== 'GET' && req.method !== 'DELETE' && !isFormData) {
+      // Ne forcer Content-Type que s'il n'est pas déjà défini
+      if (req.method !== 'GET' && !req.headers.has('Content-Type')) {
         headers = headers.set('Content-Type', 'application/json');
       }
     }
 
     authReq = req.clone({ headers });
-    console.log('AuthInterceptor - Header ajouté');
+    console.log('AuthInterceptor - Header ajouté, isFormData:', isFormData);
   }
 
   return next(authReq).pipe(
