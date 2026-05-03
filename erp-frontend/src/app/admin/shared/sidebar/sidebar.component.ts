@@ -13,12 +13,17 @@ import { AuthService } from '../../../auth/auth.service';
 export class AdminSidebarComponent implements OnInit {
   isDarkMode = false;
   userEmail = '';
+  isCollapsed: boolean = false;
 
   // Dropdown states - all open by default
   projectsOpen = true;
   rhOpen = true;
   clientsOpen = true;
   resourcesOpen: boolean = true;
+
+  toggleSidebar(): void {
+    this.isCollapsed = !this.isCollapsed;
+  }
 
   constructor(private authService: AuthService) {}
 

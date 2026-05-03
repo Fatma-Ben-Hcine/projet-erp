@@ -171,33 +171,33 @@
               </td>
               <td>
                 <div class="action-buttons">
-                  <button 
+                  <button
                     *ngIf="canEdit(hs)"
                     (click)="editHeureSupplementaire(hs)"
                     class="btn-icon btn-edit"
                     title="Modifier">
-                    <span class="material-icons">edit</span>
+                    ✏️
                   </button>
-                  <button 
+                  <button
                     *ngIf="canApprove(hs)"
                     (click)="approveHeureSupplementaire(hs)"
                     class="btn-icon btn-validate"
                     title="Approuver">
-                    <span class="material-icons">check</span>
+                    ✅
                   </button>
-                  <button 
+                  <button
                     *ngIf="canRefuse(hs)"
                     (click)="refuseHeureSupplementaire(hs)"
                     class="btn-icon btn-refuse"
                     title="Refuser">
-                    <span class="material-icons">close</span>
+                    ❌
                   </button>
-                  <button 
+                  <button
                     *ngIf="canDelete(hs)"
                     (click)="deleteHeureSupplementaire(hs)"
                     class="btn-icon btn-delete"
                     title="Supprimer">
-                    <span class="material-icons">delete</span>
+                    🗑️
                   </button>
                   <span 
                     *ngIf="!canEdit(hs) && !canApprove(hs) && !canRefuse(hs)"

@@ -13,6 +13,11 @@ import { AuthService } from '../../../auth/auth.service';
 export class EmployeSidebarComponent implements OnInit {
   isDarkMode = false;
   userName = '';
+  isCollapsed: boolean = false;
+
+  toggleSidebar(): void {
+    this.isCollapsed = !this.isCollapsed;
+  }
 
   constructor(private authService: AuthService) {}
 

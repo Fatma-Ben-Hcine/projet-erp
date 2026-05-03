@@ -519,6 +519,31 @@
   color: #78350f;
 }
 
+/* ═══════════════════════════════════════
+   BOUTONS START ET DÉPÔT — COULEURS TYPESCRIPT
+   ═══════════════════════════════════════ */
+
+/* Garde le style de base sans couleur de fond pour laisser les couleurs inline du TS */
+.status-actions .status-btn,
+button.status-btn {
+  color: #111827 !important;
+  border: none !important;
+  padding: 10px 20px !important;
+  border-radius: 10px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  width: 100% !important;
+  transition: opacity 0.2s, transform 0.2s !important;
+}
+
+/* Garde le style du hover mais sans forcer la couleur de fond */
+.status-actions .status-btn:hover,
+button.status-btn:hover {
+  opacity: 0.9 !important;
+  transform: translateY(-1px) !important;
+}
+
 /* Calendar View */
 .calendar-view {
   display: flex;
@@ -547,6 +572,7 @@
   margin: 0 0 0.5rem 0;
 }
 
+
 .calendar-placeholder p {
   color: #6b7280;
   margin: 0;
@@ -559,7 +585,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -574,6 +600,12 @@
   width: 90%;
   max-height: 90vh;
   overflow-y: auto;
+}
+
+/* Modal de détails du projet - Style spécifique */
+.modal-content.details-modal {
+  max-width: 600px;
+  padding: 32px;
 }
 
 .modal-header {
@@ -591,6 +623,23 @@
   margin: 0;
 }
 
+/* Modal de détails - Header spécifique */
+.modal-content.details-modal .modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0 16px 0;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 24px;
+}
+
+.modal-content.details-modal .modal-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin: 0;
+}
+
 .close-btn {
   padding: 0.5rem;
   border: none;
@@ -605,27 +654,105 @@
   background: #e5e7eb;
 }
 
+/* Modal de détails - Close button spécifique */
+.modal-content.details-modal .close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: transparent;
+  color: #6b7280;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.modal-content.details-modal .close-btn:hover {
+  background: #fef3c7 !important;
+  color: #d97706 !important;
+}
+
 .modal-body {
   padding: 1.5rem;
+}
+
+/* Modal de détails - Body spécifique */
+.modal-content.details-modal .modal-body {
+  padding: 0;
+  line-height: 1.6;
+}
+
+/* Modal de détails - Progression row */
+.modal-content.details-modal .progression-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-content.details-modal .progress-bar-container {
+  flex: 1;
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.modal-content.details-modal .progress-bar-fill {
+  height: 100%;
+  background: #f5a623;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.modal-content.details-modal .progression-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
+  white-space: nowrap;
 }
 
 .form-section {
   margin-bottom: 2rem;
 }
 
-.form-section h3 {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #111827;
-  margin: 0 0 1rem 0;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid #f0f0f0;
+/* Modal Créer/Modifier - Style spécifique des sections */
+.modal-content:not(.details-modal) .form-section {
+  background: #f9fafb;
+  border-radius: 10px;
+  padding: 24px;
+  margin-bottom: 24px;
+  border: 1px solid #f0f0f0;
+}
+
+.modal-content:not(.details-modal) .form-section h3 {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #6b7280;
+  margin: 0 0 20px 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .form-row {
   display: flex;
   gap: 1rem;
   margin-bottom: 1rem;
+}
+
+/* Modal Créer/Modifier - Style spécifique des form-row */
+.modal-content:not(.details-modal) .form-row {
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.modal-content:not(.details-modal) .form-row .form-group {
+  margin-bottom: 0;
 }
 
 .form-group {
@@ -644,6 +771,20 @@
   margin-bottom: 0.5rem;
 }
 
+/* Modal Créer/Modifier - Style spécifique des form-group */
+.modal-content:not(.details-modal) .form-group {
+  margin-bottom: 20px;
+}
+
+.modal-content:not(.details-modal) .form-group label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+
 .form-control {
   width: 100%;
   padding: 0.75rem;
@@ -657,6 +798,36 @@
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Modal Créer/Modifier - Style spécifique des inputs */
+.modal-content:not(.details-modal) .form-group input[type="text"],
+.modal-content:not(.details-modal) .form-group input[type="number"],
+.modal-content:not(.details-modal) .form-group input[type="date"],
+.modal-content:not(.details-modal) .form-group textarea,
+.modal-content:not(.details-modal) .form-group select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #111827;
+  background: #fff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.modal-content:not(.details-modal) .form-group input:focus,
+.modal-content:not(.details-modal) .form-group textarea:focus,
+.modal-content:not(.details-modal) .form-group select:focus {
+  outline: none;
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+}
+
+.modal-content:not(.details-modal) .form-group textarea {
+  min-height: 90px;
+  resize: vertical;
 }
 
 .error-text {
@@ -815,6 +986,29 @@
   gap: 1rem;
   padding: 1.5rem;
   border-top: 1px solid #f0f0f0;
+}
+
+/* Modal de détails - Footer spécifique */
+.modal-content.details-modal .modal-footer {
+  padding: 24px 0 0 0;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 24px;
+}
+
+.modal-content.details-modal .modal-footer .btn-primary {
+  background: #fde68a;
+  color: #92400e;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-content.details-modal .modal-footer .btn-primary:hover {
+  background: #fbbf24;
+  color: #78350f;
 }
 
 /* Dark mode */
@@ -978,12 +1172,78 @@
   font-weight: 600;
 }
 
+/* Modal de détails - Section avec fond gris */
+.modal-content.details-modal .form-section {
+  background: #f9f9f9;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  gap: 16px;
+}
+
+/* Modal de détails - Grid layout pour les informations */
+.modal-content.details-modal .info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.modal-content.details-modal .info-field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+}
+
+.modal-content.details-modal .info-field.full-width {
+  grid-column: 1 / -1;
+}
+
+.modal-content.details-modal .form-section h3 {
+  font-size: 13px;
+  font-weight: 700;
+  color: #6b7280;
+  margin: 0 0 12px 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 8px;
+}
+
+/* Labels style */
+.modal-content.details-modal .info-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #9ca3af;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.modal-content.details-modal .info-value {
+  font-size: 14px;
+  color: #111827;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
 .statut-badge {
   display: inline-block;
   padding: 0.25rem 0.75rem;
   border-radius: 12px;
   font-size: 0.75rem;
   font-weight: 600;
+  color: white;
+}
+
+/* Modal de détails - Badge statut style */
+.modal-content.details-modal .statut-badge {
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  background: #f5a623;
   color: white;
 }
 
@@ -1005,6 +1265,18 @@
 
 .team-member:hover {
   background: #f3f4f6;
+}
+
+/* Modal de détails - Team member chip style */
+.modal-content.details-modal .team-member {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: 20px;
+  padding: 8px 12px;
+}
+
+.modal-content.details-modal .team-member:hover {
+  background: rgba(245, 158, 11, 0.18);
 }
 
 .member-avatar {
@@ -1044,6 +1316,17 @@
   border-radius: 12px;
   font-size: 0.75rem;
   font-weight: 600;
+}
+
+/* Modal de détails - Chef badge style */
+.modal-content.details-modal .chef-badge {
+  background: #f5a623;
+  color: white;
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
 }
 
 .no-team {
@@ -1086,45 +1369,56 @@
 .activite-block {
   background: #fff;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 16px;
+  border-radius: 10px;
+  padding: 24px;
+  margin-bottom: 20px;
 }
 
 .activite-block .activite-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .activite-block .activite-header span {
-  font-weight: 600;
-  font-size: 16px;
-  color: #374151;
+  font-weight: 700;
+  font-size: 15px;
+  color: #111827;
 }
 
-.activite-block .activite-header button {
-  background: none;
+.activite-block .activite-header .btn-remove-activite {
+  background: transparent;
   border: none;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
   color: #ef4444;
-  font-size: 16px;
-  font-weight: bold;
-  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  transition: background 0.2s, color 0.2s;
+  padding: 0;
+  flex-shrink: 0;
 }
 
-.activite-block .activite-header button:hover {
-  background-color: #fef2f2;
+.activite-block .activite-header .btn-remove-activite:hover {
+  background: #fee2e2 !important;
+  color: #dc2626;
+}
+
+.activite-block .activite-header .btn-remove-activite .material-icons {
+  font-size: 18px;
 }
 
 .tache-block {
   border: 1px solid #e2e8f0;
   border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
   background: #f9fafb;
 }
 
@@ -1132,11 +1426,13 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .tache-block .tache-header span {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 13px;
   color: #374151;
 }

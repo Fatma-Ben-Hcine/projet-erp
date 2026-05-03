@@ -1,4 +1,4 @@
-<div class="layout" style="position: relative; z-index: 1;">
+<div class="layout" style="position: relative;">
   <!-- Hexagon background pattern -->
   <div style="position: fixed; inset: 0; opacity: 0.1;
          pointer-events: none; z-index: 0; color: #92400e;">
@@ -22,24 +22,9 @@
       <div class="header-content">
         <div class="header-text">
           <h1 class="page-title">Board Projets</h1>
-          <p class="page-subtitle">Gérez vos projets en mode Kanban ou Calendrier</p>
+          <p class="page-subtitle">Gérez vos projets en mode Kanban</p>
         </div>
         <div class="header-actions">
-          <div class="view-toggle">
-            <button 
-              class="view-btn" 
-              [class.active]="currentView === 'kanban'"
-              (click)="toggleView('kanban')">
-              <span class="material-icons">grid_view</span>
-              Kanban
-            </button>
-            <button 
-              class="view-btn" 
-              [class.active]="currentView === 'calendar'"
-              (click)="toggleView('calendar')">
-              Calendrier
-            </button>
-          </div>
           <button class="btn-primary" (click)="openCreateModal()">
             <span class="material-icons">add</span>
              Nouveau Projet
@@ -313,19 +298,11 @@
       </div>
     </div>
 
-    <!-- Vue Calendrier (placeholder) -->
-    <div *ngIf="currentView === 'calendar' && !isLoading" class="calendar-view">
-      <div class="calendar-placeholder">
-        <span class="material-icons">calendar_month</span>
-        <h3>Vue Calendrier</h3>
-        <p>La vue calendrier sera implémentée prochainement</p>
-      </div>
-    </div>
   </main>
 
   <!-- Modal de détails du projet -->
   <div *ngIf="selectedProjet" class="modal-overlay" (click)="fermerDetails()">
-    <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-content details-modal" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h2>Détails du Projet</h2>
         <button class="close-btn" (click)="fermerDetails()">
@@ -335,34 +312,44 @@
 
       <div class="modal-body">
         <!-- Section 1 - Informations générales -->
-        <div class="form-section" style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+        <div class="form-section">
           <h3>Informations générales</h3>
-          <div class="info-row">
-            <strong>Nom du Projet:</strong> {{ selectedProjet.nom }}
-          </div>
-          <div class="info-row">
-            <strong>Description:</strong> {{ selectedProjet.description || 'Aucune description' }}
-          </div>
-          <div class="info-row">
-            <strong>Client:</strong> {{ selectedProjet.client?.nom }} {{ selectedProjet.client?.prenom }}
-            <span style="margin-left: 20px;">
-              <strong>Budget:</strong> {{ selectedProjet.budget }} TND
-            </span>
-          </div>
-          <div class="info-row">
-            <span class="statut-badge" [style.background-color]="getStatutColor(selectedProjet.statut!)">
-              {{ selectedProjet.statut }}
-            </span>
-            <span style="margin-left: 15px;">
-              <strong>Date limite:</strong> {{ formatDate(selectedProjet.dateLimite) }}
-            </span>
-            <span style="margin-left: 15px;">
-              <strong>Progression:</strong> 
-              <div style="display: inline-block; width: 100px; height: 8px; background-color: #e9ecef; border-radius: 4px; margin-left: 5px; vertical-align: middle;">
-                <div style="width: {{ selectedProjet.progression }}%; height: 100%; background-color: #28a745; border-radius: 4px;"></div>
+          <div class="info-grid">
+            <div class="info-field full-width">
+              <span class="info-label">Nom du Projet</span>
+              <span class="info-value">{{ selectedProjet.nom }}</span>
+            </div>
+            <div class="info-field full-width">
+              <span class="info-label">Description</span>
+              <span class="info-value">{{ selectedProjet.description || 'Aucune description' }}</span>
+            </div>
+            <div class="info-field">
+              <span class="info-label">Client</span>
+              <span class="info-value">{{ selectedProjet.client?.nom }} {{ selectedProjet.client?.prenom }}</span>
+            </div>
+            <div class="info-field">
+              <span class="info-label">Budget</span>
+              <span class="info-value">{{ selectedProjet.budget }} TND</span>
+            </div>
+            <div class="info-field">
+              <span class="info-label">Date limite</span>
+              <span class="info-value">{{ formatDate(selectedProjet.dateLimite) }}</span>
+            </div>
+            <div class="info-field">
+              <span class="info-label">Statut</span>
+              <span class="statut-badge" [style.background-color]="getStatutColor(selectedProjet.statut!)">
+                {{ selectedProjet.statut }}
+              </span>
+            </div>
+            <div class="info-field full-width">
+              <span class="info-label">Progression</span>
+              <div class="progression-row">
+                <div class="progress-bar-container">
+                  <div class="progress-bar-fill" [style.width.%]="selectedProjet.progression"></div>
+                </div>
+                <span class="progression-value">{{ selectedProjet.progression }}%</span>
               </div>
-              <span style="margin-left: 5px;">{{ selectedProjet.progression }}%</span>
-            </span>
+            </div>
           </div>
         </div>
 
@@ -393,7 +380,7 @@
       </div>
 
       <div class="modal-footer">
-        <button class="btn btn-secondary" style="width: 100%;" (click)="fermerDetails()">
+        <button class="btn-primary" style="width: 100%;" (click)="fermerDetails()">
           Fermer
         </button>
       </div>
@@ -544,8 +531,10 @@
 
               <div class="activite-header">
                 <span>Activité {{i+1}}</span>
-                <button type="button" (click)="removeActivite(i)"
-                        *ngIf="activites.length > 1">×</button>
+                <button type="button" class="btn-remove-activite" (click)="removeActivite(i)"
+                        *ngIf="activites.length >= 1">
+                  <span class="material-icons">close</span>
+                </button>
               </div>
 
               <!-- Nom activité -->
@@ -784,6 +773,6 @@
 <app-start-project-modal
   [projet]="projetToStart"
   [isVisible]="showStartProjectModal"
-  (closeModal)="closeStartProjectModal()"
+  (closed)="closeStartProjectModal()"
   (projectStarted)="onProjectStarted()">
 </app-start-project-modal>

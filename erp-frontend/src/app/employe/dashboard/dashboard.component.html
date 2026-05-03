@@ -24,22 +24,6 @@
         <h1 class="page-title">Mes Projets</h1>
         <p class="page-subtitle">Bienvenue {{ userName }}, voici vos projets affectés</p>
       </div>
-      <div class="view-toggle">
-        <button
-          class="toggle-btn"
-          [class.active]="view === 'kanban'"
-          (click)="view = 'kanban'">
-          <span class="material-icons">view_kanban</span>
-          Kanban
-        </button>
-        <button
-          class="toggle-btn"
-          [class.active]="view === 'calendar'"
-          (click)="view = 'calendar'">
-          <span class="material-icons">calendar_month</span>
-          Calendrier
-        </button>
-      </div>
     </div>
 
     <!-- Kanban View -->
@@ -83,13 +67,6 @@
         (deposit)="handleDeposit($event)"
         (start)="handleStart($event)">
       </app-kanban-column>
-    </div>
-
-    <!-- Calendar View Placeholder -->
-    <div *ngIf="view === 'calendar'" class="calendar-placeholder">
-      <span class="material-icons calendar-icon">calendar_month</span>
-      <p>Vue Calendrier — à implémenter</p>
-      <small>Affichage des dates de début/fin, activités, deadlines</small>
     </div>
 
   </main>

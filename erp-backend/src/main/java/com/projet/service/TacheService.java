@@ -223,15 +223,19 @@ public class TacheService {
         response.setEstDeposé(tache.isEstDeposé());
 
         // Info activité
-        TacheResponse.ActiviteInfo activiteInfo = new TacheResponse.ActiviteInfo();
-        activiteInfo.setId(tache.getActivite().getId());
-        activiteInfo.setNom(tache.getActivite().getNom());
-        activiteInfo.setDescription(tache.getActivite().getDescription());
-        // Ajout du projetId pour faciliter la vérification du chef de projet
-        if (tache.getActivite().getProjet() != null) {
-            activiteInfo.setProjetId(tache.getActivite().getProjet().getId());
+        if (tache.getActivite() != null) {
+            TacheResponse.ActiviteInfo activiteInfo = new TacheResponse.ActiviteInfo();
+            activiteInfo.setId(tache.getActivite().getId());
+            activiteInfo.setNom(tache.getActivite().getNom());
+            activiteInfo.setDescription(tache.getActivite().getDescription());
+            // Ajout du projetId pour faciliter la vérification du chef de projet
+            if (tache.getActivite().getProjet() != null) {
+                activiteInfo.setProjetId(tache.getActivite().getProjet().getId());
+            }
+            response.setActivite(activiteInfo);
+        } else {
+            log.warn("Tâche {} sans activité associée", tache.getId());
         }
-        response.setActivite(activiteInfo);
 
         // Info employés assignés
         List<TacheResponse.EmployeTacheInfo> employeTaches = tache.getTravaillerTaches().stream()

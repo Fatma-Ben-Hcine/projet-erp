@@ -1,52 +1,167 @@
-.sidebar {
-  width: 260px;
+﻿/* Layout global */
+:host {
+  display: block;
   height: 100vh;
-  background: white;
-  border-right: 1px solid #f0f0f0;
-  display: flex;
-  flex-direction: column;
-  padding: 1.5rem 1rem;
-  position: fixed;
-  left: 0;
+  position: sticky;
   top: 0;
 }
-.sidebar-header { padding: 0 0.5rem 1.5rem; border-bottom: 1px solid #f0f0f0; }
-.sidebar-title { font-size: 1.25rem; font-weight: 700; color: #111827; margin: 0; }
-.sidebar-subtitle { font-size: 0.8rem; color: #6b7280; margin: 0.25rem 0 0; }
-.sidebar-nav { flex: 1; padding: 1rem 0; display: flex; flex-direction: column; gap: 0.25rem; }
+
+.sidebar {
+  width: 240px;
+  height: 100vh;
+  background: #fff;
+  border-right: 1px solid #E5E7EB;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 0;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  position: relative;
+}
+
+.sidebar.collapsed {
+  width: 68px;
+}
+
+/* Bouton toggle */
+.sidebar-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  margin: 0 8px 1rem 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  color: #6B7280;
+  transition: background 0.2s;
+  min-width: 44px;
+}
+
+.sidebar-toggle:hover {
+  background: #F3F4F6;
+  color: #111827;
+}
+
+/* Logo / Titre */
+.sidebar-brand {
+  padding: 0 16px;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.sidebar-brand .brand-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  display: block;
+  transition: opacity 0.2s;
+}
+
+.sidebar-brand .brand-role {
+  font-size: 12px;
+  color: #9CA3AF;
+  display: block;
+  transition: opacity 0.2s;
+}
+
+.sidebar.collapsed .sidebar-brand .brand-title,
+.sidebar.collapsed .sidebar-brand .brand-role {
+  opacity: 0;
+  width: 0;
+}
+
+/* Navigation links */
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  color: #6b7280;
-  text-decoration: none;
-  font-size: 0.9rem;
-  font-weight: 500;
+  gap: 12px;
+  padding: 10px 16px;
+  margin: 2px 8px;
+  border-radius: 10px;
   cursor: pointer;
-  border: none;
-  background: none;
-  width: 100%;
-  transition: all 0.2s;
+  color: #4B5563;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.2s, color 0.2s;
+  min-height: 44px;
+  overflow: hidden;
 }
-.nav-item:hover { background: #f9fafb; color: #111827; }
-.nav-item.active { background: #fef9c3; color: #111827; font-weight: 600; }
-.nav-item .material-icons { font-size: 20px; }
+
+.nav-item:hover {
+  background: #F3F4F6;
+  color: #111827;
+}
+
+.nav-item.active {
+  background: #FEF9C3;
+  color: #854D0E;
+}
+
+.nav-icon {
+  font-size: 20px;
+  min-width: 24px;
+  flex-shrink: 0;
+}
+
+.nav-label {
+  font-size: 14px;
+  font-weight: 500;
+  transition: opacity 0.2s, width 0.2s;
+  overflow: hidden;
+}
+
+.sidebar.collapsed .nav-label {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+}
+
+/* Tooltip au survol en mode collapsed */
+.sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding: 10px;
+  position: relative;
+}
+
+.sidebar.collapsed .nav-item:hover::after {
+  content: attr(title);
+  position: absolute;
+  left: 72px;
+  background: #1E293B;
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  white-space: nowrap;
+  z-index: 999;
+  pointer-events: none;
+}
+
+/* Bas de la sidebar */
 .sidebar-footer {
-  padding-top: 1rem;
-  border-top: 1px solid #f0f0f0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  margin-top: auto;
+  padding: 0.5rem 0;
+  border-top: 1px solid #F1F5F9;
 }
-.logout-btn { color: #dc2626; }
-.logout-btn:hover { background: #fee2e2; }
-:host-context(.dark) .sidebar { background: #1f2937; border-color: #374151; }
-:host-context(.dark) .sidebar-title { color: #f9fafb; }
-:host-context(.dark) .sidebar-subtitle { color: #9ca3af; }
-:host-context(.dark) .nav-item { color: #9ca3af; }
-:host-context(.dark) .nav-item:hover { background: #374151; color: #f9fafb; }
-:host-context(.dark) .nav-item.active { background: #713f12; color: #fef08a; }
-:host-context(.dark) .sidebar-header,
-:host-context(.dark) .sidebar-footer { border-color: #374151; }
+
+/* Mode sombre et déconnexion */
+.sidebar-footer .nav-item {
+  margin: 2px 8px;
+}
+
+.sidebar.collapsed .sidebar-toggle {
+  justify-content: center;
+}
+
+/* Fix layout global */
+.layout {
+  display: flex !important;
+  min-height: 100vh !important;
+}
+
+.main-content {
+  flex: 1 !important;
+  min-width: 0 !important;
+  overflow-x: hidden !important;
+}

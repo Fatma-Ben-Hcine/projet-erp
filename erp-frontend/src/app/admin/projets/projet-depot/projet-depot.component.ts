@@ -734,6 +734,11 @@ export class ProjetDepotComponent implements OnInit {
       return;
     }
 
+    if (!tache.activite || !tache.activite.id) {
+      this.showError('Erreur: information d\'activité manquante pour cette tâche');
+      return;
+    }
+
     this.tacheEnEdition = tache;
     this.activiteParenteId = tache.activite.id;
     this.tacheForm = {
