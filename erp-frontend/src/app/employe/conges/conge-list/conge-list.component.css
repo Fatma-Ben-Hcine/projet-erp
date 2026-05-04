@@ -1,12 +1,4 @@
 /* Styles based on existing project theme */
-.main-content {
-  margin-left: 250px;
-  padding: 2rem;
-  min-height: 100vh;
-  background-color: transparent !important;
-  background-image: none !important;
-}
-
 .page-header {
   margin-bottom: 2rem;
   display: flex !important;
@@ -206,19 +198,48 @@ button.btn-delete {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .main-content {
-    margin-left: 0;
-    padding: 1rem;
+/* ═══════════════════════════════════════
+   RESPONSIVE — CONGE LIST
+   ═══════════════════════════════════════ */
+
+@media (max-width: 767px) {
+  .page-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
   }
-  
+
+  .page-title {
+    font-size: 20px !important;
+  }
+
+  .page-header .btn-primary {
+    width: 100% !important;
+    justify-content: center !important;
+    margin-left: 0 !important;
+  }
+
+  .table-container {
+    overflow-x: auto !important;
+  }
+
   .data-table {
-    font-size: 0.875rem;
+    font-size: 0.875rem !important;
+    min-width: 600px !important;
   }
-  
+
   .data-table th,
   .data-table td {
-    padding: 0.5rem;
+    padding: 0.5rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-title {
+    font-size: 18px !important;
+  }
+
+  .section-title {
+    font-size: 1.25rem !important;
   }
 }

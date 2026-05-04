@@ -1,20 +1,4 @@
 /* Reuse existing styles from admin components */
-:host {
-  display: block;
-  width: 100%;
-}
-
-.layout {
-  min-height: 100vh;
-  display: flex;
-}
-
-.main-content {
-  flex: 1;
-  margin-left: 250px;
-  padding: 2rem;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-}
 
 .page-header {
   margin-bottom: 2rem;
@@ -315,11 +299,6 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .main-content {
-    margin-left: 0;
-    padding: 1rem;
-  }
-
   .filter-bar {
     flex-direction: column;
     align-items: stretch;

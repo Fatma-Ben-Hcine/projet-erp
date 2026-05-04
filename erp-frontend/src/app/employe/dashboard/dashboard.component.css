@@ -1,13 +1,3 @@
-.layout { display: flex; min-height: 100vh; position: relative; background: #f3f4f6 !important; }
-.main-content {
-  margin-left: 260px;
-  flex: 1;
-  padding: 2rem;
-  min-height: 100vh;
-  position: relative;
-  z-index: 1;
-  background: transparent !important;
-}
 .page-header {
   display: flex;
   align-items: flex-start;
@@ -114,14 +104,6 @@
 .task-name { font-weight: 500; margin: 0; font-size: 0.875rem; }
 .task-desc { color: #9ca3af; margin: 0; font-size: 0.8rem; }
 
-/* Dark mode */
-body.dark .layout {
-  background: #111827 !important;
-}
-
-body.dark .main-content {
-  background: transparent !important;
-}
 
 body.dark .page-title {
   color: #f9fafb;
@@ -158,4 +140,57 @@ body.dark .modal-section h3 { color: #f9fafb; }
 body.dark .info-item p { color: #f9fafb; }
 body.dark .team-badge { background: #374151; color: #d1d5db; }
 body.dark .activity-card { background: #111827; border-color: #374151; }
+
+/* ═══════════════════════════════════════
+   RESPONSIVE — EMPLOYE DASHBOARD
+   ═══════════════════════════════════════ */
+
+@media (max-width: 767px) {
+  .page-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  .page-title {
+    font-size: 20px !important;
+  }
+
+  .page-subtitle {
+    font-size: 13px !important;
+  }
+
+  .view-toggle {
+    width: 100% !important;
+  }
+
+  .kanban-board {
+    flex-direction: row !important;
+    overflow-x: scroll !important;
+    scroll-snap-type: x mandatory !important;
+    padding-bottom: 1rem !important;
+  }
+
+  .info-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  .modal-overlay {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+
+  .modal-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 20px 20px 0 0 !important;
+    max-height: 90vh !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-title {
+    font-size: 18px !important;
+  }
+}
 

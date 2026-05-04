@@ -1,40 +1,38 @@
-﻿/* Layout global */
-:host {
-  display: block;
-  height: 100vh;
-  position: sticky;
-  top: 0;
-}
-
 .sidebar {
-  width: 240px;
+  width: 260px;
   height: 100vh;
-  background: #fff;
+  background: white;
   border-right: 1px solid #E5E7EB;
   display: flex;
   flex-direction: column;
-  padding: 1rem 0;
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
-  position: relative;
+  padding: 1.5rem 1rem;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 2;
+  overflow-y: auto;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
-.sidebar.collapsed {
-  width: 68px;
-}
-
-/* Bouton toggle */
+/* Bouton toggle pour mobile */
 .sidebar-toggle {
-  display: flex;
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  width: 44px;
+  height: 44px;
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  display: none;
   align-items: center;
   justify-content: center;
-  padding: 10px;
-  margin: 0 8px 1rem 8px;
-  border-radius: 10px;
   cursor: pointer;
   color: #6B7280;
-  transition: background 0.2s;
-  min-width: 44px;
+  z-index: 1;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .sidebar-toggle:hover {
@@ -42,173 +40,312 @@
   color: #111827;
 }
 
-/* Logo / Titre */
-.sidebar-brand {
-  padding: 0 16px;
-  margin-bottom: 1.5rem;
-  overflow: hidden;
-  white-space: nowrap;
+/* Bouton fermeture dans sidebar */
+.sidebar-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #6B7280;
 }
 
-.sidebar-brand .brand-title {
-  font-size: 16px;
+.sidebar-close:hover {
+  background: #F3F4F6;
+  color: #111827;
+}
+
+/* Hide scrollbar for Chrome, Safari, Opera */
+.sidebar::-webkit-scrollbar {
+  display: none;
+}
+
+.sidebar-header {
+  padding: 0 0.5rem 1.5rem;
+  border-bottom: 1px solid #E5E7EB;
+  text-align: center;
+}
+.sidebar-title {
+  font-size: 1.5rem;
   font-weight: 700;
   color: #111827;
-  display: block;
-  transition: opacity 0.2s;
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+.sidebar-subtitle {
+  font-size: 0.875rem;
+  color: #6B7280;
+  margin: 0.25rem 0 0;
+  font-weight: 500;
 }
 
-.sidebar-brand .brand-role {
-  font-size: 12px;
-  color: #9CA3AF;
-  display: block;
-  transition: opacity 0.2s;
+.sidebar-nav {
+  flex: 1;
+  padding: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
-.sidebar.collapsed .sidebar-brand .brand-title,
-.sidebar.collapsed .sidebar-brand .brand-role {
-  opacity: 0;
-  width: 0;
-}
-
-/* Navigation links */
+/* Base nav item — applies to <a> links */
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
-  margin: 2px 8px;
-  border-radius: 10px;
-  cursor: pointer;
-  color: #4B5563;
-  text-decoration: none;
-  white-space: nowrap;
-  transition: background 0.2s, color 0.2s;
-  min-height: 44px;
-  overflow: hidden;
-}
-
-.nav-item:hover {
-  background: #F3F4F6;
-  color: #111827;
-}
-
-.nav-item.active {
-  background: #FEF9C3;
-  color: #854D0E;
-}
-
-.nav-icon {
-  font-size: 20px;
-  min-width: 24px;
-  flex-shrink: 0;
-}
-
-.nav-label {
-  font-size: 14px;
-  font-weight: 500;
-  transition: opacity 0.2s, width 0.2s;
-  overflow: hidden;
-}
-
-.sidebar.collapsed .nav-label {
-  opacity: 0;
-  width: 0;
-  overflow: hidden;
-}
-
-/* Tooltip au survol en mode collapsed */
-.sidebar.collapsed .nav-item {
-  justify-content: center;
-  padding: 10px;
-  position: relative;
-}
-
-.sidebar.collapsed .nav-item:hover::after {
-  content: attr(title);
-  position: absolute;
-  left: 72px;
-  background: #1E293B;
-  color: #fff;
-  padding: 6px 12px;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
   border-radius: 8px;
-  font-size: 13px;
-  white-space: nowrap;
-  z-index: 999;
-  pointer-events: none;
+  color: #6B7280;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.2s;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
+.nav-item:hover { background: #F3F4F6; color: #111827; }
+.nav-item.active { background: #EFF6FF; color: #1D4ED8; font-weight: 600; }
+.nav-item .material-icons { font-size: 20px; flex-shrink: 0; }
 
-/* Sous-menus */
-.nav-submenu {
-  overflow: hidden;
-  margin-left: 36px;
-}
-
-.sidebar.collapsed .nav-submenu {
-  display: none;
-}
-
-.nav-subitem {
+/* Dropdown button — explicit reset for <button> element */
+button.nav-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  margin: 1px 8px;
-  border-radius: 8px;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  width: 100%;
+  box-sizing: border-box;
+  border: none;
+  background: none;
   cursor: pointer;
-  color: #6B7280;
-  font-size: 13px;
-  text-decoration: none;
-  white-space: nowrap;
-  transition: background 0.2s;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #6b7280;
+  border-radius: 8px;
+  text-align: left;
+  appearance: none;
+  -webkit-appearance: none;
+}
+button.nav-item:hover { background: #f9fafb; color: #111827; }
+
+/* Nav label inside dropdown button */
+.nav-label {
+  flex: 1;
+  text-align: left;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  min-width: 0;
 }
 
-.nav-subitem:hover {
-  background: #F3F4F6;
+/* Dropdown arrow */
+.dropdown-arrow {
+  margin-left: auto;
+  font-size: 18px !important;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+  color: inherit;
+}
+.nav-item.open .dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+/* Dropdown toggle styling */
+.dropdown-toggle {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+}
+
+/* Dropdown toggle — independent styling (no nav-item class) */
+.dropdown-toggle {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  color: #6b7280;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  box-sizing: border-box;
+  background: none;
+  border: none;
+  gap: 0.75rem;
+}
+
+.dropdown-toggle:hover {
+  background: #f9fafb;
   color: #111827;
 }
 
-.nav-subitem.active {
-  background: #FEF9C3;
-  color: #854D0E;
-}
-
-/* Flèche dropdown */
-.nav-arrow {
-  margin-left: auto;
-  font-size: 18px;
-  transition: transform 0.2s;
+.dropdown-toggle .material-icons:first-child {
+  font-size: 20px;
   flex-shrink: 0;
+  width: 20px;
 }
 
-.sidebar.collapsed .nav-arrow {
-  display: none;
+.dropdown-toggle .nav-label {
+  flex-grow: 1;
+  flex-shrink: 1;
+  text-align: left;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: inherit;
+  min-width: 0;
 }
 
-/* Bas de la sidebar */
+.dropdown-toggle .dropdown-arrow {
+  font-size: 18px;
+  flex-shrink: 0;
+  margin-left: 0;
+  transition: transform 0.2s;
+}
+
+.dropdown-toggle.open .dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+/* Dark mode for dropdown-toggle */
+:host-context(.dark) .dropdown-toggle {
+  color: #9ca3af;
+}
+:host-context(.dark) .dropdown-toggle:hover {
+  background: #374151;
+  color: #f9fafb;
+}
+
+/* Dropdown container */
+.nav-dropdown {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* Dropdown menu items */
+.dropdown-menu {
+  display: flex;
+  flex-direction: column;
+  padding-left: 1rem;
+  margin-top: 0.25rem;
+  gap: 0.25rem;
+}
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  color: #6b7280;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.dropdown-item:hover { background: #f3f4f6; color: #111827; }
+.dropdown-item.active { background: #fef9c3; color: #111827; font-weight: 600; }
+.dropdown-item .material-icons { font-size: 18px; flex-shrink: 0; }
+
+/* Footer */
 .sidebar-footer {
-  margin-top: auto;
-  padding: 0.5rem 0;
-  border-top: 1px solid #F1F5F9;
+  padding-top: 1rem;
+  border-top: 1px solid #E5E7EB;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.logout-btn { color: #DC2626; border: 1px solid #FEE2E2; }
+.logout-btn:hover { background: #FEE2E2; color: #B91C1C; }
+
+/* Dark mode */
+:host-context(.dark) .sidebar {
+  background: #1f2937;
+  border-color: #374151;
+}
+:host-context(.dark) .sidebar-title { color: #f9fafb; }
+:host-context(.dark) .sidebar-subtitle { color: #9ca3af; }
+:host-context(.dark) .nav-item { color: #9ca3af; }
+:host-context(.dark) .nav-item:hover { background: #374151; color: #f9fafb; }
+:host-context(.dark) .nav-item.active { background: #713f12; color: #fef08a; }
+:host-context(.dark) button.nav-item { color: #9ca3af; }
+:host-context(.dark) button.nav-item:hover { background: #374151; color: #f9fafb; }
+:host-context(.dark) .sidebar-header,
+:host-context(.dark) .sidebar-footer { border-color: #374151; }
+:host-context(.dark) .dropdown-item { color: #9ca3af; }
+:host-context(.dark) .dropdown-item:hover { background: #374151; color: #f9fafb; }
+:host-context(.dark) .dropdown-item.active { background: #713f12; color: #fef08a; }
+
+/* ═══════════════════════════════════════
+   SIDEBAR RESPONSIVE — GLISSANTE
+   ═══════════════════════════════════════ */
+
+/* Desktop : sidebar visible */
+@media (min-width: 1024px) {
+  .sidebar {
+    transform: translateX(0) !important;
+  }
+  .sidebar-toggle,
+  .sidebar-close {
+    display: none !important;
+  }
 }
 
-/* Mode sombre et déconnexion */
-.sidebar-footer .nav-item {
-  margin: 2px 8px;
+/* Tablette : sidebar collapsed */
+@media (max-width: 1023px) {
+  .sidebar {
+    width: 68px !important;
+  }
+  .sidebar-header,
+  .nav-label,
+  .dropdown-arrow,
+  .dropdown-menu {
+    display: none !important;
+  }
+  .sidebar-toggle,
+  .sidebar-close {
+    display: none !important;
+  }
 }
 
-.sidebar.collapsed .sidebar-toggle {
-  justify-content: center;
-}
-
-/* Fix layout global */
-.layout {
-  display: flex !important;
-  min-height: 100vh !important;
-}
-
-.main-content {
-  flex: 1 !important;
-  min-width: 0 !important;
-  overflow-x: hidden !important;
+/* Mobile : sidebar cachée par défaut avec glissement */
+@media (max-width: 767px) {
+  .sidebar {
+    width: 260px !important;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  .sidebar-toggle {
+    display: flex !important;
+  }
+  .sidebar-close {
+    display: flex !important;
+  }
+  .sidebar-header,
+  .nav-label,
+  .dropdown-menu {
+    display: flex !important;
+  }
+  .dropdown-arrow {
+    display: inline-flex !important;
+  }
 }

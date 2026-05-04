@@ -13,7 +13,7 @@ import { AuthService } from '../../../auth/auth.service';
 export class AdminSidebarComponent implements OnInit {
   isDarkMode = false;
   userEmail = '';
-  isCollapsed: boolean = false;
+  isOpen = false;
 
   // Dropdown states - all open by default
   projectsOpen = true;
@@ -21,11 +21,15 @@ export class AdminSidebarComponent implements OnInit {
   clientsOpen = true;
   resourcesOpen: boolean = true;
 
+  constructor(private authService: AuthService) {}
+
   toggleSidebar(): void {
-    this.isCollapsed = !this.isCollapsed;
+    this.isOpen = !this.isOpen;
   }
 
-  constructor(private authService: AuthService) {}
+  closeSidebar(): void {
+    this.isOpen = false;
+  }
 
   ngOnInit(): void {
     this.userEmail = localStorage.getItem('email') ?? '';

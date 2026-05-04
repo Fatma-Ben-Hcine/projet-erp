@@ -1,15 +1,3 @@
-/* Layout */
-.layout {
-  position: relative;
-  min-height: 100vh;
-}
-
-.main-content {
-  margin-left: 260px;
-  padding: 2rem;
-  background: transparent !important;
-}
-
 /* Header */
 .page-header {
   display: flex;
@@ -1795,4 +1783,98 @@ button.status-btn:hover {
 
 :host-context(.dark) .info-ajout-activites .material-icons {
   color: #38bdf8;
+}
+
+/* ═══════════════════════════════════════
+   RESPONSIVE — BOARD
+   ═══════════════════════════════════════ */
+
+/* Grille de cartes */
+.cards-grid,
+.resources-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+  gap: 1.25rem !important;
+}
+
+@media (max-width: 767px) {
+  .page-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  .page-title {
+    font-size: 20px !important;
+  }
+
+  .page-subtitle {
+    font-size: 13px !important;
+  }
+
+  .header-actions {
+    width: 100% !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+
+  .view-toggle {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .btn-primary {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .cards-grid,
+  .resources-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Colonnes Kanban */
+.board-columns,
+.kanban-columns,
+.columns-container {
+  display: flex !important;
+  gap: 1.25rem !important;
+  overflow-x: auto !important;
+}
+
+@media (max-width: 1023px) {
+  .board-columns,
+  .kanban-columns,
+  .columns-container {
+    gap: 1rem !important;
+  }
+
+  .board-column,
+  .kanban-column {
+    min-width: 260px !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .board-columns,
+  .kanban-columns,
+  .columns-container {
+    flex-direction: row !important;
+    overflow-x: scroll !important;
+    scroll-snap-type: x mandatory !important;
+    padding-bottom: 1rem !important;
+  }
+
+  .board-column,
+  .kanban-column {
+    min-width: 280px !important;
+    scroll-snap-align: start !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-title {
+    font-size: 18px !important;
+  }
 }

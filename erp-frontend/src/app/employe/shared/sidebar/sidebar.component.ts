@@ -13,13 +13,17 @@ import { AuthService } from '../../../auth/auth.service';
 export class EmployeSidebarComponent implements OnInit {
   isDarkMode = false;
   userName = '';
-  isCollapsed: boolean = false;
-
-  toggleSidebar(): void {
-    this.isCollapsed = !this.isCollapsed;
-  }
+  isOpen = false;
 
   constructor(private authService: AuthService) {}
+
+  toggleSidebar(): void {
+    this.isOpen = !this.isOpen;
+  }
+
+  closeSidebar(): void {
+    this.isOpen = false;
+  }
 
   ngOnInit(): void {
     this.userName = localStorage.getItem('email') || 'Employé';

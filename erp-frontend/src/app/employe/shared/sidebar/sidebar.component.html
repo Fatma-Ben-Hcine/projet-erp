@@ -1,40 +1,49 @@
-﻿<div class="sidebar" [class.collapsed]="isCollapsed">
-  <div class="sidebar-toggle" (click)="toggleSidebar()">
-    <span class="material-icons">{{ isCollapsed ? 'menu' : 'close' }}</span>
-  </div>
+<!-- Bouton toggle pour mobile -->
+<button class="sidebar-toggle" *ngIf="!isOpen" (click)="toggleSidebar()">
+  <span class="material-icons">menu</span>
+</button>
 
-  <div class="sidebar-brand">
-    <span class="brand-title">ERP System</span>
-    <span class="brand-role">Employé</span>
+<aside class="sidebar" [class.open]="isOpen">
+  <!-- Bouton fermeture pour mobile -->
+  <button class="sidebar-close" (click)="closeSidebar()">
+    <span class="material-icons">close</span>
+  </button>
+  <div class="sidebar-header">
+    <h2 class="sidebar-title">ERP System</h2>
+    <p class="sidebar-subtitle">Employé</p>
   </div>
 
   <nav class="sidebar-nav">
-    <a class="nav-item" routerLink="/employe/dashboard" routerLinkActive="active" title="Accueil">
-      <span class="material-icons nav-icon">home</span>
-      <span class="nav-label">Accueil</span>
+    <a routerLink="/employe/dashboard" routerLinkActive="active" class="nav-item">
+      <span class="material-icons">home</span>
+      Accueil
     </a>
-    <a class="nav-item" routerLink="/employe/ressources/demande" routerLinkActive="active" title="Ressources">
-      <span class="material-icons nav-icon">inventory_2</span>
-      <span class="nav-label">Ressources</span>
+    <a routerLink="/employe/ressources/demande" routerLinkActive="active" class="nav-item">
+      <span class="material-icons">inventory_2</span>
+      Ressources
     </a>
-    <a class="nav-item" routerLink="/employe/conges" routerLinkActive="active" title="Congés">
-      <span class="material-icons nav-icon">event_available</span>
-      <span class="nav-label">Congés</span>
+    <a routerLink="/employe/tickets" routerLinkActive="active" class="nav-item">
+      <span class="material-icons">confirmation_number</span>
+      Tickets
     </a>
-    <a class="nav-item" routerLink="/employe/profile" routerLinkActive="active" title="Profile">
-      <span class="material-icons nav-icon">person</span>
-      <span class="nav-label">Profile</span>
+    <a routerLink="/employe/conges" routerLinkActive="active" class="nav-item">
+      <span class="material-icons">event_available</span>
+      Congés
+    </a>
+    <a routerLink="/employe/profile" routerLinkActive="active" class="nav-item">
+      <span class="material-icons">person</span>
+      Profile
     </a>
   </nav>
 
   <div class="sidebar-footer">
-    <div class="nav-item" (click)="toggleDarkMode()" title="Mode">
-      <span class="material-icons nav-icon">{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</span>
-      <span class="nav-label">{{ isDarkMode ? 'Mode Clair' : 'Mode Sombre' }}</span>
-    </div>
-    <div class="nav-item" (click)="logout()" title="Déconnexion">
-      <span class="material-icons nav-icon">logout</span>
-      <span class="nav-label">Déconnexion</span>
-    </div>
+    <button class="nav-item dark-toggle" (click)="toggleDarkMode()">
+      <span class="material-icons">{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</span>
+      {{ isDarkMode ? 'Mode Clair' : 'Mode Sombre' }}
+    </button>
+    <button class="nav-item logout-btn" (click)="logout()">
+      <span class="material-icons">logout</span>
+      Déconnexion
+    </button>
   </div>
-</div>
+</aside>

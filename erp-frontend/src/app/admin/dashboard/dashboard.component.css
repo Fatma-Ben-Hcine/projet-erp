@@ -1,18 +1,3 @@
-.layout {
-  display: flex;
-  min-height: 100vh;
-  position: relative;
-  background: #f3f4f6 !important;
-}
-.main-content {
-  margin-left: 260px;
-  flex: 1;
-  padding: 2rem;
-  min-height: 100vh;
-  position: relative;
-  z-index: 1;
-  background: transparent !important;
-}
 .page-header { margin-bottom: 2rem; }
 .page-title {
   font-size: 2rem;
@@ -54,4 +39,42 @@ body.dark .page-subtitle {
 
 body.dark .section-title {
   color: #f9fafb;
+}
+
+/* ═══════════════════════════════════════
+   RESPONSIVE — DASHBOARD
+   ═══════════════════════════════════════ */
+
+@media (max-width: 1023px) {
+  .stats-grid-3,
+  .stats-grid-4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .page-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  .page-title {
+    font-size: 20px !important;
+  }
+
+  .page-subtitle {
+    font-size: 13px !important;
+  }
+
+  .stats-grid-3,
+  .stats-grid-4 {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-title {
+    font-size: 18px !important;
+  }
 }
