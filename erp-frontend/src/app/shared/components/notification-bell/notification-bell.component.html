@@ -1,0 +1,42 @@
+<div class="notif-wrapper">
+  <button #notifBtn class="notif-btn" (click)="toggleDropdown()" aria-label="Notifications">
+    <span class="material-icons bell-icon" [class.has-notifs]="countNonLues > 0">notifications</span>
+    <span *ngIf="countNonLues > 0" class="badge-count">
+      {{ countNonLues > 99 ? '99+' : countNonLues }}
+    </span>
+  </button>
+
+  <div #dropdown class="notif-dropdown" *ngIf="isOpen" [ngStyle]="dropdownStyles">
+    <div class="notif-header">
+      <span class="notif-title">Notifications</span>
+      <button
+        *ngIf="countNonLues > 0"
+        class="mark-all-btn"
+        (click)="marquerToutesLues()"
+      >
+        Tout marquer comme lu
+      </button>
+    </div>
+
+    <div class="notif-list">
+      <div class="notif-empty" *ngIf="notifications.length === 0">
+        <span class="empty-icon">📭</span>
+        <p>Aucune notification</p>
+      </div>
+
+      <div
+        *ngFor="let notif of notifications"
+        class="notif-item"
+        [class.non-lue]="!notif.estLue"
+        (click)="onNotifClick(notif)"
+      >
+        <span class="notif-icon">{{ getNotifIcon(notif.type) }}</span>
+        <div class="notif-content">
+          <p class="notif-message">{{ notif.message }}</p>
+          <small class="notif-date">{{ notif.dateCreation | date : 'dd/MM/yyyy HH:mm' }}</small>
+        </div>
+        <span *ngIf="!notif.estLue" class="dot-non-lue"></span>
+      </div>
+    </div>
+  </div>
+</div>

@@ -3,6 +3,9 @@
   <!-- Global hexagon background applied to ALL pages -->
   <app-hexagon-background></app-hexagon-background>
 
+  <!-- Header global (affiché sur toutes les pages sauf login) -->
+  <app-header *ngIf="showHeader"></app-header>
+
   <!-- All page content renders above the background -->
   <div class="app-content">
     <router-outlet></router-outlet>

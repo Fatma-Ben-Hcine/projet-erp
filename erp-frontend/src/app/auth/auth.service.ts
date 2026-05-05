@@ -8,6 +8,7 @@ export interface LoginResponse {
   type: string;
   email: string;
   role: string;
+  id: number;
 }
 
 @Injectable({
@@ -60,6 +61,7 @@ export class AuthService {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
     localStorage.removeItem('email');
+    localStorage.removeItem('userId');
     this.router.navigate(['/']);
   }
 
@@ -120,5 +122,30 @@ export class AuthService {
 
   isEmploye(): boolean {
     return this.getRole() === 'ROLE_EMPLOYE';
+  }
+
+  getCurrentUser(): { id: number | null; email: string | null; role: string | null } {
+    const userIdStr = localStorage.getItem('userId');
+    const parsedId = userIdStr ? parseInt(userIdStr, 10) : null;
+    return {
+      id: isNaN(parsedId as number) ? null : parsedId,
+      email: this.getEmail(),
+      role: this.getRole()
+    };
+  }
+
+  setUserId(id: number): void {
+    localStorage.setItem('userId', id.toString());
+  }
+
+  getCurrentUserId(): number | null {
+    const userIdStr = localStorage.getItem('userId');
+    if (!userIdStr) return null;
+    const parsedId = parseInt(userIdStr, 10);
+    return isNaN(parsedId) ? null : parsedId;
+  }
+
+  clearUserId(): void {
+    localStorage.removeItem('userId');
   }
 }

@@ -58,6 +58,7 @@ public class ProjetService {
     private final DepotRepository depotRepository;
     private final FileUploadService fileUploadService;
     private final ProjetProgressionService projetProgressionService;
+    private final NotificationService notificationService;
 
     public List<ProjetResponse> getAllProjets() {
         log.info("Récupération de tous les projets");
@@ -167,6 +168,11 @@ public class ProjetService {
                 
                 travaillerProjetRepository.saveAll(travaillerProjets);
                 log.info("{} employés assignés au projet {}", travaillerProjets.size(), saved.getId());
+
+                // Notifier chaque employé assigné au projet
+                for (TravaillerProjet tp : travaillerProjets) {
+                    notificationService.notifierProjetAssigne(tp.getEmploye(), saved);
+                }
 
                 // Désigner le chef de projet si spécifié
                 if (request.getChefDeProjetId() != null) {

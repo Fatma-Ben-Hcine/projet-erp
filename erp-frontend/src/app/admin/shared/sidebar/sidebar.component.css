@@ -1,6 +1,6 @@
 .sidebar {
   width: 260px;
-  height: 100vh;
+  height: calc(100vh - 60px);
   background: white;
   border-right: 1px solid #E5E7EB;
   display: flex;
@@ -8,7 +8,7 @@
   padding: 1.5rem 1rem;
   position: fixed;
   left: 0;
-  top: 0;
+  top: 60px;
   z-index: 2;
   overflow-y: auto;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
@@ -70,8 +70,16 @@
 .sidebar-header {
   padding: 0 0.5rem 1.5rem;
   border-bottom: 1px solid #E5E7EB;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sidebar-branding {
+  flex: 1;
   text-align: center;
 }
+
 .sidebar-title {
   font-size: 1.5rem;
   font-weight: 700;

@@ -15,7 +15,7 @@
   background: transparent !important;
   padding-left: 2rem !important;
   padding-right: 2rem !important;
-  padding-top: 2rem !important;
+  padding-top: 80px !important; /* Espace pour le header fixe de 60px */
 }
 
 /* ── 2. WRAPPER CONTENU ── */
@@ -240,7 +240,7 @@ h1 {
 @media (max-width: 768px) {
   .main-content {
     margin-left: 0 !important;
-    padding: 1.5rem 1rem !important;
+    padding: 80px 1rem 1.5rem !important; /* Espace pour header en haut */
   }
 
   .ressources-grid {
