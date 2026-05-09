@@ -44,9 +44,6 @@ public class Projet {
     @Column(name = "date_limite", nullable = false)
     private LocalDate dateLimite;
 
-    @Column(nullable = false)
-    private Integer progression;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StatutProjet statut = StatutProjet.NOUVEAU;

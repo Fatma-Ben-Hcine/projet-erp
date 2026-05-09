@@ -4,7 +4,7 @@ export interface ProjetRequest {
   budget: number;
   dateDebut: string;
   dateLimite: string;
-  progression?: number;
+  // Note: progression est calculée dynamiquement par le backend
   clientId?: number;
   chefDeProjetId?: number;
   employeIds?: number[];

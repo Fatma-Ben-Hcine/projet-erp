@@ -5,9 +5,7 @@ import com.projet.dto.ProjetResponse;
 import com.projet.dto.DepotRequest;
 import com.projet.enums.StatutProjet;
 import com.projet.service.ProjetService;
-import com.projet.service.ProjetProgressionService;
 import com.projet.repository.ProjetRepository;
-import com.projet.entity.Projet;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,8 +34,6 @@ import java.util.Map;
 public class ProjetController {
 
     private final ProjetService projetService;
-    private final ProjetProgressionService projetProgressionService;
-    private final ProjetRepository projetRepository;
 
     @GetMapping
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
@@ -235,20 +231,4 @@ public class ProjetController {
         }
     }
 
-    /**
-     * Endpoint admin one-shot pour corriger les progressions des projets existants.
-     * À appeler une seule fois puis à supprimer ou sécuriser.
-     */
-    @GetMapping("/admin/fix-progressions")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<String> fixProgressions() {
-        List<Projet> projets = projetRepository.findAll();
-        int count = 0;
-        for (Projet projet : projets) {
-            projetProgressionService.recalculerEtSauvegarder(projet.getId());
-            count++;
-        }
-        log.info("Progressions recalculées pour {} projets", count);
-        return ResponseEntity.ok("Progressions recalculées : " + count + " projets");
-    }
 }

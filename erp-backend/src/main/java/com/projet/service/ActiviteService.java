@@ -34,7 +34,6 @@ public class ActiviteService {
     private final TravaillerActiviteRepository travaillerActiviteRepository;
     private final TacheRepository tacheRepository;
     private final DepotRepository depotRepository;
-    private final ProjetProgressionService projetProgressionService;
     private final FileUploadService fileUploadService;
     private final TacheService tacheService;
 
@@ -417,10 +416,6 @@ public class ActiviteService {
         // Rafraîchir l'activité depuis la base pour charger les dépôts associés
         activite = activiteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Activité non trouvée avec l'id: " + id));
-
-        // Recalculer la progression du projet parent
-        Long projetId = activite.getProjet().getId();
-        projetProgressionService.recalculerEtSauvegarder(projetId);
 
         log.info("Activité {} déposée avec dépôt {}", id, depot.getId());
         return mapToResponse(activite);

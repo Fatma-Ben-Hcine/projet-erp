@@ -34,9 +34,6 @@ public class Notification {
     @Column(name = "projet_id")
     private Long projetId;
 
-    @Column(name = "projet_nom")
-    private String projetNom;
-
     @Column(name = "est_lue")
     private boolean estLue = false;
 

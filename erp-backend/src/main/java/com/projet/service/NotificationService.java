@@ -44,15 +44,13 @@ public class NotificationService {
             Employe destinataire,
             String message,
             String type,
-            Long projetId,
-            String projetNom) {
+            Long projetId) {
 
         Notification notif = new Notification();
         notif.setDestinataire(destinataire);
         notif.setMessage(message);
         notif.setType(type);
         notif.setProjetId(projetId);
-        notif.setProjetNom(projetNom);
         notif.setEstLue(false);
         notif.setDateCreation(LocalDateTime.now());
 
@@ -103,8 +101,7 @@ public class NotificationService {
                 employe,
                 "Vous avez été assigné au projet \"" + projet.getNom() + "\"",
                 "PROJET_ASSIGNE",
-                projet.getId(),
-                projet.getNom()
+                projet.getId()
         );
 
         log.info("Notification PROJET_ASSIGNE créée pour employé {} sur projet {}",
@@ -140,7 +137,7 @@ public class NotificationService {
                 if (membre != null && employeIdsNotifies.add(membre.getId())) {
                     creerNotification(membre, message,
                             "DATE_LIMITE_PROCHE",
-                            projet.getId(), projet.getNom());
+                            projet.getId());
                 }
             }
 
@@ -149,7 +146,7 @@ public class NotificationService {
                 if (employeIdsNotifies.add(projet.getChefProjet().getId())) {
                     creerNotification(projet.getChefProjet(), message,
                             "DATE_LIMITE_PROCHE",
-                            projet.getId(), projet.getNom());
+                            projet.getId());
                 }
             }
 
@@ -159,7 +156,7 @@ public class NotificationService {
                 if (employeIdsNotifies.add(admin.getId())) {
                     creerNotification(admin, message,
                             "DATE_LIMITE_PROCHE",
-                            projet.getId(), projet.getNom());
+                            projet.getId());
                 }
             }
         }
@@ -196,12 +193,20 @@ public class NotificationService {
      * Mapper une Notification en NotificationDTO
      */
     public NotificationDTO mapToDTO(Notification notif) {
+        // Récupère le nom du projet dynamiquement via projetId
+        String projetNom = null;
+        if (notif.getProjetId() != null) {
+            projetNom = projetRepository.findById(notif.getProjetId())
+                    .map(Projet::getNom)
+                    .orElse(null);
+        }
+
         return NotificationDTO.builder()
                 .id(notif.getId())
                 .message(notif.getMessage())
                 .type(notif.getType())
                 .projetId(notif.getProjetId())
-                .projetNom(notif.getProjetNom())
+                .projetNom(projetNom)
                 .estLue(notif.isEstLue())
                 .dateCreation(notif.getDateCreation() != null
                         ? notif.getDateCreation().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))

@@ -36,6 +36,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.io.IOException;
 import org.springframework.web.server.ResponseStatusException;
@@ -57,7 +58,6 @@ public class ProjetService {
     private final TravaillerTacheRepository travaillerTacheRepository;
     private final DepotRepository depotRepository;
     private final FileUploadService fileUploadService;
-    private final ProjetProgressionService projetProgressionService;
     private final NotificationService notificationService;
 
     public List<ProjetResponse> getAllProjets() {
@@ -102,7 +102,6 @@ public class ProjetService {
             projet.setBudget(request.getBudget());
             projet.setDateDebut(request.getDateDebut());
             projet.setDateLimite(request.getDateLimite());
-            projet.setProgression(request.getProgression());
             projet.setEstDeposé(request.getEstDeposé());
 
             // Gérer le client
@@ -308,7 +307,6 @@ public class ProjetService {
         projet.setBudget(request.getBudget());
         projet.setDateDebut(request.getDateDebut());
         projet.setDateLimite(request.getDateLimite());
-        projet.setProgression(request.getProgression());
         projet.setEstDeposé(request.getEstDeposé());
 
         // Gérer le client
@@ -619,7 +617,9 @@ public class ProjetService {
         response.setBudget(projet.getBudget());
         response.setDateDebut(projet.getDateDebut());
         response.setDateLimite(projet.getDateLimite());
-        response.setProgression(projet.getProgression());
+        // Calcul dynamique de la progression basé sur les activités déposées
+        int progressionCalculee = calculerProgression(projet);
+        response.setProgression(progressionCalculee);
         response.setStatut(projet.getStatut() != null ? projet.getStatut().name() : determinerStatut(projet));
         response.setEstDeposé(projet.isEstDeposé());
         response.setJoursRestants(calculerJoursRestants(projet));
@@ -683,10 +683,36 @@ public class ProjetService {
         return response;
     }
 
+    /**
+     * Calcule la progression du projet basée sur les activités déposées.
+     * Formule : (nb activités déposées / nb total activités) × 100
+     * Si le projet est déposé → progression forcée à 100%
+     */
+    private int calculerProgression(Projet projet) {
+        // Si le projet est déposé → forcé à 100%
+        if (projet.isEstDeposé()) {
+            return 100;
+        }
+
+        // Charger les activités si elles ne sont pas déjà chargées
+        Set<Activite> activites = projet.getActivites();
+        if (activites == null || activites.isEmpty()) {
+            return 0;
+        }
+
+        long totalActivites = activites.size();
+        long activitesDeposees = activites.stream()
+                .filter(Activite::isEstDeposé)
+                .count();
+
+        return (int) Math.round((double) activitesDeposees / totalActivites * 100);
+    }
+
     private String determinerStatut(Projet projet) {
         LocalDate aujourdHui = LocalDate.now();
-        
-        if (projet.getProgression() >= 100) {
+        int progression = calculerProgression(projet);
+
+        if (progression >= 100 || projet.isEstDeposé()) {
             return "Terminé";
         } else if (aujourdHui.isAfter(projet.getDateLimite())) {
             return "En retard";
@@ -736,9 +762,6 @@ public class ProjetService {
         depot.setProjet(projet);
         depotRepository.save(depot);
 
-        // Forcer la progression à 100% car le projet est déposé
-        projet.setProgression(100);
-        projetRepository.save(projet);
 
         log.info("Projet {} déposé et marqué comme terminé avec dépôt {}", id, depot.getId());
         return mapToResponse(projet);

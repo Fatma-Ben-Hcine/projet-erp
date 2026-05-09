@@ -32,10 +32,6 @@ public class ProjetRequest {
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate dateLimite;
 
-    @Min(value = 0, message = "La progression ne peut être inférieure à 0")
-    @Max(value = 100, message = "La progression ne peut dépasser 100")
-    private Integer progression = 0; // Valeur par défaut pour les nouveaux projets
-
     private Boolean estDeposé = false; // Valeur par défaut pour les nouveaux projets
 
     private List<Long> employeIds;
