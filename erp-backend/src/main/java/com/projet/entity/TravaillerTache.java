@@ -27,16 +27,9 @@ public class TravaillerTache {
     @JoinColumn(name = "tache_id")
     private Tache tache;
 
-    @Column(name = "date_debut")
-    private java.time.LocalDate dateDebut;
-
-    @Column(name = "date_fin_reelle")
-    private java.time.LocalDate dateFinReelle;
-
     public TravaillerTache(Employe employe, Tache tache) {
         this.employe = employe;
         this.tache = tache;
         this.id = new TravaillerTacheId(employe.getId(), tache.getId());
-        this.dateDebut = java.time.LocalDate.now();
     }
 }

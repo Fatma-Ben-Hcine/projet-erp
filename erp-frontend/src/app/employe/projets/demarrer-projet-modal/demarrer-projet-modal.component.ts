@@ -303,7 +303,7 @@ export class DemarrerProjetModalComponent implements OnChanges {
 
         for (const empId of act.employes) {
           await this.activiteService
-            .assignEmploye(activiteCreee.id, empId, { statut: 'EN_COURS', progression: 0 })
+            .assignEmploye(activiteCreee.id, empId)
             .toPromise();
         }
 

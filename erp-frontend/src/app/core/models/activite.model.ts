@@ -72,7 +72,7 @@ export interface EmployeTacheResponse {
 
 export interface AssignEmployeToActiviteRequest {
   statut?: string;
-  progression?: number;
+  // progression supprimée - calculée dynamiquement par le backend
 }
 
 export interface AssignEmployeToTacheRequest {

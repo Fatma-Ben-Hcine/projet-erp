@@ -351,7 +351,7 @@ export class EmployeProjetStartComponent implements OnInit {
 
         for (const empId of act.employes) {
           await this.employeActiviteService
-            .assignEmploye(activiteCreee.id, empId, { statut: 'EN_COURS', progression: 0 })
+            .assignEmploye(activiteCreee.id, empId)
             .toPromise();
         }
 

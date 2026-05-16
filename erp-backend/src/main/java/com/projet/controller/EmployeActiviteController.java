@@ -100,18 +100,11 @@ public class EmployeActiviteController {
     @PostMapping("/{activiteId}/employes/{employeId}")
     public ResponseEntity<Void> assignEmployeToActivite(
             @PathVariable Long activiteId,
-            @PathVariable Long employeId,
-            @RequestBody Map<String, Object> requestBody) {
+            @PathVariable Long employeId) {
         log.info("POST /api/employe/activites/{}/employes/{} - Assignation d'employé à l'activité", activiteId, employeId);
         
         try {
-            Integer progression = 0;
-            
-            if (requestBody.containsKey("progression")) {
-                progression = (Integer) requestBody.get("progression");
-            }
-            
-            activiteService.assignEmployeToActivite(activiteId, employeId, progression);
+            activiteService.assignEmployeToActivite(activiteId, employeId);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             log.error("Erreur lors de l'assignation de l'employé: {}", e.getMessage());
@@ -209,7 +202,8 @@ public class EmployeActiviteController {
                     emp.put("id", ea.getEmployeId());
                     emp.put("nom", ea.getEmployeNom());
                     emp.put("prenom", ea.getEmployePrenom());
-                    emp.put("progression", ea.getProgression());
+                    // Progression sera calculée dynamiquement côté frontend ou via DTO
+                    emp.put("progression", 0);
                     return emp;
                 })
                 .collect(Collectors.toList());

@@ -221,8 +221,6 @@ public class ProjetService {
                                 .orElseThrow(() -> new RuntimeException("Employé non trouvé avec id: " + employeId));
 
                             TravaillerActivite travaillerActivite = new TravaillerActivite(employe, savedActivite);
-                            travaillerActivite.setDateDebut(savedActivite.getDateDebut());
-                            travaillerActivite.setDateFin(savedActivite.getDateFin());
                             travaillerActiviteRepository.save(travaillerActivite);
                             log.info("Employé {} assigné à l'activité {}", employeId, savedActivite.getId());
                         }
@@ -265,8 +263,6 @@ public class ProjetService {
                                         .orElseThrow(() -> new RuntimeException("Employé non trouvé avec id: " + employeId));
 
                                     TravaillerTache travaillerTache = new TravaillerTache(employe, savedTache);
-                                    travaillerTache.setDateDebut(tacheRequest.getDateDebut());
-                                    travaillerTache.setDateFinReelle(tacheRequest.getDateFin());
                                     travaillerTacheRepository.save(travaillerTache);
                                     log.info("Employé {} assigné à la tâche {}", employeId, savedTache.getId());
                                 }
@@ -448,8 +444,6 @@ public class ProjetService {
                             .orElseThrow(() -> new RuntimeException("Employé non trouvé avec id: " + employeId));
 
                         TravaillerActivite travaillerActivite = new TravaillerActivite(employe, savedActivite);
-                        travaillerActivite.setDateDebut(savedActivite.getDateDebut());
-                        travaillerActivite.setDateFin(savedActivite.getDateFin());
                         travaillerActiviteRepository.save(travaillerActivite);
                     }
                 }
@@ -490,8 +484,6 @@ public class ProjetService {
                                     .orElseThrow(() -> new RuntimeException("Employé non trouvé avec id: " + employeId));
 
                                 TravaillerTache travaillerTache = new TravaillerTache(employe, savedTache);
-                                travaillerTache.setDateDebut(tacheRequest.getDateDebut());
-                                travaillerTache.setDateFinReelle(tacheRequest.getDateFin());
                                 travaillerTacheRepository.save(travaillerTache);
                             }
                         }

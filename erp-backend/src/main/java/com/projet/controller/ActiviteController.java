@@ -102,18 +102,11 @@ public class ActiviteController {
     @PostMapping("/{activiteId}/employes/{employeId}")
     public ResponseEntity<Void> assignEmployeToActivite(
             @PathVariable Long activiteId,
-            @PathVariable Long employeId,
-            @RequestBody Map<String, Object> requestBody) {
+            @PathVariable Long employeId) {
         log.info("POST /api/admin/activites/{}/employes/{} - Assignation d'employé à l'activité", activiteId, employeId);
         
         try {
-            Integer progression = 0;
-            
-            if (requestBody.containsKey("progression")) {
-                progression = (Integer) requestBody.get("progression");
-            }
-            
-            activiteService.assignEmployeToActivite(activiteId, employeId, progression);
+            activiteService.assignEmployeToActivite(activiteId, employeId);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             log.error("Erreur lors de l'assignation de l'employé: {}", e.getMessage());
@@ -136,26 +129,9 @@ public class ActiviteController {
         }
     }
 
-    @PutMapping("/{activiteId}/employes/{employeId}/progression")
-    public ResponseEntity<Void> updateEmployeActiviteProgression(
-            @PathVariable Long activiteId,
-            @PathVariable Long employeId,
-            @RequestBody Map<String, Integer> requestBody) {
-        log.info("PUT /api/admin/activites/{}/employes/{}/progression - Mise à jour de la progression", activiteId, employeId);
-        
-        try {
-            Integer progression = requestBody.get("progression");
-            if (progression == null || progression < 0 || progression > 100) {
-                return ResponseEntity.badRequest().build();
-            }
-            
-            activiteService.updateEmployeActiviteProgression(activiteId, employeId, progression);
-            return ResponseEntity.ok().build();
-        } catch (Exception e) {
-            log.error("Erreur lors de la mise à jour de la progression: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
-        }
-    }
+    // Endpoint supprimé : la progression est calculée dynamiquement
+    // @PutMapping("/{activiteId}/employes/{employeId}/progression")
+    // public ResponseEntity<Void> updateEmployeActiviteProgression(...) { ... }
 
     @GetMapping("/{activiteId}/progression")
     public ResponseEntity<Map<String, Object>> getActiviteProgression(@PathVariable Long activiteId) {

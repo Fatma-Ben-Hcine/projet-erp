@@ -28,8 +28,9 @@ public interface TravaillerActiviteRepository extends JpaRepository<TravaillerAc
     @Query("SELECT COUNT(ta) FROM TravaillerActivite ta WHERE ta.activite.id = :activiteId")
     long countByActiviteId(@Param("activiteId") Long activiteId);
     
-    @Query("SELECT AVG(ta.progression) FROM TravaillerActivite ta WHERE ta.activite.id = :activiteId")
-    Double getAverageProgressionByActiviteId(@Param("activiteId") Long activiteId);
+    // Méthode supprimée : la progression est calculée dynamiquement
+    // @Query("SELECT AVG(ta.progression) FROM TravaillerActivite ta WHERE ta.activite.id = :activiteId")
+    // Double getAverageProgressionByActiviteId(@Param("activiteId") Long activiteId);
     
     void deleteByEmployeIdAndActiviteId(Long employeId, Long activiteId);
     

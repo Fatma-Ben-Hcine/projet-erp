@@ -42,17 +42,16 @@ export class EmployeActiviteService {
   }
 
   // Gestion des employés assignés aux activités
-  assignEmploye(activiteId: number, employeId: number, request: AssignEmployeToActiviteRequest): Observable<any> {
-    return this.http.post(`${this.baseUrl}/${activiteId}/employes/${employeId}`, request);
+  assignEmploye(activiteId: number, employeId: number): Observable<any> {
+    return this.http.post(`${this.baseUrl}/${activiteId}/employes/${employeId}`, {});
   }
 
   unassignEmploye(activiteId: number, employeId: number): Observable<any> {
     return this.http.delete(`${this.baseUrl}/${activiteId}/employes/${employeId}`, { responseType: 'text' });
   }
 
-  updateEmployeProgression(activiteId: number, employeId: number, progression: number): Observable<any> {
-    return this.http.put(`${this.baseUrl}/${activiteId}/employes/${employeId}/progression`, { progression });
-  }
+  // Méthode supprimée : la progression est calculée dynamiquement par le backend
+  // updateEmployeProgression(activiteId: number, employeId: number, progression: number): Observable<any> { ... }
 
   // Statistiques et progression
   getProgression(activiteId: number): Observable<ActiviteProgressionResponse> {

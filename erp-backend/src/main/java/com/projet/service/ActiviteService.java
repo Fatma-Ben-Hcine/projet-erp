@@ -89,13 +89,12 @@ public class ActiviteService {
         // Ajouter les employés si spécifiés
         if (request.getEmployeActivites() != null && !request.getEmployeActivites().isEmpty()) {
             for (ActiviteRequest.EmployeActiviteRequest empAct : request.getEmployeActivites()) {
-                assignEmployeToActivite(savedActivite.getId(), empAct.getEmployeId(), 
-                    empAct.getProgression());
+                assignEmployeToActivite(savedActivite.getId(), empAct.getEmployeId());
             }
         } else if (request.getEmployeIds() != null && !request.getEmployeIds().isEmpty()) {
             // Support pour employeIds (compatibilité frontend)
             for (Long employeId : request.getEmployeIds()) {
-                assignEmployeToActivite(savedActivite.getId(), employeId, 0);
+                assignEmployeToActivite(savedActivite.getId(), employeId);
             }
         }
 
@@ -136,7 +135,7 @@ public class ActiviteService {
             travaillerActiviteRepository.deleteByActiviteId(id);
             // Ajouter les nouvelles
             for (ActiviteRequest.EmployeActiviteRequest empAct : request.getEmployeActivites()) {
-                assignEmployeToActivite(id, empAct.getEmployeId(), empAct.getProgression());
+                assignEmployeToActivite(id, empAct.getEmployeId());
             }
         } else if (request.getEmployeIds() != null && !request.getEmployeIds().isEmpty()) {
             // Support pour employeIds (compatibilité frontend)
@@ -144,7 +143,7 @@ public class ActiviteService {
             travaillerActiviteRepository.deleteByActiviteId(id);
             // Ajouter les nouvelles
             for (Long employeId : request.getEmployeIds()) {
-                assignEmployeToActivite(id, employeId, 0);
+                assignEmployeToActivite(id, employeId);
             }
         }
 
@@ -171,9 +170,9 @@ public class ActiviteService {
     }
 
     // Gestion des employés
-    public void assignEmployeToActivite(Long activiteId, Long employeId, Integer progression) {
-        log.info("Assignation de l'employé {} à l'activité {} avec progression {}", 
-                employeId, activiteId, progression);
+    public void assignEmployeToActivite(Long activiteId, Long employeId) {
+        log.info("Assignation de l'employé {} à l'activité {}", 
+                employeId, activiteId);
 
         Activite activite = activiteRepository.findById(activiteId)
                 .orElseThrow(() -> new RuntimeException("Activité non trouvée avec ID: " + activiteId));
@@ -185,16 +184,13 @@ public class ActiviteService {
         Optional<TravaillerActivite> existing = travaillerActiviteRepository
                 .findByEmployeIdAndActiviteId(employeId, activiteId);
 
-        TravaillerActivite travaillerActivite;
-        if (existing.isPresent()) {
-            travaillerActivite = existing.get();
-            travaillerActivite.setProgression(progression);
+        if (existing.isEmpty()) {
+            TravaillerActivite travaillerActivite = new TravaillerActivite(employe, activite);
+            travaillerActiviteRepository.save(travaillerActivite);
+            log.info("Assignation réussie");
         } else {
-            travaillerActivite = new TravaillerActivite(employe, activite, progression);
+            log.info("Assignation existe déjà");
         }
-
-        travaillerActiviteRepository.save(travaillerActivite);
-        log.info("Assignation réussie");
     }
 
     public void unassignEmployeFromActivite(Long activiteId, Long employeId) {
@@ -211,19 +207,8 @@ public class ActiviteService {
         }
     }
 
-    public void updateEmployeActiviteProgression(Long activiteId, Long employeId, Integer progression) {
-        log.info("Mise à jour de la progression de l'employé {} pour l'activité {}: {}%", 
-                employeId, activiteId, progression);
-
-        TravaillerActivite travaillerActivite = travaillerActiviteRepository
-                .findByEmployeIdAndActiviteId(employeId, activiteId)
-                .orElseThrow(() -> new RuntimeException("Assignation non trouvée"));
-
-        travaillerActivite.setProgression(progression);
-
-        travaillerActiviteRepository.save(travaillerActivite);
-        log.info("Progression mise à jour avec succès");
-    }
+    // Méthode supprimée : la progression est calculée dynamiquement
+    // public void updateEmployeActiviteProgression(...) { ... }
 
     // Méthodes utilitaires
     private ActiviteResponse mapToResponse(Activite activite) {
@@ -251,9 +236,8 @@ public class ActiviteService {
                     tacheInfo.setDateDebut(tache.getDateDebut());
                     tacheInfo.setDateFin(tache.getDateFin());
                     tacheInfo.setEstDeposé(tache.isEstDeposé());
-                    // Calculer la progression moyenne des tâches
-                    Double avgProgression = travaillerActiviteRepository.getAverageProgressionByActiviteId(activite.getId());
-                    tacheInfo.setProgression(avgProgression != null ? avgProgression.intValue() : 0);
+                    // Calculer la progression de la tâche : 100% si déposée, 0% sinon
+                    tacheInfo.setProgression(tache.isEstDeposé() ? 100 : 0);
                     // Info employés assignés à la tâche
                     List<ActiviteResponse.EmployeTacheInfo> employeTaches = tache.getTravaillerTaches().stream()
                             .map(tt -> {
@@ -310,15 +294,23 @@ public class ActiviteService {
                     info.setEmployeId(ta.getEmploye().getId());
                     info.setEmployeNom(ta.getEmploye().getNom());
                     info.setEmployePrenom(ta.getEmploye().getPrenom());
-                    info.setProgression(ta.getProgression());
+                    // Progression sera calculée dynamiquement
+                    info.setProgression(0);
                     return info;
                 })
                 .collect(Collectors.toList());
         response.setEmployeActivites(employeActivites);
 
-        // Calculer la progression moyenne
-        Double avgProgression = travaillerActiviteRepository.getAverageProgressionByActiviteId(activite.getId());
-        response.setProgressionMoyenne(avgProgression != null ? avgProgression.intValue() : 0);
+        // Calculer la progression moyenne dynamiquement
+        // Basée sur les tâches déposées de l'activité
+        int progressionMoyenne = 0;
+        if (activite.getTaches() != null && !activite.getTaches().isEmpty()) {
+            long deposees = activite.getTaches().stream()
+                .filter(Tache::isEstDeposé)
+                .count();
+            progressionMoyenne = (int) Math.round((deposees * 100.0) / activite.getTaches().size());
+        }
+        response.setProgressionMoyenne(progressionMoyenne);
 
         // Nombre d'employés assignés
         response.setNombreEmployesAssignes(employeActivites.size());
@@ -437,7 +429,8 @@ public class ActiviteService {
                     employeInfo.put("id", ta.getEmploye().getId());
                     employeInfo.put("nom", ta.getEmploye().getNom());
                     employeInfo.put("prenom", ta.getEmploye().getPrenom());
-                    employeInfo.put("progression", ta.getProgression());
+                    // Progression sera calculée dynamiquement
+                    employeInfo.put("progression", 0);
                     return employeInfo;
                 })
                 .collect(java.util.stream.Collectors.toList());

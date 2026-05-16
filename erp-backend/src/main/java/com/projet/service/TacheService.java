@@ -244,8 +244,9 @@ public class TacheService {
                     info.setEmployeId(tt.getEmploye().getId());
                     info.setEmployeNom(tt.getEmploye().getNom());
                     info.setEmployePrenom(tt.getEmploye().getPrenom());
-                    info.setDateDebut(tt.getDateDebut());
-                    info.setDateFinReelle(tt.getDateFinReelle());
+                    // Les dates viennent de la tâche, pas de l'association
+                    info.setDateDebut(tache.getDateDebut());
+                    info.setDateFinReelle(tache.getDateFin());
                     return info;
                 })
                 .collect(Collectors.toList());
