@@ -14,4 +14,7 @@ public interface RessourceRepository extends JpaRepository<Ressource, Long> {
     
     // Ressources par statut
     List<Ressource> findByStatut(StatutRessource statut);
+    
+    // Ressource par nom
+    List<Ressource> findByNom(String nom);
 }

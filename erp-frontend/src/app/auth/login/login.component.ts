@@ -44,12 +44,13 @@ export class LoginComponent implements OnInit {
 
     this.authService.login(email, motDePasse).subscribe({
       next: (response: LoginResponse) => {
+        const normalizedRole = this.normalizeRole(response.role);
         localStorage.setItem('token', response.token);
-        localStorage.setItem('role', response.role);
+        localStorage.setItem('role', normalizedRole);
         localStorage.setItem('email', response.email);
         localStorage.setItem('userId', response.id.toString());
 
-        this.redirectBasedOnRole(response.role);
+        this.redirectBasedOnRole(normalizedRole);
       },
       error: (error) => {
         this.isLoading = false;
@@ -67,7 +68,7 @@ export class LoginComponent implements OnInit {
   }
 
   private redirectBasedOnRole(role?: string): void {
-    const currentRole = role || localStorage.getItem('role');
+    const currentRole = role || this.normalizeRole(localStorage.getItem('role') || '');
 
     if (currentRole === 'ROLE_ADMIN') {
       this.router.navigate(['/admin/dashboard']);
@@ -76,5 +77,20 @@ export class LoginComponent implements OnInit {
     } else {
       this.router.navigate(['/login']);
     }
+  }
+
+  private normalizeRole(role?: string): string {
+    if (!role) {
+      return '';
+    }
+
+    const normalized = role.trim().toUpperCase();
+    if (normalized === 'ADMIN') {
+      return 'ROLE_ADMIN';
+    }
+    if (normalized === 'EMPLOYE' || normalized === 'EMPLOYEE') {
+      return 'ROLE_EMPLOYE';
+    }
+    return normalized;
   }
 }

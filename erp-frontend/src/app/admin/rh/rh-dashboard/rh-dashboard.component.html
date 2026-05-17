@@ -1,0 +1,27 @@
+<div class="layout" style="position: relative; z-index: 1;">
+  <app-admin-sidebar></app-admin-sidebar>
+
+  <main class="main-content" style="background: transparent !important;">
+    <div class="rh-dashboard-container">
+      <div class="page-header">
+        <div class="header-text">
+          <h1 class="page-title">Dashboard RH</h1>
+          <p class="page-subtitle">
+            Analyse et statistiques des ressources humaines
+          </p>
+        </div>
+      </div>
+
+      <div class="powerbi-wrapper">
+        <div class="powerbi-container">
+          <iframe 
+            title="erp_db_BI" 
+            [src]="powerBiUrl"
+            frameborder="0" 
+            allowFullScreen="true">
+          </iframe>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

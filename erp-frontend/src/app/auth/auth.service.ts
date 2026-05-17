@@ -70,7 +70,19 @@ export class AuthService {
   }
 
   getRole(): string | null {
-    return localStorage.getItem('role');
+    const role = localStorage.getItem('role');
+    if (!role) {
+      return null;
+    }
+
+    const normalizedRole = role.trim().toUpperCase();
+    if (normalizedRole === 'ADMIN') {
+      return 'ROLE_ADMIN';
+    }
+    if (normalizedRole === 'EMPLOYE' || normalizedRole === 'EMPLOYEE') {
+      return 'ROLE_EMPLOYE';
+    }
+    return normalizedRole;
   }
 
   getEmail(): string | null {
@@ -94,26 +106,30 @@ export class AuthService {
     const role = this.getRole();
     console.log('Auth Debug - Token:', token ? 'Présent' : 'Absent');
     console.log('Auth Debug - Role:', role);
-    
-    // Vérifier si le token n'est pas expiré (format JWT simple)
-    if (token) {
+
+    if (!token) {
+      return false;
+    }
+
+    const tokenParts = token.split('.');
+    if (tokenParts.length === 3) {
       try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
+        const payload = JSON.parse(atob(tokenParts[1]));
         const isExpired = payload.exp * 1000 < Date.now();
         console.log('Auth Debug - Token expiré:', isExpired);
-        
+
         if (isExpired) {
           this.clearSession();
           return false;
         }
       } catch (e) {
-        console.log('Auth Debug - Token invalide:', e);
-        this.clearSession();
-        return false;
+        console.log('Auth Debug - Token invalid JWT payload, skipping expiry check', e);
       }
+    } else {
+      console.log('Auth Debug - Token non JWT, skipping expiry check');
     }
-    
-    return token !== null;
+
+    return true;
   }
 
   isAdmin(): boolean {

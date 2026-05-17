@@ -9,6 +9,7 @@ import { AdminDashboardComponent } from './admin/dashboard/dashboard.component';
 import { EmployeDashboardComponent } from './employe/dashboard/dashboard.component';
 import { ProfileComponent } from './shared/profile/profile.component';
 import { UserManagementComponent } from './admin/rh/user-management/user-management.component';
+import { RhDashboardComponent } from './admin/rh/rh-dashboard/rh-dashboard.component';
 
 import { ClientManagementComponent } from './admin/clients/client-management/client-management.component';
 import { ContratManagementComponent } from './admin/contrats/contrat-management/contrat-management.component';
@@ -67,6 +68,12 @@ export const routes: Routes = [
     component: ProfileComponent,
     canActivate: [AuthGuard, AdminGuard],
     title: 'Profil Admin'
+  },
+  {
+    path: 'admin/rh/dashboard',
+    component: RhDashboardComponent,
+    canActivate: [AuthGuard, AdminGuard],
+    title: 'Dashboard RH'
   },
   {
     path: 'admin/rh/utilisateurs',
