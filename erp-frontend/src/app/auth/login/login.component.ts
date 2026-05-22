@@ -49,6 +49,8 @@ export class LoginComponent implements OnInit {
         localStorage.setItem('role', normalizedRole);
         localStorage.setItem('email', response.email);
         localStorage.setItem('userId', response.id.toString());
+        localStorage.setItem('nom', response.nom || '');
+        localStorage.setItem('prenom', response.prenom || '');
 
         this.redirectBasedOnRole(normalizedRole);
       },

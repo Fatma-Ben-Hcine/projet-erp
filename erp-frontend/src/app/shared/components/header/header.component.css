@@ -1,77 +1,17 @@
 /* ═══════════════════════════════════════
-   HEADER GLOBAL - STYLES
+   NOTIFICATION BAR - MINIMAL HEADER
    ═══════════════════════════════════════ */
 
-.app-header {
+.notification-bar {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 60px;
-  background: white;
-  border-bottom: 1px solid #e5e7eb;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
+  top: 16px;
+  right: 24px;
   z-index: 1000;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-}
-
-.header-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #111827;
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-/* Cloche de notification dans le header */
-.header-right app-notification-bell {
-  position: relative;
-}
-
-/* Menu utilisateur */
-.user-menu {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.user-name {
-  font-size: 0.9rem;
-  color: #6b7280;
-  font-weight: 500;
-}
-
-.logout-btn {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #6b7280;
-  transition: all 0.2s ease;
 }
 
-.logout-btn:hover {
-  background: #f3f4f6;
-  color: #ef4444;
-}
-
-/* Ajustement pour le contenu principal sous le header */
 :host {
   display: block;
 }

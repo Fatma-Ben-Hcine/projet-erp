@@ -1,6 +1,6 @@
 .sidebar {
   width: 260px;
-  height: calc(100vh - 60px);
+  height: 100vh;
   background: white;
   border-right: 1px solid #E5E7EB;
   display: flex;
@@ -8,8 +8,8 @@
   padding: 1.5rem 1rem;
   position: fixed;
   left: 0;
-  top: 60px;
-  z-index: 2;
+  top: 0;
+  z-index: 999;
   overflow-y: auto;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
   scrollbar-width: none;

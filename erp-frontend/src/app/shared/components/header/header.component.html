@@ -1,18 +1,4 @@
-<header class="app-header">
-  <div class="header-left">
-    <span class="header-title">ERP System</span>
-  </div>
-  
-  <div class="header-right">
-    <!-- Cloche de notification -->
-    <app-notification-bell></app-notification-bell>
-    
-    <!-- Menu utilisateur -->
-    <div class="user-menu">
-      <span class="user-name">{{ userName }}</span>
-      <button class="logout-btn" (click)="logout()" title="Déconnexion">
-        <span class="material-icons">logout</span>
-      </button>
-    </div>
-  </div>
-</header>
+<!-- Barre minimaliste avec juste la cloche de notification -->
+<div class="notification-bar">
+  <app-notification-bell></app-notification-bell>
+</div>

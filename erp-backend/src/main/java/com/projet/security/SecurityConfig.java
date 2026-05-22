@@ -63,6 +63,7 @@ public class SecurityConfig {
                         .requestMatchers("/uploads/photos/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/conges/**").permitAll()
+                        .requestMatchers("/api/dashboard/stats").hasAnyRole("ADMIN", "EMPLOYE")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/employe/**").hasAnyRole("ADMIN", "EMPLOYE")
                         .requestMatchers("/api/employees/**").hasAnyRole("ADMIN", "EMPLOYE")

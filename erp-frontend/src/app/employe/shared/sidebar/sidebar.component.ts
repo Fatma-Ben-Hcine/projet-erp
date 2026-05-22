@@ -13,6 +13,8 @@ import { AuthService } from '../../../auth/auth.service';
 export class EmployeSidebarComponent implements OnInit {
   isDarkMode = false;
   userName = '';
+  userNom = '';
+  userPrenom = '';
   isOpen = false;
 
   constructor(private authService: AuthService) {}
@@ -27,6 +29,8 @@ export class EmployeSidebarComponent implements OnInit {
 
   ngOnInit(): void {
     this.userName = localStorage.getItem('email') || 'Employé';
+    this.userNom = localStorage.getItem('nom') ?? 'Utilisateur';
+    this.userPrenom = localStorage.getItem('prenom') ?? '';
     this.isDarkMode = localStorage.getItem('darkMode') === 'true';
     this.applyDarkMode();
   }

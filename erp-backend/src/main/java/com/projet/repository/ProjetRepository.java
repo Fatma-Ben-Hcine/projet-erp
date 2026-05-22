@@ -27,4 +27,6 @@ public interface ProjetRepository extends JpaRepository<Projet, Long> {
     // Check if a user is chef de projet for a specific project
     @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM Projet p WHERE p.id = :projetId AND p.chefProjet.id = :employeId")
     boolean isChefDeProjet(@Param("projetId") Long projetId, @Param("employeId") Long employeId);
+    
+    long countByStatut(StatutProjet statut);
 }

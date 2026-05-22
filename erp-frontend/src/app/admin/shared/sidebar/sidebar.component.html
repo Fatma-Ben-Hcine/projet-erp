@@ -10,15 +10,25 @@
   </button>
   <div class="sidebar-header">
     <div class="sidebar-branding">
-      <h2 class="sidebar-title">ERP System</h2>
-      <p class="sidebar-subtitle">Administrateur</p>
+      <h2 class="sidebar-title">DigiLab Solutions</h2>
+      <p class="sidebar-subtitle">{{ userPrenom }} {{ userNom }}</p>
     </div>
   </div>
 
   <nav class="sidebar-nav">
-    <a routerLink="/admin/dashboard" routerLinkActive="active" class="nav-item">
+    <a routerLink="/admin/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-item">
       <span class="material-icons">home</span>
       Accueil
+    </a>
+    <a class="nav-item" 
+       routerLink="/admin/dashboard-global"
+       routerLinkActive="active"
+       [routerLinkActiveOptions]="{ exact: true }"
+       title="Dashboard">
+      <span class="material-icons nav-icon">
+        dashboard
+      </span>
+      <span class="nav-label">Dashboard</span>
     </a>
     <!-- Projects Dropdown -->
     <div class="nav-dropdown">
@@ -28,10 +38,6 @@
         <span class="material-icons dropdown-arrow">{{ projectsOpen ? 'expand_less' : 'expand_more' }}</span>
       </div>
       <div class="dropdown-menu" *ngIf="projectsOpen">
-        <a routerLink="/admin/projects/dashboard" routerLinkActive="active" class="dropdown-item">
-          <span class="material-icons">dashboard</span>
-          Dashboard
-        </a>
         <a routerLink="/admin/ressources" routerLinkActive="active" class="dropdown-item">
           <span class="material-icons">people</span>
           Ressources
@@ -51,10 +57,6 @@
         <span class="material-icons dropdown-arrow">{{ rhOpen ? 'expand_less' : 'expand_more' }}</span>
       </div>
       <div class="dropdown-menu" *ngIf="rhOpen">
-        <a routerLink="/admin/rh/dashboard" routerLinkActive="active" class="dropdown-item">
-          <span class="material-icons">dashboard</span>
-          Dashboard
-        </a>
         <a routerLink="/admin/rh/utilisateurs" routerLinkActive="active" class="dropdown-item">
           <span class="material-icons">manage_accounts</span>
           Gestion utilisateurs

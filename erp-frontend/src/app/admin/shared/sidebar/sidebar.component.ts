@@ -13,6 +13,8 @@ import { AuthService } from '../../../auth/auth.service';
 export class AdminSidebarComponent implements OnInit {
   isDarkMode = false;
   userEmail = '';
+  userNom = '';
+  userPrenom = '';
   isOpen = false;
 
   // Dropdown states - all open by default
@@ -33,6 +35,8 @@ export class AdminSidebarComponent implements OnInit {
 
   ngOnInit(): void {
     this.userEmail = localStorage.getItem('email') ?? '';
+    this.userNom = localStorage.getItem('nom') ?? 'Utilisateur';
+    this.userPrenom = localStorage.getItem('prenom') ?? '';
     this.isDarkMode = localStorage.getItem('darkMode') === 'true';
     this.applyDarkMode();
   }

@@ -48,7 +48,7 @@ body {
   overflow-y: auto !important;
   margin-left: 260px !important; /* Espace pour la sidebar fixed */
   padding: 2rem !important;
-  padding-top: 80px !important; /* Espace pour le header fixe de 60px + 20px marge */
+  padding-top: 100px !important; /* Espace pour eviter le chevauchement avec la cloche */
 }
 
 /* Tablet - sidebar collapsed */
@@ -56,7 +56,7 @@ body {
   .main-content {
     margin-left: 68px !important;
     padding: 1.5rem !important;
-    padding-top: 80px !important; /* Espace pour le header fixe */
+    padding-top: 100px !important; /* Espace pour eviter le chevauchement */
   }
 }
 
@@ -65,7 +65,7 @@ body {
   .main-content {
     margin-left: 0 !important;
     padding: 1rem !important;
-    padding-top: 80px !important; /* Espace pour header + bouton hamburger */
+    padding-top: 100px !important; /* Espace pour eviter le chevauchement */
   }
 }
 

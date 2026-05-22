@@ -6,6 +6,7 @@ import { AuthGuard } from './auth/auth.guard';
 import { AdminGuard } from './auth/admin.guard';
 import { EmployeGuard } from './auth/employe.guard';
 import { AdminDashboardComponent } from './admin/dashboard/dashboard.component';
+import { DashboardGlobalComponent } from './admin/dashboard-global/dashboard-global.component';
 import { EmployeDashboardComponent } from './employe/dashboard/dashboard.component';
 import { ProfileComponent } from './shared/profile/profile.component';
 import { UserManagementComponent } from './admin/rh/user-management/user-management.component';
@@ -62,6 +63,12 @@ export const routes: Routes = [
     component: AdminDashboardComponent,
     canActivate: [AuthGuard, AdminGuard],
     title: 'Dashboard Admin'
+  },
+  {
+    path: 'admin/dashboard-global',
+    component: DashboardGlobalComponent,
+    canActivate: [AuthGuard, AdminGuard],
+    title: 'Dashboard Global'
   },
   {
     path: 'admin/profile',

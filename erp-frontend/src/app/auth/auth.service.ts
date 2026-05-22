@@ -9,6 +9,8 @@ export interface LoginResponse {
   email: string;
   role: string;
   id: number;
+  nom?: string;
+  prenom?: string;
 }
 
 @Injectable({
@@ -62,6 +64,8 @@ export class AuthService {
     localStorage.removeItem('role');
     localStorage.removeItem('email');
     localStorage.removeItem('userId');
+    localStorage.removeItem('nom');
+    localStorage.removeItem('prenom');
     this.router.navigate(['/']);
   }
 
