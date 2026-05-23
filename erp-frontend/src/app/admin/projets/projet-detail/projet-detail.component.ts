@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ProjetService } from '../../../core/services/projet.service';
 import { ActiviteService } from '../../../core/services/activite.service';
 import { TacheService } from '../../../core/services/tache.service';
+import { AuthService } from '../../../auth/auth.service';
 import { ProjetResponse } from '../../../core/models/projet.model';
 import { ActiviteResponse } from '../../../core/models/activite.model';
 import { TacheResponse } from '../../../core/models/activite.model';
@@ -36,7 +37,8 @@ export class ProjetDetailComponent implements OnInit {
     private router: Router,
     private projetService: ProjetService,
     private activiteService: ActiviteService,
-    private tacheService: TacheService
+    private tacheService: TacheService,
+    public authService: AuthService
   ) {}
 
   ngOnInit(): void {

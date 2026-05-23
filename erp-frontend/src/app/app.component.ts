@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { HexagonBackgroundComponent } from './shared/components/hexagon-background/hexagon-background.component';
 import { HeaderComponent } from './shared/components/header/header.component';
 import { AuthService } from './auth/auth.service';
+import { DarkModeService } from './core/services/dark-mode.service';
 import { filter } from 'rxjs/operators';
 
 @Component({
@@ -18,10 +19,13 @@ export class AppComponent implements OnInit {
 
   constructor(
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private darkModeService: DarkModeService
   ) {}
 
   ngOnInit(): void {
+    this.darkModeService.initialize();
+
     // Check if header should be shown on route changes
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))

@@ -15,8 +15,8 @@
 
 .btn-primary {
   padding: 10px 20px;
-  background: #1976d2;
-  color: white;
+  background: #fef9c3;
+  color: #111827;
   border: none;
   border-radius: 8px;
   font-size: 14px;
@@ -25,7 +25,7 @@
   transition: background 0.2s;
 
   &:hover {
-    background: #1565c0;
+    background: #fde68a;
   }
 }
 
@@ -489,36 +489,191 @@
   }
 }
 
-/* Nouvelles colonnes */
-.demandes-count {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  
-  .demandes-number {
-    font-weight: 600;
-    font-size: 14px;
-    color: #1976d2;
-  }
-  
-  .demandes-label {
-    font-size: 11px;
-    color: #666;
-    font-weight: 500;
-  }
-}
+  :host-context(.dark) {
+    .page-header {
+      .page-title {
+        color: #f3f4f6;
+      }
+    }
 
-.expire-warning {
-  margin-top: 4px;
-  font-size: 11px;
-  color: #d32f2f;
-  font-weight: 500;
-  background: rgba(211, 47, 47, 0.1);
-  padding: 2px 6px;
-  border-radius: 4px;
-  display: inline-block;
-}
+    .btn-primary {
+      background: #374151;
+      color: #f9fafb;
+    }
+
+    .stats-grid {
+      .stat-card {
+        background: #111827;
+        border-color: #374151;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+
+        .stat-label {
+          color: #9ca3af;
+        }
+
+        .stat-number {
+          color: #f9fafb;
+        }
+      }
+    }
+
+    .filters-bar {
+      background: #111827;
+      border: 1px solid #374151;
+      padding: 16px;
+      border-radius: 16px;
+
+      .search-box input {
+        background: #1f2937;
+        border-color: #4b5563;
+        color: #f3f4f6;
+      }
+
+      .filter-group {
+        background: #111827;
+
+        button {
+          color: #d1d5db;
+          border-color: transparent;
+        }
+
+        button.active {
+          background: #2563eb;
+          color: #f8fafc;
+          box-shadow: none;
+        }
+      }
+    }
+
+    .table-container {
+      background: #111827;
+      box-shadow: 0 2px 16px rgba(0, 0, 0, 0.45);
+      border: 1px solid #374151;
+    }
+
+    .resources-table {
+      thead {
+        background: #1f2937;
+      }
+
+      th,
+      td {
+        color: #d1d5db;
+        border-color: #334155;
+      }
+
+      tbody tr:hover {
+        background: #111827;
+      }
+    }
+
+    .btn-icon.btn-edit {
+      background: #1d4ed8;
+      color: white;
+    }
+
+    .btn-icon.btn-delete {
+      background: #b91c1c;
+      color: white;
+    }
+
+    .badge {
+      &.badge-success {
+        background-color: #064e3b;
+        color: #d1fae5;
+      }
+
+      &.badge-danger {
+        background-color: #581c1c;
+        color: #fecdd3;
+      }
+
+      &.badge-warning {
+        background-color: #78350f;
+        color: #fef3c7;
+      }
+
+      &.badge-info {
+        background-color: #0f172a;
+        color: #c7d2fe;
+      }
+    }
+
+    .empty-state {
+      color: #d1d5db;
+
+      h3 {
+        color: #f8fafc;
+      }
+
+      p {
+        color: #cbd5e1;
+      }
+    }
+
+    .modal-content {
+      background: #111827;
+      border: 1px solid #374151;
+    }
+
+    .modal-header {
+      border-color: #374151;
+
+      h2 {
+        color: #f8fafc;
+      }
+
+      .modal-close {
+        color: #d1d5db;
+      }
+    }
+
+    .modal-body {
+      .form-group {
+        label {
+          color: #e5e7eb;
+        }
+
+        .form-control {
+          background: #1f2937;
+          border-color: #4b5563;
+          color: #f8fafc;
+        }
+      }
+
+      .form-actions {
+        .btn-secondary {
+          background: #374151;
+        }
+      }
+    }
+
+    .toast {
+      background: #1e293b;
+      color: #e2e8f0;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    .toast-close {
+      color: #cbd5e1;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.08);
+      }
+    }
+
+    .demandes-count {
+      .demandes-number,
+      .demandes-label {
+        color: #cbd5e1;
+      }
+    }
+
+    .expire-warning {
+      background: rgba(248, 113, 113, 0.15);
+      color: #fee2e2;
+    }
+  }
 
 /* Badges supplémentaires */
 .badge-gray {

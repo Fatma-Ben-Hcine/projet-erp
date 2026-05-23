@@ -266,6 +266,105 @@
   -webkit-font-smoothing: antialiased;
 }
 
+:host-context(.dark) {
+  .page-title {
+    color: #f9fafb;
+  }
+
+  .page-subtitle,
+  .filter-label,
+  .filter-info,
+  .text-gray-500,
+  .text-gray-400 {
+    color: #9ca3af !important;
+  }
+
+  .stat-card,
+  .filter-bar,
+  .table-container {
+    background: #111827;
+    border-color: #374151;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  }
+
+  .filter-select {
+    background: #0f172a;
+    border-color: #334155;
+    color: #e5e7eb;
+  }
+
+  .data-table th,
+  .data-table td {
+    border-color: #1f2937;
+    color: #d1d5db;
+  }
+
+  .data-table th {
+    background: #111827;
+  }
+
+  .data-table tbody tr:hover {
+    background: #1f2937;
+  }
+
+  .employee-info .font-medium,
+  .font-medium {
+    color: #f8fafc;
+  }
+
+  .badge-warning {
+    background: #78350f;
+    color: #fde68a;
+  }
+
+  .badge-success {
+    background: #064e3b;
+    color: #d1fae5;
+  }
+
+  .badge-danger {
+    background: #581c1c;
+    color: #fecaca;
+  }
+
+  .badge-info {
+    background: #0f172a;
+    color: #c7d2fe;
+  }
+
+  .btn-icon {
+    background: transparent;
+  }
+
+  .btn-validate:hover {
+    background: rgba(34, 197, 94, 0.14);
+  }
+
+  .btn-refuse:hover {
+    background: rgba(248, 113, 113, 0.14);
+  }
+
+  .bg-red-100 {
+    background: #881337 !important;
+    color: #fee2e2 !important;
+    border-color: #7f1d1d !important;
+  }
+
+  .text-red-700 {
+    color: #fecaca !important;
+  }
+
+  .bg-green-100 {
+    background: #14532d !important;
+    color: #dcfce7 !important;
+    border-color: #166534 !important;
+  }
+
+  .text-green-700 {
+    color: #bbf7d0 !important;
+  }
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .stats-grid-4 {

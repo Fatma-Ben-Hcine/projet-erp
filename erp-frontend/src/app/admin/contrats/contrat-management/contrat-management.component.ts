@@ -1,12 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { ContratService } from '../../../core/services/contrat.service';
 import { ClientService } from '../../../core/services/client.service';
+import { DarkModeService } from '../../../core/services/dark-mode.service';
 import { AdminSidebarComponent } from '../../shared/sidebar/sidebar.component';
 import { ContratRequest, ContratResponse, STATUTS_CONTRAT } from '../../../core/models/contrat.model';
 import { ClientResponse } from '../../../core/models/client.model';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-contrat-management',
@@ -32,40 +34,27 @@ export class ContratManagementComponent implements OnInit {
   statuts = STATUTS_CONTRAT;
 
   isDarkMode = false;
-  private observer: MutationObserver | null = null;
+  private darkModeSubscription: Subscription | null = null;
 
   constructor(
     private contratService: ContratService,
     private clientService: ClientService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private darkModeService: DarkModeService
   ) {}
 
   ngOnInit(): void {
     this.initForms();
     this.loadContrats();
     this.loadClients();
-    this.setupDarkModeObserver();
+    this.darkModeSubscription = this.darkModeService.isDarkMode$.subscribe(value => {
+      this.isDarkMode = value;
+    });
+    this.isDarkMode = this.darkModeService.isDarkMode;
   }
 
   ngOnDestroy(): void {
-    if (this.observer) {
-      this.observer.disconnect();
-    }
-  }
-
-  setupDarkModeObserver(): void {
-    const body = document.body;
-    this.isDarkMode = body.classList.contains('dark');
-
-    this.observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.attributeName === 'class') {
-          this.isDarkMode = body.classList.contains('dark');
-        }
-      });
-    });
-
-    this.observer.observe(body, { attributes: true, attributeFilter: ['class'] });
+    this.darkModeSubscription?.unsubscribe();
   }
 
   initForms(): void {

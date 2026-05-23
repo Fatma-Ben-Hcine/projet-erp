@@ -42,6 +42,8 @@ import java.io.IOException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.Authentication;
 
 @Service
 @RequiredArgsConstructor
@@ -606,7 +608,15 @@ public class ProjetService {
         response.setId(projet.getId());
         response.setNom(projet.getNom());
         response.setDescription(projet.getDescription());
-        response.setBudget(projet.getBudget());
+        
+        // Vérifier si l'utilisateur est EMPLOYE → masquer le budget
+        boolean isBudgetVisible = isBudgetVisibleForUser();
+        if (isBudgetVisible) {
+            response.setBudget(projet.getBudget());
+        } else {
+            response.setBudget(null); // Masquer le budget pour les employés
+        }
+        
         response.setDateDebut(projet.getDateDebut());
         response.setDateLimite(projet.getDateLimite());
         // Calcul dynamique de la progression basé sur les activités déposées
@@ -692,6 +702,24 @@ public class ProjetService {
             return 0;
         }
 
+        // Nouvelle logique : si le projet contient des tâches, calculer la progression
+        // en fonction des tâches déposées (plus granulaire). Sinon, retomber
+        // sur la proportion d'activités déposées.
+        long totalTaches = 0;
+        long tachesDeposees = 0;
+
+        for (Activite a : activites) {
+            Set<Tache> taches = a.getTaches();
+            if (taches != null && !taches.isEmpty()) {
+                totalTaches += taches.size();
+                tachesDeposees += taches.stream().filter(Tache::isEstDeposé).count();
+            }
+        }
+
+        if (totalTaches > 0) {
+            return (int) Math.round((double) tachesDeposees / totalTaches * 100);
+        }
+
         long totalActivites = activites.size();
         long activitesDeposees = activites.stream()
                 .filter(Activite::isEstDeposé)
@@ -734,8 +762,8 @@ public class ProjetService {
         projet.setStatut(StatutProjet.TERMINE);
         projet = projetRepository.save(projet);
 
-        // Chercher un dépôt existant pour ce projet
-        List<Depot> existingDepots = depotRepository.findByProjetId(id);
+        // Chercher un dépôt de PROJET existant uniquement (pas une activité ni une tâche)
+        List<Depot> existingDepots = depotRepository.findDepotsByProjetIdSeulement(id);
         Depot depot = existingDepots.isEmpty() ? new Depot() : existingDepots.get(0);
 
         depot.setType(depotRequest.getType());
@@ -752,6 +780,8 @@ public class ProjetService {
 
         depot.setDateDepot(java.time.LocalDateTime.now());
         depot.setProjet(projet);
+        depot.setActivite(null);
+        depot.setTache(null);
         depotRepository.save(depot);
 
 
@@ -828,5 +858,22 @@ public class ProjetService {
             log.error("Statut invalide: {}", statut);
             throw new RuntimeException("Statut invalide: " + statut);
         }
+    }
+
+    /**
+     * Vérifie si le budget doit être visible pour l'utilisateur actuel
+     * Le budget n'est visible que pour les ADMIN
+     * Les EMPLOYE ne voient pas le budget
+     */
+    private boolean isBudgetVisibleForUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return false;
+        }
+        
+        // Vérifier si l'utilisateur a le rôle ADMIN
+        return authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
     }
 }

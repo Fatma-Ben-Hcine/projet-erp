@@ -1,11 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { ClientService } from '../../../core/services/client.service';
+import { DarkModeService } from '../../../core/services/dark-mode.service';
 import { AdminSidebarComponent } from '../../shared/sidebar/sidebar.component';
 import { ClientRequest, ClientResponse } from '../../../core/models/client.model';
-import { Subject } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 
 @Component({
@@ -29,41 +30,28 @@ export class ClientManagementComponent implements OnInit {
 
   searchKeyword = '';
   private searchSubject = new Subject<string>();
+  private darkModeSubscription: Subscription | null = null;
 
   isDarkMode = false;
-  private observer: MutationObserver | null = null;
 
   constructor(
     private clientService: ClientService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private darkModeService: DarkModeService
   ) {}
 
   ngOnInit(): void {
     this.initForms();
     this.loadClients();
     this.setupSearchDebounce();
-    this.setupDarkModeObserver();
+    this.darkModeSubscription = this.darkModeService.isDarkMode$.subscribe(value => {
+      this.isDarkMode = value;
+    });
+    this.isDarkMode = this.darkModeService.isDarkMode;
   }
 
   ngOnDestroy(): void {
-    if (this.observer) {
-      this.observer.disconnect();
-    }
-  }
-
-  setupDarkModeObserver(): void {
-    const body = document.body;
-    this.isDarkMode = body.classList.contains('dark');
-
-    this.observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.attributeName === 'class') {
-          this.isDarkMode = body.classList.contains('dark');
-        }
-      });
-    });
-
-    this.observer.observe(body, { attributes: true, attributeFilter: ['class'] });
+    this.darkModeSubscription?.unsubscribe();
   }
 
   setupSearchDebounce(): void {

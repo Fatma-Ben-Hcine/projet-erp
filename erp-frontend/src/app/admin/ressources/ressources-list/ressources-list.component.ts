@@ -42,6 +42,8 @@ export class RessourcesListComponent implements OnInit {
     this.adminRessourceService.getAll().subscribe({
       next: (ressources: Ressource[]) => {
         this.ressources = ressources;
+        // Mark expired abonnements for UI only (do not change backend statut here)
+        this.markExpiredForDisplay(this.ressources);
         this.filteredRessources = ressources;
         this.loading = false;
       },
@@ -94,7 +96,20 @@ export class RessourcesListComponent implements OnInit {
   }
 
   getStatutClass(statut: string): string {
-    return statut === 'ACTIVE' ? 'badge-success' : 'badge-danger';
+    const s = this.getStatutValue({ statut });
+    return s === 'ACTIVE' ? 'badge-success' : 'badge-danger';
+  }
+
+  /**
+   * Normalize statut value returned from backend which may be a string or an object { name: 'ACTIVE' }
+   */
+  getStatutValue(ressource: any): string {
+    if (!ressource) return 'NON_ACTIVE';
+    const st = ressource.statut;
+    if (!st) return 'NON_ACTIVE';
+    if (typeof st === 'string') return st;
+    if (typeof st === 'object' && st.name) return st.name;
+    return String(st);
   }
 
   
@@ -139,11 +154,63 @@ export class RessourcesListComponent implements OnInit {
 
     observable.subscribe({
       next: () => {
+        // Après la sauvegarde, vérifier si la date de fin est future -> activer la ressource
+        const dateFin = this.ressourceForm.dateFinAbonnement;
+        const nom = this.ressourceForm.nom;
+        if (dateFin) {
+          this.ensureActivationIfDateValid(nom, dateFin);
+        } else {
+          this.showSuccess('Ressource ' + (this.ressourceEnEdition ? 'modifiée' : 'créée') + ' avec succès');
+          this.fermerModal();
+          this.loadRessources();
+        }
+      },
+      error: () => this.showError('Erreur lors de la sauvegarde')
+    });
+  }
+
+  /**
+   * Trouve la ressource créée/éditée (by name+dateFin) et l'active si la dateFin est dans le futur.
+   * Rafraîchit ensuite la liste.
+   */
+  private ensureActivationIfDateValid(nom: string, dateFinStr: string): void {
+    this.adminRessourceService.getAll().subscribe({
+      next: (ressources: Ressource[]) => {
+        // Chercher correspondance probable
+        const match = ressources.find(r => r.nom === nom && (r.dateFinAbonnement || '') === dateFinStr);
+        if (match && match.dateFinAbonnement) {
+          const fin = new Date(match.dateFinAbonnement);
+          const today = new Date();
+          const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+          const finOnly = new Date(fin.getFullYear(), fin.getMonth(), fin.getDate());
+          if (finOnly > todayOnly && match.statut !== 'ACTIVE') {
+            this.adminRessourceService.changerStatut(match.id, 'ACTIVE').subscribe({
+              next: () => {
+                this.showSuccess('Ressource activée car date d\'abonnement valide');
+                this.fermerModal();
+                this.loadRessources();
+              },
+              error: (err) => {
+                console.error('Erreur activation automatique', err);
+                this.showError('La ressource a été sauvegardée mais impossible de l\'activer automatiquement');
+                this.fermerModal();
+                this.loadRessources();
+              }
+            });
+            return;
+          }
+        }
+        // Si pas de correspondance ou pas besoin d'activer
         this.showSuccess('Ressource ' + (this.ressourceEnEdition ? 'modifiée' : 'créée') + ' avec succès');
         this.fermerModal();
         this.loadRessources();
       },
-      error: () => this.showError('Erreur lors de la sauvegarde')
+      error: (err) => {
+        console.error('Erreur récupération ressources après sauvegarde', err);
+        this.showSuccess('Ressource sauvegardée');
+        this.fermerModal();
+        this.loadRessources();
+      }
     });
   }
 
@@ -252,7 +319,28 @@ export class RessourcesListComponent implements OnInit {
     if (!ressource.dateFinAbonnement) return false;
     const dateFin = new Date(ressource.dateFinAbonnement);
     const today = new Date();
-    return today > dateFin;
+    // Expired when end date is earlier than or equal to today
+    // Compare dates only (ignore time)
+    const y1 = today.getFullYear(), m1 = today.getMonth(), d1 = today.getDate();
+    const y2 = dateFin.getFullYear(), m2 = dateFin.getMonth(), d2 = dateFin.getDate();
+    const todayOnly = new Date(y1, m1, d1);
+    const dateFinOnly = new Date(y2, m2, d2);
+    return todayOnly >= dateFinOnly;
+  }
+
+  private markExpiredForDisplay(ressources: Ressource[]): void {
+    const today = new Date();
+    ressources.forEach(r => {
+      (r as any).isExpired = false;
+      if (r.dateFinAbonnement) {
+        const fin = new Date(r.dateFinAbonnement);
+        const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const finOnly = new Date(fin.getFullYear(), fin.getMonth(), fin.getDate());
+        if (todayOnly >= finOnly) {
+          (r as any).isExpired = true;
+        }
+      }
+    });
   }
 
   getStatutLabel(ressource: any): string {

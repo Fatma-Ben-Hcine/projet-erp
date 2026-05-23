@@ -28,7 +28,7 @@ export class EmployeProjetDetailComponent implements OnInit {
     private router: Router,
     private projetService: EmployeProjetService,
     private employeActiviteService: EmployeActiviteService,
-    private authService: AuthService
+    public authService: AuthService
   ) {}
 
   ngOnInit(): void {

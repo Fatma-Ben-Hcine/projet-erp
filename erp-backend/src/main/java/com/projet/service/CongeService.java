@@ -61,17 +61,18 @@ public class CongeService {
         // Calculer la nouvelle durée du congé
         int nouvelleDuree = (int) ChronoUnit.DAYS.between(congeDTO.getDateDebut(), congeDTO.getDateFin()) + 1;
 
-        // Obtenir le total des jours déjà pris par cet employé
-        int totalJoursPris = getTotalJoursPris(existingConge.getEmploye().getId());
+        // Obtenir le total des jours déjà pris pour l'année courante
+        int totalJoursPris = getTotalJoursPrisDeLAnneeCourante(existingConge.getEmploye().getId());
 
         // Soustraire les jours du congé actuel s'il est déjà validé (pour éviter le double comptage)
         int joursDejaComptes = 0;
         if (existingConge.getStatut() == StatutConge.VALIDE) {
-            joursDejaComptes = (int) ChronoUnit.DAYS.between(existingConge.getDateDebut(), existingConge.getDateFin()) + 1;
+            int anneeCourante = java.time.LocalDate.now().getYear();
+            joursDejaComptes = getJoursPrisDansAnnee(existingConge, anneeCourante);
         }
 
         // Calculer le solde disponible pour cette modification
-        int soldeDisponible = 21 - (totalJoursPris - joursDejaComptes);
+        int soldeDisponible = SOLDE_ANNUEL - (totalJoursPris - joursDejaComptes);
 
         // Vérifier si la nouvelle durée dépasse le solde disponible
         if (nouvelleDuree > soldeDisponible) {
@@ -146,21 +147,40 @@ public class CongeService {
                 .collect(Collectors.toList());
     }
 
+    private static final int SOLDE_ANNUEL = 21;
+
     public int getSoldeRestant(Long employeId) {
-        int joursPris = getTotalJoursPris(employeId);
-        return 21 - joursPris;
+        int joursPris = getTotalJoursPrisDeLAnneeCourante(employeId);
+        return SOLDE_ANNUEL - joursPris;
     }
 
-    private int getTotalJoursPris(Long employeId) {
+    private int getTotalJoursPrisDeLAnneeCourante(Long employeId) {
+        int anneeCourante = java.time.LocalDate.now().getYear();
         List<Conge> valideConges = congeRepository.findValideCongesByEmployeId(employeId);
         return valideConges.stream()
-                .mapToInt(c -> (int) ChronoUnit.DAYS.between(c.getDateDebut(), c.getDateFin()) + 1)
+                .mapToInt(c -> getJoursPrisDansAnnee(c, anneeCourante))
                 .sum();
     }
 
+    private int getJoursPrisDansAnnee(Conge conge, int annee) {
+        java.time.LocalDate debutAnnee = java.time.LocalDate.of(annee, 1, 1);
+        java.time.LocalDate finAnnee = java.time.LocalDate.of(annee, 12, 31);
+        java.time.LocalDate debut = conge.getDateDebut().isBefore(debutAnnee)
+                ? debutAnnee
+                : conge.getDateDebut();
+        java.time.LocalDate fin = conge.getDateFin().isAfter(finAnnee)
+                ? finAnnee
+                : conge.getDateFin();
+
+        if (debut.isAfter(fin)) {
+            return 0;
+        }
+        return (int) ChronoUnit.DAYS.between(debut, fin) + 1;
+    }
+
     public Map<String, Integer> getSoldeDetails(Long employeId) {
-        int joursPris = getTotalJoursPris(employeId);
-        int soldeTotal = 21;
+        int joursPris = getTotalJoursPrisDeLAnneeCourante(employeId);
+        int soldeTotal = SOLDE_ANNUEL;
         int soldeRestant = soldeTotal - joursPris;
         Map<String, Integer> details = new HashMap<>();
         details.put("soldeTotal", soldeTotal);

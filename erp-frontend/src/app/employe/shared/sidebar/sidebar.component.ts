@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { AuthService } from '../../../auth/auth.service';
+import { DarkModeService } from '../../../core/services/dark-mode.service';
 
 @Component({
   selector: 'app-employe-sidebar',
@@ -10,14 +12,18 @@ import { AuthService } from '../../../auth/auth.service';
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.css']
 })
-export class EmployeSidebarComponent implements OnInit {
+export class EmployeSidebarComponent implements OnInit, OnDestroy {
   isDarkMode = false;
   userName = '';
   userNom = '';
   userPrenom = '';
   isOpen = false;
+  private darkModeSubscription: Subscription | null = null;
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private darkModeService: DarkModeService
+  ) {}
 
   toggleSidebar(): void {
     this.isOpen = !this.isOpen;
@@ -31,22 +37,18 @@ export class EmployeSidebarComponent implements OnInit {
     this.userName = localStorage.getItem('email') || 'Employé';
     this.userNom = localStorage.getItem('nom') ?? 'Utilisateur';
     this.userPrenom = localStorage.getItem('prenom') ?? '';
-    this.isDarkMode = localStorage.getItem('darkMode') === 'true';
-    this.applyDarkMode();
+    this.isDarkMode = this.darkModeService.isDarkMode;
+    this.darkModeSubscription = this.darkModeService.isDarkMode$.subscribe(value => {
+      this.isDarkMode = value;
+    });
   }
 
   toggleDarkMode(): void {
-    this.isDarkMode = !this.isDarkMode;
-    localStorage.setItem('darkMode', String(this.isDarkMode));
-    this.applyDarkMode();
+    this.darkModeService.toggle();
   }
 
-  private applyDarkMode(): void {
-    if (this.isDarkMode) {
-      document.body.classList.add('dark');
-    } else {
-      document.body.classList.remove('dark');
-    }
+  ngOnDestroy(): void {
+    this.darkModeSubscription?.unsubscribe();
   }
 
   logout(): void {

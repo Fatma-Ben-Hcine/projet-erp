@@ -79,23 +79,14 @@ export class HeuresSupplementaireFormComponent implements OnInit {
   }
 
   private createForm(): FormGroup {
-    const today = new Date().toISOString().split('T')[0];
     return this.fb.group({
-      date: ['', [Validators.required, this.minDateValidator(today)]],
+      date: ['', [Validators.required]],
       nombreHeures: ['', [Validators.required, Validators.min(0.1), Validators.max(24)]],
       mission: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
       statut: [StatutHeureSupplementaire.EN_ATTENTE],
       tarifHeuresSupp: ['', [Validators.required, Validators.min(0)]],
       employeId: ['', [Validators.required]]
     });
-  }
-
-  private minDateValidator(minDate: string) {
-    return (control: any) => {
-      const value = control.value;
-      if (!value) return null;
-      return value >= minDate ? null : { minDate: true };
-    };
   }
 
   loadHeureSupplementaire(): void {
@@ -218,9 +209,7 @@ export class HeuresSupplementaireFormComponent implements OnInit {
     if (field?.errors?.required) {
       return 'Ce champ est obligatoire';
     }
-    if (field?.errors?.minDate) {
-      return 'La date ne peut pas être antérieure à aujourd\'hui';
-    }
+    
     if (field?.errors?.min) {
       return `La valeur minimale est ${field.errors.min.min}`;
     }

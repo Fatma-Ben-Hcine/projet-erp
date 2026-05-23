@@ -55,7 +55,7 @@
             <span class="info-label">Progression</span>
             <span class="info-value">{{ projet.progression }}%</span>
           </div>
-          <div class="info-card">
+          <div class="info-card" *ngIf="authService.isAdmin() && projet.budget">
             <span class="info-label">Budget</span>
             <span class="info-value">{{ projet.budget }} €</span>
           </div>

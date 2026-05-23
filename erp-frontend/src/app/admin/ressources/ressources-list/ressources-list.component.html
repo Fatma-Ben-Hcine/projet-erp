@@ -108,10 +108,8 @@
           <td>{{ ressource.dateDebutAbonnement ? formatDate(ressource.dateDebutAbonnement) : '-' }}</td>
           <td>{{ ressource.dateFinAbonnement ? formatDate(ressource.dateFinAbonnement) : '-' }}</td>
           <td>
-            <span [class]="ressource.statut === 'ACTIVE' 
-                           ? 'badge badge-active' 
-                           : 'badge badge-inactive'">
-              {{ ressource.statut === 'ACTIVE' ? 'Active' : 'Non active' }}
+            <span [class]="getStatutValue(ressource) === 'ACTIVE' ? 'badge badge-active' : 'badge badge-inactive'">
+              {{ getStatutValue(ressource) === 'ACTIVE' ? 'Active' : 'Non active' }}
             </span>
           </td>
           <td>
@@ -143,11 +141,10 @@
               <!-- Toggle Activer/Désactiver -->
               <label class="toggle-switch" title="Activer/Désactiver">
                 <input type="checkbox"
-                       [checked]="ressource.statut === 'ACTIVE'"
+                       [checked]="getStatutValue(ressource) === 'ACTIVE'"
                        (change)="changerStatut(
                          ressource.id,
-                         ressource.statut === 'ACTIVE' 
-                           ? 'NON_ACTIVE' : 'ACTIVE')">
+                         getStatutValue(ressource) === 'ACTIVE' ? 'NON_ACTIVE' : 'ACTIVE')">
                 <span class="toggle-slider"></span>
               </label>
             </div>

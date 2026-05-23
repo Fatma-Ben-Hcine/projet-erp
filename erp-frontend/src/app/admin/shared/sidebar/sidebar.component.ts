@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { AuthService } from '../../../auth/auth.service';
+import { DarkModeService } from '../../../core/services/dark-mode.service';
 
 @Component({
   selector: 'app-admin-sidebar',
@@ -10,12 +12,13 @@ import { AuthService } from '../../../auth/auth.service';
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.css']
 })
-export class AdminSidebarComponent implements OnInit {
+export class AdminSidebarComponent implements OnInit, OnDestroy {
   isDarkMode = false;
   userEmail = '';
   userNom = '';
   userPrenom = '';
   isOpen = false;
+  private darkModeSubscription: Subscription | null = null;
 
   // Dropdown states - all open by default
   projectsOpen = true;
@@ -23,7 +26,10 @@ export class AdminSidebarComponent implements OnInit {
   clientsOpen = true;
   resourcesOpen: boolean = true;
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private darkModeService: DarkModeService
+  ) {}
 
   toggleSidebar(): void {
     this.isOpen = !this.isOpen;
@@ -37,8 +43,10 @@ export class AdminSidebarComponent implements OnInit {
     this.userEmail = localStorage.getItem('email') ?? '';
     this.userNom = localStorage.getItem('nom') ?? 'Utilisateur';
     this.userPrenom = localStorage.getItem('prenom') ?? '';
-    this.isDarkMode = localStorage.getItem('darkMode') === 'true';
-    this.applyDarkMode();
+    this.isDarkMode = this.darkModeService.isDarkMode;
+    this.darkModeSubscription = this.darkModeService.isDarkMode$.subscribe(value => {
+      this.isDarkMode = value;
+    });
   }
 
   toggleDropdown(section: 'projects' | 'rh' | 'clients' | 'resources'): void {
@@ -54,17 +62,11 @@ export class AdminSidebarComponent implements OnInit {
   }
 
   toggleDarkMode(): void {
-    this.isDarkMode = !this.isDarkMode;
-    localStorage.setItem('darkMode', String(this.isDarkMode));
-    this.applyDarkMode();
+    this.darkModeService.toggle();
   }
 
-  private applyDarkMode(): void {
-    if (this.isDarkMode) {
-      document.body.classList.add('dark');
-    } else {
-      document.body.classList.remove('dark');
-    }
+  ngOnDestroy(): void {
+    this.darkModeSubscription?.unsubscribe();
   }
 
   logout(): void {
