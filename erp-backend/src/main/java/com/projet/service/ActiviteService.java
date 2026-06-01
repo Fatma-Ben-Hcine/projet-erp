@@ -236,8 +236,10 @@ public class ActiviteService {
                     tacheInfo.setDateDebut(tache.getDateDebut());
                     tacheInfo.setDateFin(tache.getDateFin());
                     tacheInfo.setEstDeposé(tache.isEstDeposé());
-                    // Calculer la progression de la tâche : 100% si déposée, 0% sinon
-                    tacheInfo.setProgression(tache.isEstDeposé() ? 100 : 0);
+                    // Calculer la progression de la tâche : 100% si déposée (avec dépôt réel), 0% sinon
+                    List<Depot> taskDepots = depotRepository.findByTacheId(tache.getId());
+                    boolean hasDepot = !taskDepots.isEmpty();
+                    tacheInfo.setProgression(hasDepot ? 100 : 0);
                     // Info employés assignés à la tâche
                     List<ActiviteResponse.EmployeTacheInfo> employeTaches = tache.getTravaillerTaches().stream()
                             .map(tt -> {
@@ -305,8 +307,12 @@ public class ActiviteService {
         // Basée sur les tâches déposées de l'activité
         int progressionMoyenne = 0;
         if (activite.getTaches() != null && !activite.getTaches().isEmpty()) {
+            // Vérifier que chaque tâche a un dépôt (pas seulement le flag estDeposé)
             long deposees = activite.getTaches().stream()
-                .filter(Tache::isEstDeposé)
+                .filter(t -> {
+                    List<Depot> depots = depotRepository.findByTacheId(t.getId());
+                    return !depots.isEmpty();
+                })
                 .count();
             progressionMoyenne = (int) Math.round((deposees * 100.0) / activite.getTaches().size());
         }
@@ -377,6 +383,31 @@ public class ActiviteService {
         log.info("Dépôt de l'activité {}", id);
         Activite activite = activiteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Activité non trouvée avec l'id: " + id));
+
+        // Vérification : toutes les tâches doivent être déposées
+        List<Tache> taches = tacheRepository.findByActiviteId(id);
+        boolean toutesDeposees = taches.stream()
+                .allMatch(t -> {
+                    List<Depot> depots = depotRepository.findByTacheId(t.getId());
+                    return !depots.isEmpty();
+                });
+
+        if (!toutesDeposees) {
+            throw new RuntimeException(
+                "Toutes les tâches doivent être déposées avant de déposer l'activité"
+            );
+        }
+
+        // Validation du contenu du dépôt : un lien ou un fichier est obligatoire
+        boolean hasLien = depotRequest.getLien() != null && !depotRequest.getLien().isBlank();
+        boolean hasFichier = "fichier".equals(depotRequest.getType()) && file != null && !file.isEmpty();
+        
+        if (!hasLien && !hasFichier) {
+            throw new RuntimeException(
+                "Un lien ou un fichier est obligatoire pour le dépôt"
+            );
+        }
+
         activite.setEstDeposé(true);
         activite = activiteRepository.save(activite);
 
@@ -385,7 +416,12 @@ public class ActiviteService {
         Depot depot = existingDepots.isEmpty() ? new Depot() : existingDepots.get(0);
 
         depot.setType(depotRequest.getType());
-        depot.setLien(depotRequest.getLien());
+        // Ne pas définir le lien s'il est vide ou null
+        if (hasLien) {
+            depot.setLien(depotRequest.getLien().trim());
+        } else {
+            depot.setLien(null);
+        }
         depot.setNomFichier(depotRequest.getNomFichier());
 
         // Si c'est un fichier, le stocker physiquement
@@ -442,6 +478,10 @@ public class ActiviteService {
         if (activite.getTaches() == null || activite.getTaches().isEmpty()) {
             return false;
         }
-        return activite.getTaches().stream().allMatch(Tache::isEstDeposé);
+        // Vérifier que chaque tâche a un dépôt (pas seulement le flag estDeposé)
+        return activite.getTaches().stream().allMatch(t -> {
+            List<Depot> depots = depotRepository.findByTacheId(t.getId());
+            return !depots.isEmpty();
+        });
     }
 }

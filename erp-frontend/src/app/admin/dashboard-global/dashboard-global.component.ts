@@ -16,10 +16,10 @@ import { takeUntil } from 'rxjs/operators';
 export class DashboardGlobalComponent implements OnInit, OnDestroy {
   @ViewChild('powerBiIframe') iframeElement!: ElementRef<HTMLIFrameElement>;
 
-  // Power BI URL
-  powerBiUrl!: SafeResourceUrl;
+  // Power BI URL sécurisé
+  reportUrl!: SafeResourceUrl;
   private readonly POWERBI_BASE_URL =
-    'https://app.powerbi.com/view?r=eyJrIjoiMGUyYjRkYjYtZWFlZS00YzE4LTgxNGEtMmU1Mzk3OWRjZGZhIiwidCI6ImRiZDY2NjRkLTRlYjktNDZlYi05OWQ4LTVjNDNiYTE1M2M2MSIsImMiOjl9&navContentPaneEnabled=true';
+    'https://app.powerbi.com/reportEmbed?reportId=69f5e80d-7798-458d-94c7-a82e981fd460&autoAuth=true&ctid=dbd6664d-4eb9-46eb-99d8-5c43ba153c61';
 
   isRefreshing = false;
   lastRefreshTime: Date | null = null;
@@ -55,7 +55,7 @@ export class DashboardGlobalComponent implements OnInit, OnDestroy {
    * Charge le dashboard initial
    */
   loadDashboard(): void {
-    this.powerBiUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+    this.reportUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
       this.POWERBI_BASE_URL
     );
   }
@@ -78,7 +78,7 @@ export class DashboardGlobalComponent implements OnInit, OnDestroy {
       const timestamp = Date.now();
       const urlWithCacheBusting = `${this.POWERBI_BASE_URL}&t=${timestamp}`;
 
-      this.powerBiUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+      this.reportUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
         urlWithCacheBusting
       );
 

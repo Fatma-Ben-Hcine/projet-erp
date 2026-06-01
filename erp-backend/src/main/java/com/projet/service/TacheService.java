@@ -258,8 +258,10 @@ public class TacheService {
         // Nombre d'employés qui ont terminé la tâche
         response.setNombreEmployesTermines(0);
 
-        // Calculer la progression (par défaut 0)
-        response.setProgression(0);
+        // Calculer la progression : 100% si la tâche a un dépôt, 0% sinon
+        List<Depot> taskDepots = depotRepository.findByTacheId(tache.getId());
+        boolean hasDepot = taskDepots != null && !taskDepots.isEmpty();
+        response.setProgression(hasDepot ? 100 : 0);
 
         // Mapper les dépôts
         List<Depot> depots = depotRepository.findByTacheId(tache.getId());
@@ -323,6 +325,17 @@ public class TacheService {
         log.info("Dépôt de la tâche {}", id);
         Tache tache = tacheRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Tâche non trouvée avec l'id: " + id));
+
+        // Validation du contenu du dépôt : un lien ou un fichier est obligatoire
+        boolean hasLien = depotRequest.getLien() != null && !depotRequest.getLien().isBlank();
+        boolean hasFichier = "fichier".equals(depotRequest.getType()) && file != null && !file.isEmpty();
+        
+        if (!hasLien && !hasFichier) {
+            throw new RuntimeException(
+                "Un lien ou un fichier est obligatoire pour le dépôt"
+            );
+        }
+
         tache.setEstDeposé(true);
         tache = tacheRepository.save(tache);
 
@@ -331,7 +344,12 @@ public class TacheService {
         Depot depot = existingDepots.isEmpty() ? new Depot() : existingDepots.get(0);
 
         depot.setType(depotRequest.getType());
-        depot.setLien(depotRequest.getLien());
+        // Ne pas définir le lien s'il est vide ou null
+        if (hasLien) {
+            depot.setLien(depotRequest.getLien().trim());
+        } else {
+            depot.setLien(null);
+        }
         depot.setNomFichier(depotRequest.getNomFichier());
 
         // Si c'est un fichier, le stocker physiquement

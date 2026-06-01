@@ -712,7 +712,13 @@ public class ProjetService {
             Set<Tache> taches = a.getTaches();
             if (taches != null && !taches.isEmpty()) {
                 totalTaches += taches.size();
-                tachesDeposees += taches.stream().filter(Tache::isEstDeposé).count();
+                // Vérifier que chaque tâche a un dépôt (pas seulement le flag estDeposé)
+                for (Tache t : taches) {
+                    List<Depot> depots = depotRepository.findByTacheId(t.getId());
+                    if (!depots.isEmpty()) {
+                        tachesDeposees++;
+                    }
+                }
             }
         }
 
@@ -721,9 +727,14 @@ public class ProjetService {
         }
 
         long totalActivites = activites.size();
-        long activitesDeposees = activites.stream()
-                .filter(Activite::isEstDeposé)
-                .count();
+        long activitesDeposees = 0;
+        // Vérifier que chaque activité a un dépôt (pas seulement le flag estDeposé)
+        for (Activite a : activites) {
+            List<Depot> depots = depotRepository.findDepotsByActiviteIdSeulement(a.getId());
+            if (!depots.isEmpty()) {
+                activitesDeposees++;
+            }
+        }
 
         return (int) Math.round((double) activitesDeposees / totalActivites * 100);
     }
@@ -758,6 +769,31 @@ public class ProjetService {
         log.info("Dépôt du projet {}", id);
         Projet projet = projetRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Projet non trouvé avec l'id: " + id));
+
+        // Vérification : toutes les activités doivent être déposées
+        List<Activite> activites = activiteRepository.findByProjetId(id);
+        boolean toutesDeposees = activites.stream()
+                .allMatch(a -> {
+                    List<Depot> depots = depotRepository.findDepotsByActiviteIdSeulement(a.getId());
+                    return !depots.isEmpty();
+                });
+
+        if (!toutesDeposees) {
+            throw new RuntimeException(
+                "Toutes les activités doivent être déposées avant de déposer le projet"
+            );
+        }
+
+        // Validation du contenu du dépôt : un lien ou un fichier est obligatoire
+        boolean hasLien = depotRequest.getLien() != null && !depotRequest.getLien().isBlank();
+        boolean hasFichier = "fichier".equals(depotRequest.getType()) && file != null && !file.isEmpty();
+        
+        if (!hasLien && !hasFichier) {
+            throw new RuntimeException(
+                "Un lien ou un fichier est obligatoire pour le dépôt"
+            );
+        }
+
         projet.setEstDeposé(true);
         projet.setStatut(StatutProjet.TERMINE);
         projet = projetRepository.save(projet);
@@ -767,7 +803,12 @@ public class ProjetService {
         Depot depot = existingDepots.isEmpty() ? new Depot() : existingDepots.get(0);
 
         depot.setType(depotRequest.getType());
-        depot.setLien(depotRequest.getLien());
+        // Ne pas définir le lien s'il est vide ou null
+        if (hasLien) {
+            depot.setLien(depotRequest.getLien().trim());
+        } else {
+            depot.setLien(null);
+        }
         depot.setNomFichier(depotRequest.getNomFichier());
 
         // Si c'est un fichier, le stocker physiquement
@@ -800,7 +841,11 @@ public class ProjetService {
         if (projet.getActivites() == null || projet.getActivites().isEmpty()) {
             return false;
         }
-        return projet.getActivites().stream().allMatch(Activite::isEstDeposé);
+        // Vérifier que chaque activité a un dépôt (pas seulement le flag estDeposé)
+        return projet.getActivites().stream().allMatch(a -> {
+            List<Depot> depots = depotRepository.findDepotsByActiviteIdSeulement(a.getId());
+            return !depots.isEmpty();
+        });
     }
 
     public String getDepotFilePath(Long depotId) {
