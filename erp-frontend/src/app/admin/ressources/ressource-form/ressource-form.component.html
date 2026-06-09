@@ -1,0 +1,122 @@
+<div class="ressource-form-container">
+  <div class="header">
+    <h1>{{ isEditMode ? 'Modifier' : 'Nouvelle' }} Ressource</h1>
+    <button class="btn btn-secondary" routerLink="/admin/ressources">
+      <i class="icon-arrow-left"></i> Retour
+    </button>
+  </div>
+
+  <div class="loading" *ngIf="loading">
+    <p>Chargement...</p>
+  </div>
+
+  <div class="error" *ngIf="error">
+    <p>{{ error }}</p>
+  </div>
+
+  <form *ngIf="!loading" (ngSubmit)="onSubmit()" class="form-container">
+    <!-- Champs obligatoires -->
+    <fieldset class="form-section">
+      <legend>Informations obligatoires</legend>
+
+      <div class="form-group">
+        <label for="nom">Nom *</label>
+        <input
+          type="text"
+          id="nom"
+          name="nom"
+          [(ngModel)]="ressource.nom"
+          required
+          class="form-control"
+          placeholder="Nom de la ressource"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="description">Description</label>
+        <textarea
+          id="description"
+          name="description"
+          [(ngModel)]="ressource.description"
+          rows="3"
+          class="form-control"
+          placeholder="Description de la ressource"
+        ></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="prix">Prix *</label>
+        <input
+          type="number"
+          id="prix"
+          name="prix"
+          [(ngModel)]="ressource.prix"
+          class="form-control"
+          placeholder="Prix de la ressource"
+          step="0.01"
+          min="0"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="statut">Statut *</label>
+        <select
+          id="statut"
+          name="statut"
+          [(ngModel)]="ressource.statut"
+          class="form-control"
+          required
+        >
+          <option value="ACTIVE">Active</option>
+          <option value="NON_ACTIVE">Non active</option>
+        </select>
+        <small class="form-help">Statut par défaut : Active</small>
+      </div>
+    </fieldset>
+
+    <!-- Champs d'abonnement (optionnels) -->
+    <fieldset class="form-section">
+      <legend>Abonnement (optionnel)</legend>
+
+      <div class="form-group">
+        <label for="dateDebutAbonnement">Date début abonnement</label>
+        <input
+          type="date"
+          id="dateDebutAbonnement"
+          name="dateDebutAbonnement"
+          [(ngModel)]="ressource.dateDebutAbonnement"
+          class="form-control"
+          (change)="onDateAbonnementChange()"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="dateFinAbonnement">Date fin abonnement</label>
+        <input
+          type="date"
+          id="dateFinAbonnement"
+          name="dateFinAbonnement"
+          [(ngModel)]="ressource.dateFinAbonnement"
+          class="form-control"
+          (change)="onDateAbonnementChange()"
+        />
+        <div class="warning-message" *ngIf="isDateFinAbonnementInPast()">
+          ⚠️ Attention : La date de fin est dans le passé. La ressource sera marquée comme expirée.
+        </div>
+      </div>
+
+          </fieldset>
+
+    
+    <!-- Actions -->
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" [disabled]="saving">
+        {{ saving ? 'Enregistrement...' : (isEditMode ? 'Mettre à jour' : 'Créer') }}
+      </button>
+      <button type="button" class="btn btn-secondary" routerLink="/admin/ressources">
+        Annuler
+      </button>
+    </div>
+  </form>
+</div>

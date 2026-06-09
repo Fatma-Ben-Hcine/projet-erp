@@ -1,0 +1,42 @@
+package com.projet.dto;
+
+import com.projet.dto.ActiviteRequest;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.constraints.*;
+import lombok.Data;
+import java.time.LocalDate;
+import java.math.BigDecimal;
+import java.util.List;
+
+@Data
+public class ProjetRequest {
+
+    @NotBlank(message = "Le nom du projet est obligatoire")
+    @Size(max = 100, message = "Le nom ne doit pas dépasser 100 caractères")
+    private String nom;
+
+    @Size(max = 500, message = "La description ne doit pas dépasser 500 caractères")
+    private String description;
+
+    @NotNull(message = "Le budget est obligatoire")
+    @DecimalMin(value = "0.0", inclusive = false, message = "Le budget doit être supérieur à 0")
+    private BigDecimal budget;
+
+    @NotNull(message = "La date de début est obligatoire")
+    @FutureOrPresent(message = "La date de début doit être aujourd'hui ou dans le futur")
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate dateDebut;
+
+    @NotNull(message = "La date limite est obligatoire")
+    @Future(message = "La date limite doit être dans le futur")
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate dateLimite;
+
+    private Boolean estDeposé = false; // Valeur par défaut pour les nouveaux projets
+
+    private List<Long> employeIds;
+    private Long chefDeProjetId;
+    private Long clientId;
+
+    private List<ActiviteRequest> activites;
+}

@@ -1,0 +1,272 @@
+<div class="ressources-container">
+  <!-- En-tête de page -->
+  <div class="page-header">
+    <h1 class="page-title">Gestion des Ressources</h1>
+    <button class="btn-primary" (click)="ouvrirModalCreation()">
+      + Nouvelle Ressource
+    </button>
+  </div>
+
+  <!-- Cartes de statistiques -->
+  <div class="stats-grid" *ngIf="!loading && !error && ressources.length > 0">
+    <div class="stat-card">
+      <div class="stat-icon">📦</div>
+      <div class="stat-info">
+        <span class="stat-number">{{ totalRessources }}</span>
+        <span class="stat-label">Total ressources</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-green">
+      <div class="stat-icon">✅</div>
+      <div class="stat-info">
+        <span class="stat-number">{{ nombreActives }}</span>
+        <span class="stat-label">Actives</span>
+      </div>
+    </div>
+
+    
+      </div>
+
+  <!-- Barre de filtres -->
+  <div class="filters-bar" *ngIf="!loading && !error">
+    <!-- Recherche -->
+    <div class="search-box">
+      <input 
+        type="text" 
+        placeholder="Rechercher par nom..."
+        [(ngModel)]="searchTerm"
+        (input)="filterRessources($any($event).target?.value || '')"
+      >
+    </div>
+
+    <!-- Filtres statut -->
+    <div class="filter-group">
+      <button 
+        [class.active]="currentFilter === 'all'"
+        (click)="setFilter('all')"
+      >
+        Tous
+      </button>
+      <button 
+        [class.active]="currentFilter === 'actives'"
+        (click)="setFilter('actives')"
+      >
+        Actifs
+      </button>
+      <button 
+        [class.active]="currentFilter === 'non-actifs'"
+        (click)="setFilter('non-actifs')"
+      >
+        Non actifs
+      </button>
+    </div>
+
+    <!-- Filtres situation -->
+    <div class="filter-group">
+      <button 
+        [class.active]="currentFilter === 'all'"
+        (click)="setFilter('all')"
+      >
+        Tous
+      </button>
+          </div>
+  </div>
+
+  <!-- État de chargement -->
+  <div class="loading" *ngIf="loading">
+    <p>Chargement...</p>
+  </div>
+
+  <!-- Message d'erreur -->
+  <div class="error" *ngIf="error">
+    <p>{{ error }}</p>
+  </div>
+
+  <!-- Tableau des ressources -->
+  <div class="table-container" *ngIf="!loading && !error && filteredRessources.length > 0">
+    <table class="resources-table">
+      <thead>
+        <tr>
+          <th>Nom</th>
+          <th>Description</th>
+          <th>Prix</th>
+          <th>Date début</th>
+          <th>Date fin</th>
+          <th>Statut</th>
+          <th>Nb Demandes</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let ressource of filteredRessources">
+          <td>
+            <strong>{{ ressource.nom }}</strong>
+          </td>
+          <td>{{ ressource.description || '-' }}</td>
+          <td>{{ ressource.prix ? ressource.prix + ' TND' : '-' }}</td>
+          <td>{{ ressource.dateDebutAbonnement ? formatDate(ressource.dateDebutAbonnement) : '-' }}</td>
+          <td>{{ ressource.dateFinAbonnement ? formatDate(ressource.dateFinAbonnement) : '-' }}</td>
+          <td>
+            <span [class]="getStatutValue(ressource) === 'ACTIVE' ? 'badge badge-active' : 'badge badge-inactive'">
+              {{ getStatutValue(ressource) === 'ACTIVE' ? 'Active' : 'Non active' }}
+            </span>
+          </td>
+          <td>
+            <!-- Nb Demandes calculé -->
+            <span class="compteur-demandes"
+                  [class.compteur-zero]="(ressource.nombreDemandes || 0) === 0"
+                  [class.compteur-nonzero]="(ressource.nombreDemandes || 0) > 0">
+              👥 {{ ressource.nombreDemandes || 0 }}
+              {{ (ressource.nombreDemandes || 0) <= 1 ? 'demande' : 'demandes' }}
+            </span>
+          </td>
+          <td class="actions-cell">
+            <div class="action-buttons">
+              <!-- Modifier -->
+              <button class="btn-icon btn-edit"
+                      (click)="ouvrirModification(ressource)"
+                      title="Modifier">
+                ✏️
+              </button>
+
+              <!-- Supprimer -->
+              <button class="btn-icon btn-delete"
+                      (click)="supprimerRessource(ressource.id)"
+                      title="Supprimer">
+                🗑️
+              </button>
+
+              
+              <!-- Toggle Activer/Désactiver -->
+              <label class="toggle-switch" title="Activer/Désactiver">
+                <input type="checkbox"
+                       [checked]="getStatutValue(ressource) === 'ACTIVE'"
+                       (change)="changerStatut(
+                         ressource.id,
+                         getStatutValue(ressource) === 'ACTIVE' ? 'NON_ACTIVE' : 'ACTIVE')">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- État vide -->
+  <div class="empty-state" *ngIf="!loading && !error && filteredRessources.length === 0">
+    <div class="empty-icon">
+      <i class="icon-inbox"></i>
+    </div>
+    <h3>Aucune ressource trouvée</h3>
+    <p>Cliquez sur "Nouvelle Ressource" pour commencer</p>
+  </div>
+</div>
+
+<!-- Notifications Toast -->
+<div class="toast-container">
+  <div class="toast toast-success" *ngIf="notification" 
+       [class.show]="notification.type === 'success'"
+       [class.hide]="notification.type !== 'success'">
+    <div class="toast-icon">✅</div>
+    <div class="toast-message">{{ notification.message }}</div>
+    <button class="toast-close" (click)="clearNotification()">×</button>
+  </div>
+  
+  <div class="toast toast-error" *ngIf="notification" 
+       [class.show]="notification.type === 'error'"
+       [class.hide]="notification.type !== 'error'">
+    <div class="toast-icon">❌</div>
+    <div class="toast-message">{{ notification.message }}</div>
+    <button class="toast-close" (click)="clearNotification()">×</button>
+  </div>
+</div>
+
+<!-- Modal création/modification -->
+<div class="modal-overlay" *ngIf="showModal" (click)="fermerModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ ressourceEnEdition ? 'Modifier la Ressource' : 'Nouvelle Ressource' }}</h2>
+      <button class="modal-close" (click)="fermerModal()">
+        <i class="icon-close"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <form (ngSubmit)="enregistrerRessource()" class="resource-form">
+        <div class="form-group">
+          <label for="nom">Nom *</label>
+          <input 
+            type="text" 
+            id="nom" 
+            name="nom" 
+            [(ngModel)]="ressourceForm.nom"
+            required
+            class="form-control"
+            placeholder="Nom de la ressource"
+          >
+        </div>
+        
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea 
+            id="description" 
+            name="description" 
+            [(ngModel)]="ressourceForm.description"
+            rows="3"
+            class="form-control"
+            placeholder="Description de la ressource"
+          ></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label for="prix">Prix (TND)</label>
+          <input 
+            type="number" 
+            id="prix" 
+            name="prix" 
+            [(ngModel)]="ressourceForm.prix"
+            class="form-control"
+            placeholder="Prix en TND"
+            step="0.01"
+            min="0"
+          >
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="dateDebutAbonnement">Date début</label>
+            <input 
+              type="date" 
+              id="dateDebutAbonnement" 
+              name="dateDebutAbonnement" 
+              [(ngModel)]="ressourceForm.dateDebutAbonnement"
+              class="form-control"
+            >
+          </div>
+          
+          <div class="form-group">
+            <label for="dateFinAbonnement">Date fin</label>
+            <input 
+              type="date" 
+              id="dateFinAbonnement" 
+              name="dateFinAbonnement" 
+              [(ngModel)]="ressourceForm.dateFinAbonnement"
+              class="form-control"
+            >
+          </div>
+        </div>
+        
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="fermerModal()">
+            Annuler
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!ressourceForm.nom">
+            {{ ressourceEnEdition ? 'Mettre à jour' : 'Créer' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

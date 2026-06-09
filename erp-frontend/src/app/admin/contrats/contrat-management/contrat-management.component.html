@@ -1,0 +1,209 @@
+<div class="layout" style="position: relative; z-index: 1;">
+
+  <!-- Hexagon background pattern -->
+  <div style="position: fixed; inset: 0; opacity: 0.04;
+              pointer-events: none; z-index: 0; color: #92400e;">
+    <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id="hexagons-contrats" x="0" y="0"
+                 width="100" height="87" patternUnits="userSpaceOnUse">
+          <polygon points="50,0 93.3,25 93.3,62 50,87 6.7,62 6.7,25"
+                   fill="none" stroke="currentColor" stroke-width="0.8" />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#hexagons-contrats)" />
+    </svg>
+  </div>
+
+  <!-- Admin Sidebar -->
+  <app-admin-sidebar></app-admin-sidebar>
+
+  <!-- Main content -->
+  <main class="main-content">
+    <div class="page-container">
+
+      <!-- En-tête -->
+      <div class="page-header">
+        <div>
+          <h1>Gestion Contrats</h1>
+          <p>Gérez les contrats clients</p>
+        </div>
+        <button class="btn-primary" (click)="openCreateModal()">
+          + Nouveau Contrat
+        </button>
+      </div>
+
+      <!-- Message d'erreur -->
+      <div class="error-banner" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+      <!-- Filtres par statut -->
+      <div class="filter-card">
+        <div class="filter-buttons">
+          <button [class.active]="activeFilter === 'all'" (click)="setFilter('all')">
+            Tous ({{ contrats.length }})
+          </button>
+          <button [class.active]="activeFilter === 'EN_COURS'" (click)="setFilter('EN_COURS')">
+            En Cours
+          </button>
+          <button [class.active]="activeFilter === 'TERMINE'" (click)="setFilter('TERMINE')">
+            Terminé
+          </button>
+          <button [class.active]="activeFilter === 'SUSPENDU'" (click)="setFilter('SUSPENDU')">
+            Suspendu
+          </button>
+          <button [class.active]="activeFilter === 'EN_ATTENTE'" (click)="setFilter('EN_ATTENTE')">
+            En Attente
+          </button>
+        </div>
+      </div>
+
+      <!-- Loader -->
+      <div *ngIf="isLoading" class="loading-state">Chargement...</div>
+
+      <!-- Table -->
+      <div *ngIf="!isLoading" class="table-card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>CLIENT</th>
+                <th>EMAIL CLIENT</th>
+                <th>DATE DÉBUT</th>
+                <th>DATE FIN</th>
+                <th>MONTANT</th>
+                <th>STATUT</th>
+                <th>ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let c of filteredContrats">
+                <td class="name-cell">{{ c.clientNom }} {{ c.clientPrenom }}</td>
+                <td>{{ c.clientEmail }}</td>
+                <td>{{ c.dateDebut | date:'dd/MM/yyyy' }}</td>
+                <td>{{ c.dateFin | date:'dd/MM/yyyy' }}</td>
+                <td>{{ formatMontant(c.montant) }}</td>
+                <td>
+                  <span class="badge" [ngClass]="getStatutBadgeClass(c.statut)">
+                    {{ getStatutLabel(c.statut) }}
+                  </span>
+                </td>
+                <td>
+                  <div class="action-buttons">
+                    <button class="btn-icon btn-edit" (click)="openEditModal(c)">✏️</button>
+                    <button class="btn-icon btn-delete" (click)="deleteContrat(c.id)">🗑️</button>
+                  </div>
+                </td>
+              </tr>
+              <tr *ngIf="filteredContrats.length === 0">
+                <td colspan="7" class="empty-state">Aucun contrat trouvé</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Modal Création -->
+    <div class="modal-overlay" *ngIf="showModal && !isEditing" (click)="closeModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Nouveau Contrat</h2>
+          <button class="btn-icon" (click)="closeModal()">✕</button>
+        </div>
+        <div class="error-banner" *ngIf="errorMessage">{{ errorMessage }}</div>
+        <form [formGroup]="createForm" (ngSubmit)="saveCreate()">
+          <div class="form-group">
+            <label>Client *</label>
+            <select formControlName="clientId">
+              <option value="">Sélectionner un client</option>
+              <option *ngFor="let client of clients" [value]="client.id">
+                {{ client.nom }} {{ client.prenom }} ({{ client.email }})
+              </option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Date Début *</label>
+              <input type="date" formControlName="dateDebut" />
+            </div>
+            <div class="form-group">
+              <label>Date Fin *</label>
+              <input type="date" formControlName="dateFin" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Montant *</label>
+              <input type="number" formControlName="montant" placeholder="Montant en TND" min="0" step="0.01" />
+            </div>
+            <div class="form-group">
+              <label>Statut *</label>
+              <select formControlName="statut">
+                <option *ngFor="let s of statuts" [value]="s">{{ getStatutLabel(s) }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" (click)="closeModal()">Annuler</button>
+            <button type="submit" class="btn-primary" [disabled]="createForm.invalid">
+              Créer
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Édition -->
+    <div class="modal-overlay" *ngIf="showModal && isEditing" (click)="closeModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Modifier Contrat</h2>
+          <button class="btn-icon" (click)="closeModal()">✕</button>
+        </div>
+        <div class="error-banner" *ngIf="errorMessage">{{ errorMessage }}</div>
+        <form [formGroup]="editForm" (ngSubmit)="saveEdit()">
+          <div class="form-group">
+            <label>Client *</label>
+            <select formControlName="clientId">
+              <option value="">Sélectionner un client</option>
+              <option *ngFor="let client of clients" [value]="client.id">
+                {{ client.nom }} {{ client.prenom }} ({{ client.email }})
+              </option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Date Début *</label>
+              <input type="date" formControlName="dateDebut" />
+            </div>
+            <div class="form-group">
+              <label>Date Fin *</label>
+              <input type="date" formControlName="dateFin" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Montant *</label>
+              <input type="number" formControlName="montant" placeholder="Montant en TND" min="0" step="0.01" />
+            </div>
+            <div class="form-group">
+              <label>Statut *</label>
+              <select formControlName="statut">
+                <option *ngFor="let s of statuts" [value]="s">{{ getStatutLabel(s) }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" (click)="closeModal()">Annuler</button>
+            <button type="submit" class="btn-primary" [disabled]="editForm.invalid">
+              Mettre à jour
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </main>
+
+</div>

@@ -1,0 +1,68 @@
+<div class="project-card" [ngClass]="borderColor">
+
+  <!-- Chef de Projet Badge -->
+  <div class="chef-badge" *ngIf="isProjectManager">
+    <span class="material-icons">star</span>
+    <span>Chef de projet</span>
+  </div>
+
+  <div class="card-header">
+    <span class="project-name">{{ project.name }}</span>
+    <span class="project-deadline">
+      — {{ project.deadline | date:'dd/MM/yyyy' }}
+    </span>
+  </div>
+
+  <p class="project-description">{{ project.description }}</p>
+
+  <div class="card-meta">
+    <span class="meta-label">Jours restants:</span>
+    <span class="meta-value" [class.text-red]="daysRemaining < 0">
+      {{ daysRemaining }} jour{{ daysRemaining !== 1 ? 's' : '' }} restant{{ daysRemaining !== 1 ? 's' : '' }}
+    </span>
+  </div>
+
+  <div class="progress-section">
+    <div class="progress-header">
+      <span class="progress-label">Progression</span>
+      <span class="progress-value">{{ project.progress }}%</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" [style.width.%]="project.progress"></div>
+    </div>
+  </div>
+
+  <div class="card-actions">
+    <!-- Start button: for new or late projects + project manager can restart -->
+    <button
+      *ngIf="isProjectManager &&
+             (project.status === 'new' ||
+              project.status === 'late')"
+      class="btn btn-start"
+      (click)="start.emit(project.id)">
+      <span class="material-icons">play_circle</span>
+      Start
+    </button>
+
+    <!-- Deposit button: only for project manager + in-progress, late, completed -->
+    <button
+      *ngIf="isProjectManager &&
+             (project.status === 'new' ||
+              project.status === 'in-progress' ||
+              project.status === 'late' ||
+              project.status === 'completed')"
+      class="btn btn-deposit"
+      (click)="onDepositClick()">
+      <span class="material-icons">check_circle</span>
+      Dépôt
+    </button>
+
+    <!-- View details: always visible -->
+    <button
+      class="btn btn-details"
+      (click)="onViewDetailsClick()">
+      <span class="material-icons">visibility</span>
+      Voir détails
+    </button>
+  </div>
+</div>

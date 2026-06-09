@@ -1,0 +1,196 @@
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+.page-title { font-size: 2rem; font-weight: 700; color: #111827; margin: 0 0 0.25rem; }
+.page-subtitle { color: #6b7280; margin: 0; }
+.view-toggle {
+  display: flex;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 4px;
+  gap: 4px;
+}
+.toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  color: #6b7280;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.toggle-btn.active { background: #fef9c3; color: #111827; font-weight: 600; }
+.toggle-btn .material-icons { font-size: 16px; }
+.kanban-board {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+}
+.calendar-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem;
+  background: white;
+  border-radius: 12px;
+  color: #9ca3af;
+  text-align: center;
+}
+.calendar-icon { font-size: 48px; margin-bottom: 1rem; }
+
+/* Badge styles */
+.badge { padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.8rem; font-weight: 500; }
+.badge-default  { background: #f3f4f6; color: #6b7280; }
+.badge-warning  { background: #fef3c7; color: #d97706; }
+.badge-success  { background: #d1fae5; color: #059669; }
+.badge-danger   { background: #fee2e2; color: #dc2626; }
+
+/* Modal */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 50; padding: 1rem;
+}
+.modal-content {
+  background: white; border-radius: 12px;
+  max-width: 700px; width: 100%;
+  max-height: 90vh; overflow-y: auto;
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.5rem; border-bottom: 1px solid #f0f0f0;
+  position: sticky; top: 0; background: white; z-index: 1;
+}
+.modal-header h2 { font-size: 1.5rem; font-weight: 700; margin: 0; }
+.modal-close {
+  border: none; background: none; cursor: pointer;
+  padding: 0.5rem; border-radius: 8px;
+}
+.modal-close:hover { background: #f3f4f6; }
+.modal-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
+.modal-section {
+  background: #f9fafb; border-radius: 10px; padding: 1rem;
+}
+.modal-section h3 { font-size: 1rem; font-weight: 600; margin: 0 0 1rem; }
+.info-grid { display: flex; flex-direction: column; gap: 0.75rem; }
+.info-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+.info-item label { font-size: 0.8rem; font-weight: 600; color: #6b7280; display: block; margin-bottom: 0.25rem; }
+.info-item p { margin: 0; color: #111827; }
+.team-list { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.team-badge {
+  padding: 0.4rem 0.75rem; border-radius: 8px;
+  background: #f3f4f6; color: #374151; font-size: 0.85rem;
+}
+.team-badge.is-manager { background: #dbeafe; color: #1d4ed8; font-weight: 600; }
+.activity-card {
+  background: white; border-radius: 8px; padding: 1rem;
+  border: 1px solid #e5e7eb; margin-bottom: 0.75rem;
+}
+.activity-card h4 { margin: 0 0 0.25rem; font-weight: 600; }
+.activity-card p { margin: 0 0 0.75rem; color: #6b7280; font-size: 0.875rem; }
+.task-list { padding-left: 1rem; border-left: 2px solid #e5e7eb; }
+.task-item { margin-bottom: 0.5rem; }
+.task-name { font-weight: 500; margin: 0; font-size: 0.875rem; }
+.task-desc { color: #9ca3af; margin: 0; font-size: 0.8rem; }
+
+
+body.dark .page-title {
+  color: #f9fafb;
+}
+
+body.dark .page-subtitle {
+  color: #9ca3af;
+}
+
+body.dark .view-toggle {
+  background: #1f2937;
+  border-color: #374151;
+}
+
+body.dark .toggle-btn {
+  color: #9ca3af;
+}
+
+body.dark .toggle-btn.active {
+  background: #713f12;
+  color: #fef08a;
+}
+
+body.dark .calendar-placeholder {
+  background: #1f2937;
+  color: #9ca3af;
+}
+
+body.dark .modal-content { background: #1f2937; }
+body.dark .modal-header { background: #1f2937; border-color: #374151; }
+body.dark .modal-header h2 { color: #f9fafb; }
+body.dark .modal-section { background: rgba(255,255,255,0.05); }
+body.dark .modal-section h3 { color: #f9fafb; }
+body.dark .info-item p { color: #f9fafb; }
+body.dark .team-badge { background: #374151; color: #d1d5db; }
+body.dark .activity-card { background: #111827; border-color: #374151; }
+
+/* ═══════════════════════════════════════
+   RESPONSIVE — EMPLOYE DASHBOARD
+   ═══════════════════════════════════════ */
+
+@media (max-width: 767px) {
+  .page-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  .page-title {
+    font-size: 20px !important;
+  }
+
+  .page-subtitle {
+    font-size: 13px !important;
+  }
+
+  .view-toggle {
+    width: 100% !important;
+  }
+
+  .kanban-board {
+    flex-direction: row !important;
+    overflow-x: scroll !important;
+    scroll-snap-type: x mandatory !important;
+    padding-bottom: 1rem !important;
+  }
+
+  .info-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  .modal-overlay {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+
+  .modal-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 20px 20px 0 0 !important;
+    max-height: 90vh !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-title {
+    font-size: 18px !important;
+  }
+}
+

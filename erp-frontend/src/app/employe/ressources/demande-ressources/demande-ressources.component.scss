@@ -1,0 +1,253 @@
+/* ═══════════════════════════════════════
+   DEMANDE DE RESSOURCES — CSS REFONDU
+   ═══════════════════════════════════════ */
+
+/* ── 1. CONTENEUR PRINCIPAL ── */
+.main-content {
+  margin-left: 260px !important;
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  min-height: 100vh !important;
+  position: relative !important;
+  z-index: 1 !important;
+  background: transparent !important;
+  padding-left: 2rem !important;
+  padding-right: 2rem !important;
+  padding-top: 80px !important; /* Espace pour le header fixe de 60px */
+}
+
+/* ── 2. WRAPPER CONTENU ── */
+.container {
+  max-width: 900px !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+}
+
+/* ── 3. EN-TÊTE ── */
+h1 {
+  font-size: 28px !important;
+  font-weight: 700 !important;
+  color: #111827 !important;
+  margin: 0 0 6px 0 !important;
+}
+
+.container > p {
+  font-size: 14px !important;
+  color: #9CA3AF !important;
+  font-weight: 400 !important;
+  margin: 0 0 2rem 0 !important;
+}
+
+/* ── 4. GRILLE DE CARTES ── */
+.ressources-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+  gap: 1.25rem !important;
+  width: 100% !important;
+}
+
+/* ── 5. CARTE RESSOURCE ── */
+.ressource-card {
+  background: #FFFFFF !important;
+  border-radius: 16px !important;
+  border: 1px solid #E5E7EB !important;
+  padding: 1.5rem !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06) !important;
+  transition: box-shadow 0.2s ease, transform 0.2s ease !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.75rem !important;
+  cursor: pointer !important;
+}
+
+.ressource-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.10) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Carte cochée */
+.ressource-card:has(.checkbox-label input[type="checkbox"]:checked) {
+  border: 2px solid #3B82F6 !important;
+  background: #F0F7FF !important;
+}
+
+/* Carte déjà demandée */
+.ressource-card.card-demandee {
+  opacity: 0.7 !important;
+  border-color: #d1d5db !important;
+}
+
+/* ── 6. HEADER DE CARTE ── */
+.card-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+}
+
+.ressource-nom {
+  font-size: 17px !important;
+  font-weight: 700 !important;
+  color: #1E293B !important;
+  margin: 0 !important;
+  text-transform: capitalize !important;
+}
+
+/* ── 7. BADGE COMPTEUR ── */
+.compteur {
+  background: #EFF6FF !important;
+  color: #3B82F6 !important;
+  padding: 4px 10px !important;
+  border-radius: 99px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+}
+
+.compteur.zero {
+  background: #F3F4F6 !important;
+  color: #9CA3AF !important;
+}
+
+.compteur.nonzero {
+  background: #EFF6FF !important;
+  color: #3B82F6 !important;
+}
+
+/* ── 8. DESCRIPTION ── */
+.card-body {
+  flex: 1 !important;
+}
+
+.ressource-description {
+  font-size: 13px !important;
+  color: #94A3B8 !important;
+  margin: 0 !important;
+  line-height: 1.5 !important;
+}
+
+/* ── 9. SÉPARATEUR + PIED DE CARTE ── */
+.card-footer {
+  border-top: 1px solid #F1F5F9 !important;
+  padding-top: 0.75rem !important;
+  margin-top: 0.25rem !important;
+}
+
+/* ── 10. CHECKBOX + LABEL ── */
+.checkbox-label {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  cursor: pointer !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 18px !important;
+  height: 18px !important;
+  accent-color: #3B82F6 !important;
+  cursor: pointer !important;
+  border-radius: 4px !important;
+  margin: 0 !important;
+}
+
+.checkbox-label span {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: #3B82F6 !important;
+  cursor: pointer !important;
+}
+
+/* ── 11. DEMANDE DÉJÀ FAITE ── */
+.demande-moi {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+}
+
+.badge-moi {
+  background: #E8F5E9 !important;
+  color: #388E3C !important;
+  padding: 4px 10px !important;
+  border-radius: 99px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  width: fit-content !important;
+}
+
+.btn-annuler {
+  padding: 6px 14px !important;
+  background: #FFEBEE !important;
+  color: #C62828 !important;
+  border: 1px solid #FFCDD2 !important;
+  border-radius: 6px !important;
+  font-size: 13px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  width: fit-content !important;
+}
+
+.btn-annuler:hover {
+  background: #FFCDD2 !important;
+}
+
+/* ── 12. ALERTES ── */
+.alert {
+  padding: 1rem !important;
+  border-radius: 0.75rem !important;
+  margin-bottom: 1.5rem !important;
+  font-weight: 500 !important;
+  font-size: 14px !important;
+}
+
+.alert-success {
+  background-color: #D1FAE5 !important;
+  color: #065F46 !important;
+  border: 1px solid #A7F3D0 !important;
+}
+
+.alert-danger {
+  background-color: #FEE2E2 !important;
+  color: #991B1B !important;
+  border: 1px solid #FECACA !important;
+}
+
+/* ── 13. ÉTATS VIDE / CHARGEMENT ── */
+.loading-state,
+.empty-state {
+  text-align: center !important;
+  padding: 3rem !important;
+  color: #9CA3AF !important;
+  font-size: 14px !important;
+  font-style: italic !important;
+}
+
+/* ── 14. LAYOUT GLOBAL ── */
+.layout {
+  display: flex !important;
+  min-height: 100vh !important;
+  position: relative !important;
+  background: #F3F4F6 !important;
+}
+
+/* ── 15. RESPONSIVE ── */
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0 !important;
+    padding: 80px 1rem 1.5rem !important; /* Espace pour header en haut */
+  }
+
+  .ressources-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .ressource-card {
+    padding: 1.25rem !important;
+  }
+}

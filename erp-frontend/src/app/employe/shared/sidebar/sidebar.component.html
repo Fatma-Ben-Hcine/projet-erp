@@ -1,0 +1,47 @@
+<!-- Bouton toggle pour mobile -->
+<button class="sidebar-toggle" *ngIf="!isOpen" (click)="toggleSidebar()">
+  <span class="material-icons">menu</span>
+</button>
+
+<aside class="sidebar" [class.open]="isOpen">
+  <!-- Bouton fermeture pour mobile -->
+  <button class="sidebar-close" (click)="closeSidebar()">
+    <span class="material-icons">close</span>
+  </button>
+  <div class="sidebar-header">
+    <div class="sidebar-branding">
+      <h2 class="sidebar-title">DigiLab Solutions</h2>
+      <p class="sidebar-subtitle">{{ userPrenom }} {{ userNom }}</p>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a routerLink="/employe/dashboard" routerLinkActive="active" class="nav-item">
+      <span class="material-icons">home</span>
+      Accueil
+    </a>
+    <a routerLink="/employe/ressources/demande" routerLinkActive="active" class="nav-item">
+      <span class="material-icons">inventory_2</span>
+      Ressources
+    </a>
+    <a routerLink="/employe/conges" routerLinkActive="active" class="nav-item">
+      <span class="material-icons">event_available</span>
+      Congés
+    </a>
+    <a routerLink="/employe/profile" routerLinkActive="active" class="nav-item">
+      <span class="material-icons">person</span>
+      Profile
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <button class="nav-item dark-toggle" (click)="toggleDarkMode()">
+      <span class="material-icons">{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</span>
+      {{ isDarkMode ? 'Mode Clair' : 'Mode Sombre' }}
+    </button>
+    <button class="nav-item logout-btn" (click)="logout()">
+      <span class="material-icons">logout</span>
+      Déconnexion
+    </button>
+  </div>
+</aside>

@@ -1,0 +1,214 @@
+import { Component, Input, Output, EventEmitter, ChangeDetectorRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ProjetResponse, DepotResponse } from '../../../core/models/projet.model';
+import { ProjetService } from '../../../core/services/projet.service';
+
+@Component({
+  selector: 'app-depot-modal',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule],
+  templateUrl: './depot-modal.component.html',
+  styleUrls: ['./depot-modal.component.scss']
+})
+export class DepotModalComponent {
+  @Input() isVisible: boolean = false;
+  @Input() targetName: string = '';
+  @Input() mode: 'create' | 'view' = 'create';
+  @Input() depots: any[] = [];
+  @Output() closed = new EventEmitter<void>();
+  @Output() depotSubmitted = new EventEmitter<{type: 'lien' | 'fichier', value: string | File}>();
+
+  depotForm!: FormGroup;
+  selectedTab: 'lien' | 'fichier' = 'lien';
+  selectedFile: File | null = null;
+  errorMessage: string = '';
+  private lastDepotData: { type: 'lien' | 'fichier', value: string | File } | null = null;
+
+  constructor(
+    private fb: FormBuilder,
+    private cdr: ChangeDetectorRef,
+    private projetService: ProjetService
+  ) {}
+
+  ngOnInit(): void {
+    this.initForm();
+  }
+
+  ngOnChanges(): void {
+    if (this.mode === 'view' && this.depots && this.depots.length > 0) {
+      // Pré-remplir avec le dernier dépôt
+      const dernierDepot = this.depots[this.depots.length - 1];
+      if (dernierDepot.type === 'lien' && dernierDepot.lien) {
+        this.depotForm.get('lien')?.setValue(dernierDepot.lien);
+        this.selectedTab = 'lien';
+      } else if (dernierDepot.type === 'fichier' && dernierDepot.nomFichier) {
+        this.selectedTab = 'fichier';
+      }
+    }
+  }
+
+  private initForm(): void {
+    this.depotForm = this.fb.group({
+      lien: ['', [Validators.pattern(/^https?:\/\/.+/)]],
+      fichier: [null]
+    });
+  }
+
+  onTabChange(tab: 'lien' | 'fichier'): void {
+    this.selectedTab = tab;
+    this.errorMessage = '';
+    // Ne pas réinitialiser les données lors du changement d'onglet
+    // Conserver l'état des liens et fichiers
+    this.cdr.detectChanges();
+  }
+
+  onFileSelected(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      this.selectedFile = file;
+      this.depotForm.get('fichier')?.setValue(file);
+      this.errorMessage = '';
+      this.cdr.detectChanges();
+    }
+  }
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      this.selectedFile = files[0];
+      this.depotForm.get('fichier')?.setValue(files[0]);
+      this.errorMessage = '';
+      this.cdr.detectChanges();
+    }
+  }
+
+  onSubmit(): void {
+    console.log('onSubmit appelé');
+    this.errorMessage = '';
+
+    if (this.selectedTab === 'lien') {
+      const lien = this.depotForm.get('lien')?.value?.trim();
+      if (!lien) {
+        this.errorMessage = 'Veuillez entrer un lien valide';
+        return;
+      }
+      this.lastDepotData = { type: 'lien', value: lien };
+      this.depotSubmitted.emit(this.lastDepotData);
+    } else {
+      if (!this.selectedFile) {
+        this.errorMessage = 'Veuillez sélectionner un fichier';
+        return;
+      }
+      this.lastDepotData = { type: 'fichier', value: this.selectedFile };
+      this.depotSubmitted.emit(this.lastDepotData);
+    }
+  }
+
+  get depotData(): { type: 'lien' | 'fichier', value: string | File } | null {
+    return this.lastDepotData;
+  }
+
+  close(): void {
+    this.closed.emit();
+    this.resetForm();
+  }
+
+  private resetForm(): void {
+    this.selectedTab = 'lien';
+    this.selectedFile = null;
+    this.errorMessage = '';
+    this.depotForm.reset();
+  }
+
+  // Helper pour vérifier si un fichier est valide
+  private isValidFileType(file: File): boolean {
+    const validTypes = ['application/pdf', 'application/zip', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'image/png', 'image/jpeg'];
+    return validTypes.includes(file.type);
+  }
+
+  // Helper pour déclencher le sélecteur de fichier
+  triggerFileInput(): void {
+    const input = document.getElementById('fileInput') as HTMLInputElement;
+    input?.click();
+  }
+
+  // Helper pour formater la taille du fichier
+  formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  }
+
+  // Télécharger un fichier de dépôt
+  downloadFile(depotId: number, filename: string): void {
+    this.projetService.downloadDepotFile(depotId, filename).subscribe({
+      next: (blob: Blob) => {
+        console.log('=== DEBUG DOWNLOAD ===');
+        console.log('Blob size:', blob.size, 'octets');
+        console.log('Blob type:', blob.type);
+        console.log('Filename:', filename);
+        console.log('=====================');
+
+        if (blob.size === 0) {
+          console.error('Erreur: Blob vide reçu');
+          return;
+        }
+
+        // Vérifier si le blob contient du HTML (erreur backend) au lieu du fichier binaire
+        if (blob.type.includes('text/html') || blob.size < 1000) {
+          console.warn('Attention: Blob suspect - possible erreur HTML du backend');
+          blob.text().then(text => {
+            console.error('Contenu du blob (possiblement erreur):', text.substring(0, 500));
+          });
+          alert('Erreur lors du téléchargement: le fichier n\'a pas pu être récupéré correctement du serveur.');
+          return;
+        }
+
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        // Retarder la révocation de l'URL pour éviter la corruption sur certains navigateurs
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url);
+        }, 100);
+      },
+      error: (err) => {
+        console.error('Erreur lors du téléchargement du fichier:', err);
+      }
+    });
+  }
+
+  // Getter pour vérifier si le formulaire est valide (lien OU fichier)
+  get isFormValid(): boolean {
+    const lienValue = this.depotForm.get('lien')?.value?.trim();
+    const lienValid = lienValue && /^https?:\/\//.test(lienValue);
+    const fichierValid = this.selectedFile !== null;
+    return lienValid || fichierValid;
+  }
+
+  // Méthode pour supprimer le fichier sélectionné
+  removeFile(): void {
+    this.selectedFile = null;
+    this.depotForm.get('fichier')?.setValue(null);
+    const input = document.getElementById('fileInput') as HTMLInputElement;
+    if (input) {
+      input.value = '';
+    }
+    this.cdr.detectChanges();
+  }
+}

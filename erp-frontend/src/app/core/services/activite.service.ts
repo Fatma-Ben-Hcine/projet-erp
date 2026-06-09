@@ -1,0 +1,89 @@
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { 
+  ActiviteRequest, 
+  ActiviteResponse, 
+  AssignEmployeToActiviteRequest,
+  ActiviteProgressionResponse 
+} from '../models/activite.model';
+
+@Injectable({ providedIn: 'root' })
+export class ActiviteService {
+  private baseUrl = `${environment.apiUrl}/admin/activites`;
+
+  constructor(private http: HttpClient) {}
+
+  // CRUD Activités
+  getAll(): Observable<ActiviteResponse[]> {
+    return this.http.get<ActiviteResponse[]>(this.baseUrl);
+  }
+
+  getById(id: number): Observable<ActiviteResponse> {
+    return this.http.get<ActiviteResponse>(`${this.baseUrl}/${id}`);
+  }
+
+  getByProjet(projetId: number): Observable<ActiviteResponse[]> {
+    return this.http.get<ActiviteResponse[]>(`${this.baseUrl}/projet/${projetId}`);
+  }
+
+  create(request: ActiviteRequest): Observable<ActiviteResponse> {
+    return this.http.post<ActiviteResponse>(this.baseUrl, request);
+  }
+
+  update(id: number, request: ActiviteRequest): Observable<ActiviteResponse> {
+    return this.http.put<ActiviteResponse>(`${this.baseUrl}/${id}`, request);
+  }
+
+  delete(id: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/${id}`, { responseType: 'text' });
+  }
+
+  // Gestion des employés assignés aux activités
+  assignEmploye(activiteId: number, employeId: number): Observable<any> {
+    return this.http.post(`${this.baseUrl}/${activiteId}/employes/${employeId}`, {});
+  }
+
+  unassignEmploye(activiteId: number, employeId: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/${activiteId}/employes/${employeId}`, { responseType: 'text' });
+  }
+
+  // Méthode supprimée : la progression est calculée dynamiquement par le backend
+  // updateEmployeProgression(activiteId: number, employeId: number, progression: number): Observable<any> { ... }
+
+  // Statistiques et progression
+  getProgression(activiteId: number): Observable<ActiviteProgressionResponse> {
+    return this.http.get<ActiviteProgressionResponse>(`${this.baseUrl}/${activiteId}/progression`);
+  }
+
+  // Récupérer les employés d'une activité
+  getEmployesByActiviteId(activiteId: number): Observable<Array<{ id: number; nom: string; prenom: string; progression: number }>> {
+    return this.http.get<Array<{ id: number; nom: string; prenom: string; progression: number }>>(`${this.baseUrl}/${activiteId}/employes`);
+  }
+
+  // Dépôt d'activité
+  deposerActivite(id: number, depotData: { type: 'lien' | 'fichier', value: string | File }): Observable<ActiviteResponse> {
+    const formData = new FormData();
+    formData.append('type', depotData.type);
+
+    if (depotData.type === 'lien') {
+      formData.append('lien', depotData.value as string);
+    } else if (depotData.type === 'fichier') {
+      formData.append('file', depotData.value as File);
+      formData.append('nomFichier', (depotData.value as File).name);
+    }
+
+    return this.http.patch<ActiviteResponse>(`${this.baseUrl}/${id}/depot`, formData);
+  }
+
+  // Vérification de dépôt
+  hasDepot(id: number): Observable<{ hasDepot: boolean; activiteId: number }> {
+    return this.http.get<{ hasDepot: boolean; activiteId: number }>(`${this.baseUrl}/${id}/depot-exists`);
+  }
+
+  // Vérification si toutes les tâches sont déposées
+  areAllTachesDeposees(id: number): Observable<{ allDeposees: boolean; activiteId: number }> {
+    return this.http.get<{ allDeposees: boolean; activiteId: number }>(`${this.baseUrl}/${id}/toutes-taches-deposees`);
+  }
+}

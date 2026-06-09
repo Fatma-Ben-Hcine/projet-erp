@@ -1,0 +1,20 @@
+/* Admin Resources Wrapper Component */
+.layout {
+  position: relative;
+  min-height: 100vh;
+}
+
+.main-content {
+  margin-left: 250px; /* Same as sidebar width */
+  padding: 20px;
+  min-height: 100vh;
+  background: transparent !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0;
+    padding: 10px;
+  }
+}

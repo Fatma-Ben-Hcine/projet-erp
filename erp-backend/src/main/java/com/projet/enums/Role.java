@@ -12,7 +12,7 @@ public enum Role {
         if (value == null) {
             return null;
         }
-        
+
         switch (value.toUpperCase()) {
             case "ADMIN":
             case "ROLE_ADMIN":

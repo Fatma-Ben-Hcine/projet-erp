@@ -1,0 +1,157 @@
+<div class="layout">
+  <app-admin-sidebar></app-admin-sidebar>
+
+  <div class="main-content">
+    <!-- Header -->
+    <div class="page-header">
+      <div class="header-content">
+        <button class="back-btn" (click)="goBack()">
+          <span class="material-icons">arrow_back</span>
+          Retour
+        </button>
+        <div class="header-text">
+          <h1 class="page-title" *ngIf="projet">{{ projet.nom }}</h1>
+          <p class="page-subtitle" *ngIf="projet">{{ projet.description }}</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn-primary" (click)="openDepotModalForProjet()" *ngIf="projet">
+          <span class="material-icons">upload</span>
+          Dépôt Projet
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading" *ngIf="isLoading">
+      <div class="spinner"></div>
+      <p>Chargement...</p>
+    </div>
+
+    <!-- Error -->
+    <div class="error-message" *ngIf="errorMessage">
+      <p>{{ errorMessage }}</p>
+    </div>
+
+    <!-- Content -->
+    <div class="content" *ngIf="projet && !isLoading">
+      <!-- Section 1: Informations du projet -->
+      <section class="section">
+        <h2 class="section-title">Informations du projet</h2>
+        <div class="project-info-grid">
+          <div class="info-card">
+            <span class="info-label">Statut</span>
+            <span class="info-value">{{ projet.statut }}</span>
+          </div>
+          <div class="info-card">
+            <span class="info-label">Date de début</span>
+            <span class="info-value">{{ formatDate(projet.dateDebut) }}</span>
+          </div>
+          <div class="info-card">
+            <span class="info-label">Date limite</span>
+            <span class="info-value">{{ formatDate(projet.dateLimite) }}</span>
+          </div>
+          <div class="info-card">
+            <span class="info-label">Progression</span>
+            <span class="info-value">{{ projet.progression }}%</span>
+          </div>
+          <div class="info-card" *ngIf="authService.isAdmin() && projet.budget">
+            <span class="info-label">Budget</span>
+            <span class="info-value">{{ projet.budget }} €</span>
+          </div>
+          <div class="info-card">
+            <span class="info-label">Jours restants</span>
+            <span class="info-value">{{ projet.joursRestants }}</span>
+          </div>
+        </div>
+        <div class="info-card full-width" *ngIf="projet.chefDeProjet">
+          <span class="info-label">Chef de projet</span>
+          <span class="info-value">{{ projet.chefDeProjet.nom }} {{ projet.chefDeProjet.prenom }}</span>
+        </div>
+        <div class="info-card full-width" *ngIf="projet.client">
+          <span class="info-label">Client</span>
+          <span class="info-value">{{ projet.client.nom }} {{ projet.client.prenom }}</span>
+        </div>
+        <div class="info-card full-width" *ngIf="projet.employes && projet.employes.length > 0">
+          <span class="info-label">Équipe</span>
+          <span class="info-value">{{ employesNoms }}</span>
+        </div>
+      </section>
+
+      <!-- Section 2: Activités associées -->
+      <section class="section">
+        <h2 class="section-title">Activités associées</h2>
+        <div class="activities-grid" *ngIf="activites.length > 0">
+          <div class="activity-card" *ngFor="let activite of activites">
+            <div class="card-header">
+              <h3 class="card-title">{{ activite.nom }}</h3>
+              <span class="card-badge" [class.depose]="activite.estDepose">
+                {{ activite.estDepose ? 'Déposé' : 'En cours' }}
+              </span>
+            </div>
+            <p class="card-description">{{ activite.description }}</p>
+            <div class="card-meta">
+              <span class="meta-item">
+                <span class="material-icons">calendar_today</span>
+                {{ formatDate(activite.dateDebut) }} - {{ formatDate(activite.dateFin || '') }}
+              </span>
+              <span class="meta-item">
+                <span class="material-icons">trending_up</span>
+                {{ activite.progressionMoyenne }}%
+              </span>
+            </div>
+            <div class="card-actions">
+              <button class="action-btn" (click)="openDepotModalForActivite(activite)">
+                <span class="material-icons">upload</span>
+                Dépôt
+              </button>
+            </div>
+            
+            <!-- Tâches de l'activité -->
+            <div class="tasks-section" *ngIf="activite.taches && activite.taches.length > 0">
+              <h4 class="tasks-title">Tâches</h4>
+              <div class="tasks-list">
+                <div class="task-item" *ngFor="let tache of activite.taches">
+                  <div class="task-header">
+                    <span class="task-name">{{ tache.nom }}</span>
+                    <span class="task-badge" [class.depose]="tache.estDepose">
+                      {{ tache.estDepose ? 'Déposé' : 'En cours' }}
+                    </span>
+                  </div>
+                  <p class="task-description">{{ tache.description }}</p>
+                  <div class="task-meta">
+                    <span class="meta-item">
+                      <span class="material-icons">calendar_today</span>
+                      {{ formatDate(tache.dateDebut) }} - {{ formatDate(tache.dateFin || '') }}
+                    </span>
+                    <span class="meta-item">
+                      <span class="material-icons">trending_up</span>
+                      {{ tache.progression }}%
+                    </span>
+                  </div>
+                  <button class="task-action-btn" (click)="openDepotModalForTache(tache)">
+                    <span class="material-icons">upload</span>
+                    Dépôt
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="empty-state" *ngIf="activites.length === 0">
+          <p>Aucune activité associée à ce projet</p>
+        </div>
+      </section>
+    </div>
+
+    <!-- Depot Modal -->
+    <app-depot-modal
+      *ngIf="showDepotModal"
+      [mode]="depotModalMode"
+      [depots]="depotModalDepots"
+      [targetName]="depotTarget?.name || ''"
+      (close)="closeDepotModal()"
+      (submit)="onDepotSubmitted()">
+    </app-depot-modal>
+  </div>
+</div>

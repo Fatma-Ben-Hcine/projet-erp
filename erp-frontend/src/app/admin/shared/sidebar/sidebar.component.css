@@ -1,0 +1,359 @@
+.sidebar {
+  width: 260px;
+  height: 100vh;
+  background: white;
+  border-right: 1px solid #E5E7EB;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 1rem;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 999;
+  overflow-y: auto;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* Bouton toggle pour mobile */
+.sidebar-toggle {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  width: 44px;
+  height: 44px;
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #6B7280;
+  z-index: 1;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.sidebar-toggle:hover {
+  background: #F3F4F6;
+  color: #111827;
+}
+
+/* Bouton fermeture dans sidebar */
+.sidebar-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #6B7280;
+}
+
+.sidebar-close:hover {
+  background: #F3F4F6;
+  color: #111827;
+}
+
+/* Hide scrollbar for Chrome, Safari, Opera */
+.sidebar::-webkit-scrollbar {
+  display: none;
+}
+
+.sidebar-header {
+  padding: 0 0.5rem 1.5rem;
+  border-bottom: 1px solid #E5E7EB;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sidebar-branding {
+  flex: 1;
+  text-align: center;
+}
+
+.sidebar-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+.sidebar-subtitle {
+  font-size: 0.875rem;
+  color: #6B7280;
+  margin: 0.25rem 0 0;
+  font-weight: 500;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* Base nav item — applies to <a> links */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  color: #6B7280;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.2s;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+.nav-item:hover { background: #F3F4F6; color: #111827; }
+.nav-item.active { background: #EFF6FF; color: #1D4ED8; font-weight: 600; }
+.nav-item .material-icons { font-size: 20px; flex-shrink: 0; }
+
+/* Dropdown button — explicit reset for <button> element */
+button.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  width: 100%;
+  box-sizing: border-box;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #6b7280;
+  border-radius: 8px;
+  text-align: left;
+  appearance: none;
+  -webkit-appearance: none;
+}
+button.nav-item:hover { background: #f9fafb; color: #111827; }
+
+/* Nav label inside dropdown button */
+.nav-label {
+  flex: 1;
+  text-align: left;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  min-width: 0;
+}
+
+/* Dropdown arrow */
+.dropdown-arrow {
+  margin-left: auto;
+  font-size: 18px !important;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+  color: inherit;
+}
+.nav-item.open .dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+/* Dropdown toggle styling */
+.dropdown-toggle {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+}
+
+/* Dropdown toggle — independent styling (no nav-item class) */
+.dropdown-toggle {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  color: #6b7280;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  box-sizing: border-box;
+  background: none;
+  border: none;
+  gap: 0.75rem;
+}
+
+.dropdown-toggle:hover {
+  background: #f9fafb;
+  color: #111827;
+}
+
+.dropdown-toggle .material-icons:first-child {
+  font-size: 20px;
+  flex-shrink: 0;
+  width: 20px;
+}
+
+.dropdown-toggle .nav-label {
+  flex-grow: 1;
+  flex-shrink: 1;
+  text-align: left;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: inherit;
+  min-width: 0;
+}
+
+.dropdown-toggle .dropdown-arrow {
+  font-size: 18px;
+  flex-shrink: 0;
+  margin-left: 0;
+  transition: transform 0.2s;
+}
+
+.dropdown-toggle.open .dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+/* Dark mode for dropdown-toggle */
+:host-context(.dark) .dropdown-toggle {
+  color: #9ca3af;
+}
+:host-context(.dark) .dropdown-toggle:hover {
+  background: #374151;
+  color: #f9fafb;
+}
+
+/* Dropdown container */
+.nav-dropdown {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* Dropdown menu items */
+.dropdown-menu {
+  display: flex;
+  flex-direction: column;
+  padding-left: 1rem;
+  margin-top: 0.25rem;
+  gap: 0.25rem;
+}
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  color: #6b7280;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.dropdown-item:hover { background: #f3f4f6; color: #111827; }
+.dropdown-item.active { background: #fef9c3; color: #111827; font-weight: 600; }
+.dropdown-item .material-icons { font-size: 18px; flex-shrink: 0; }
+
+/* Footer */
+.sidebar-footer {
+  padding-top: 1rem;
+  border-top: 1px solid #E5E7EB;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.logout-btn { color: #DC2626; border: 1px solid #FEE2E2; }
+.logout-btn:hover { background: #FEE2E2; color: #B91C1C; }
+
+/* Dark mode */
+:host-context(.dark) .sidebar {
+  background: #1f2937;
+  border-color: #374151;
+}
+:host-context(.dark) .sidebar-title { color: #f9fafb; }
+:host-context(.dark) .sidebar-subtitle { color: #9ca3af; }
+:host-context(.dark) .nav-item { color: #9ca3af; }
+:host-context(.dark) .nav-item:hover { background: #374151; color: #f9fafb; }
+:host-context(.dark) .nav-item.active { background: #713f12; color: #fef08a; }
+:host-context(.dark) button.nav-item { color: #9ca3af; }
+:host-context(.dark) button.nav-item:hover { background: #374151; color: #f9fafb; }
+:host-context(.dark) .sidebar-header,
+:host-context(.dark) .sidebar-footer { border-color: #374151; }
+:host-context(.dark) .dropdown-item { color: #9ca3af; }
+:host-context(.dark) .dropdown-item:hover { background: #374151; color: #f9fafb; }
+:host-context(.dark) .dropdown-item.active { background: #713f12; color: #fef08a; }
+
+/* ═══════════════════════════════════════
+   SIDEBAR RESPONSIVE — GLISSANTE
+   ═══════════════════════════════════════ */
+
+/* Desktop : sidebar visible */
+@media (min-width: 1024px) {
+  .sidebar {
+    transform: translateX(0) !important;
+  }
+  .sidebar-toggle,
+  .sidebar-close {
+    display: none !important;
+  }
+}
+
+/* Tablette : sidebar collapsed */
+@media (max-width: 1023px) {
+  .sidebar {
+    width: 68px !important;
+  }
+  .sidebar-header,
+  .nav-label,
+  .dropdown-arrow,
+  .dropdown-menu {
+    display: none !important;
+  }
+  .sidebar-toggle,
+  .sidebar-close {
+    display: none !important;
+  }
+}
+
+/* Mobile : sidebar cachée par défaut avec glissement */
+@media (max-width: 767px) {
+  .sidebar {
+    width: 260px !important;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  .sidebar-toggle {
+    display: flex !important;
+  }
+  .sidebar-close {
+    display: flex !important;
+  }
+  .sidebar-header,
+  .nav-label,
+  .dropdown-menu {
+    display: flex !important;
+  }
+  .dropdown-arrow {
+    display: inline-flex !important;
+  }
+}

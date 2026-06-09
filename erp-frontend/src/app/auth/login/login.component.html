@@ -1,0 +1,105 @@
+<div class="min-h-screen flex items-center justify-center p-4">
+  <div class="w-full max-w-md relative z-10">
+    <div class="bg-white dark:bg-gray-900 rounded-[16px] shadow-xl p-8 
+                border border-gray-100 dark:border-gray-800">
+
+      <!-- Header -->
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-16 h-16 
+                    bg-[#FFF1C1] dark:bg-yellow-900 rounded-full mb-4">
+          <span class="material-icons text-gray-900 dark:text-yellow-100"
+                style="font-size: 32px;">login</span>
+        </div>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          Digilab Solutions
+        </h1>
+        <p class="text-gray-600 dark:text-gray-400">
+          Connectez-vous à votre compte
+        </p>
+      </div>
+
+      <!-- Form -->
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-6">
+
+        <!-- Email field -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 
+                        dark:text-gray-300 mb-2">
+            Email
+          </label>
+          <input
+            type="email"
+            formControlName="email"
+            placeholder="votre@email.com"
+            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 
+                   dark:border-gray-700 bg-white dark:bg-gray-800 
+                   text-gray-900 dark:text-white 
+                   focus:ring-2 focus:ring-[#FFF1C1] dark:focus:ring-yellow-900 
+                   focus:border-transparent outline-none transition-all"
+          />
+          <small
+            *ngIf="loginForm.get('email')?.invalid && 
+                   loginForm.get('email')?.touched"
+            class="text-red-500 text-xs mt-1 block">
+            Email invalide
+          </small>
+        </div>
+
+        <!-- Password field -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 
+                        dark:text-gray-300 mb-2">
+            Mot de passe
+          </label>
+          <input
+            type="password"
+            formControlName="motDePasse"
+            placeholder="••••••••"
+            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 
+                   dark:border-gray-700 bg-white dark:bg-gray-800 
+                   text-gray-900 dark:text-white 
+                   focus:ring-2 focus:ring-[#FFF1C1] dark:focus:ring-yellow-900 
+                   focus:border-transparent outline-none transition-all"
+          />
+          <small
+            *ngIf="loginForm.get('motDePasse')?.invalid && 
+                   loginForm.get('motDePasse')?.touched"
+            class="text-red-500 text-xs mt-1 block">
+            Minimum 6 caractères
+          </small>
+        </div>
+
+        <!-- Server error message -->
+        <div
+          *ngIf="errorMessage"
+          class="bg-red-50 dark:bg-red-900/20 text-red-600 
+                 dark:text-red-400 p-3 rounded-lg text-sm">
+          {{ errorMessage }}
+        </div>
+
+        <!-- Submit button -->
+        <button
+          type="submit"
+          [disabled]="loginForm.invalid || isLoading"
+          class="w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 
+                 py-3 rounded-lg font-medium hover:bg-gray-800 
+                 dark:hover:bg-gray-100 transition-colors shadow-md 
+                 disabled:opacity-50 disabled:cursor-not-allowed">
+          {{ isLoading ? 'Connexion...' : 'Se connecter' }}
+        </button>
+
+      </form>
+
+      <!-- Forgot password link -->
+      <div class="text-center mt-6">
+        <a routerLink="/forgot-password"
+           class="text-sm text-gray-500 dark:text-gray-400 
+                  hover:text-gray-900 dark:hover:text-white 
+                  transition-colors">
+          Mot de passe oublié ?
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>

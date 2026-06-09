@@ -1,0 +1,179 @@
+<div class="layout" style="position: relative; z-index: 1;">
+
+  <!-- Hexagon background pattern -->
+  <div style="position: fixed; inset: 0; opacity: 0.04;
+              pointer-events: none; z-index: 0; color: #92400e;">
+    <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id="hexagons-clients" x="0" y="0"
+                 width="100" height="87" patternUnits="userSpaceOnUse">
+          <polygon points="50,0 93.3,25 93.3,62 50,87 6.7,62 6.7,25"
+                   fill="none" stroke="currentColor" stroke-width="0.8" />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#hexagons-clients)" />
+    </svg>
+  </div>
+
+  <!-- Admin Sidebar -->
+  <app-admin-sidebar></app-admin-sidebar>
+
+  <!-- Main content -->
+  <main class="main-content">
+    <div class="page-container">
+
+      <!-- En-tête -->
+      <div class="page-header">
+        <div>
+          <h1>Gestion Clients</h1>
+          <p>Gérez vos clients</p>
+        </div>
+        <button class="btn-primary" (click)="openCreateModal()">
+          + Nouveau Client
+        </button>
+      </div>
+
+      <!-- Message d'erreur -->
+      <div class="error-banner" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+      <!-- Barre de recherche -->
+      <div class="filter-card">
+        <div class="search-row">
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Rechercher un client..."
+            [value]="searchKeyword"
+            (input)="onSearchInput($event)"
+          />
+        </div>
+      </div>
+
+      <!-- Loader -->
+      <div *ngIf="isLoading" class="loading-state">Chargement...</div>
+
+      <!-- Table -->
+      <div *ngIf="!isLoading" class="table-card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>NOM PRÉNOM</th>
+                <th>EMAIL</th>
+                <th>TÉLÉPHONE</th>
+                <th>MATRICULE FISCALE</th>
+                <th>CONTRATS</th>
+                <th>ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let c of filteredClients">
+                <td class="name-cell">{{ c.nom }} {{ c.prenom }}</td>
+                <td>{{ c.email }}</td>
+                <td>{{ c.numeroTelephone || '-' }}</td>
+                <td>{{ c.matriculeFiscale || '-' }}</td>
+                <td>
+                  <span class="badge badge-info">{{ c.nombreContrats }}</span>
+                </td>
+                <td>
+                  <div class="action-buttons">
+                    <button class="btn-icon btn-edit" (click)="openEditModal(c)">✏️</button>
+                    <button class="btn-icon btn-delete" (click)="deleteClient(c.id)">🗑️</button>
+                  </div>
+                </td>
+              </tr>
+              <tr *ngIf="filteredClients.length === 0">
+                <td colspan="6" class="empty-state">Aucun client trouvé</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Modal Création -->
+    <div class="modal-overlay" *ngIf="showModal && !isEditing" (click)="closeModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Nouveau Client</h2>
+          <button class="btn-icon" (click)="closeModal()">✕</button>
+        </div>
+        <div class="error-banner" *ngIf="errorMessage">{{ errorMessage }}</div>
+        <form [formGroup]="createForm" (ngSubmit)="saveCreate()">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Prénom *</label>
+              <input type="text" formControlName="prenom" placeholder="Prénom" />
+            </div>
+            <div class="form-group">
+              <label>Nom *</label>
+              <input type="text" formControlName="nom" placeholder="Nom" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Email *</label>
+            <input type="email" formControlName="email" placeholder="email@exemple.com" />
+          </div>
+          <div class="form-group">
+            <label>Téléphone</label>
+            <input type="text" formControlName="numeroTelephone" placeholder="Numéro de téléphone" />
+          </div>
+          <div class="form-group">
+            <label>Matricule Fiscale</label>
+            <input type="text" formControlName="matriculeFiscale" placeholder="Matricule fiscale" />
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" (click)="closeModal()">Annuler</button>
+            <button type="submit" class="btn-primary" [disabled]="createForm.invalid">
+              Créer
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Édition -->
+    <div class="modal-overlay" *ngIf="showModal && isEditing" (click)="closeModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Modifier Client</h2>
+          <button class="btn-icon" (click)="closeModal()">✕</button>
+        </div>
+        <div class="error-banner" *ngIf="errorMessage">{{ errorMessage }}</div>
+        <form [formGroup]="editForm" (ngSubmit)="saveEdit()">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Prénom *</label>
+              <input type="text" formControlName="prenom" placeholder="Prénom" />
+            </div>
+            <div class="form-group">
+              <label>Nom *</label>
+              <input type="text" formControlName="nom" placeholder="Nom" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Email *</label>
+            <input type="email" formControlName="email" placeholder="email@exemple.com" />
+          </div>
+          <div class="form-group">
+            <label>Téléphone</label>
+            <input type="text" formControlName="numeroTelephone" placeholder="Numéro de téléphone" />
+          </div>
+          <div class="form-group">
+            <label>Matricule Fiscale</label>
+            <input type="text" formControlName="matriculeFiscale" placeholder="Matricule fiscale" />
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" (click)="closeModal()">Annuler</button>
+            <button type="submit" class="btn-primary" [disabled]="editForm.invalid">
+              Mettre à jour
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </main>
+
+</div>

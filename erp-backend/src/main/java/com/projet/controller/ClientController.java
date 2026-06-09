@@ -19,6 +19,12 @@ public class ClientController {
 
     private final ClientService clientService;
 
+    @GetMapping("/test")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<String> testAccess() {
+        return ResponseEntity.ok("Accès admin autorisé - test réussi");
+    }
+
     @GetMapping
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<List<ClientResponse>> getAllClients() {

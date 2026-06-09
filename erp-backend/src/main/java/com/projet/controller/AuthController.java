@@ -3,6 +3,7 @@ package com.projet.controller;
 import com.projet.dto.JwtResponse;
 import com.projet.dto.LoginRequest;
 import com.projet.dto.LogoutResponse;
+import com.projet.entity.Utilisateur;
 import com.projet.exception.AccountDisabledException;
 import com.projet.security.JwtUtils;
 import com.projet.service.LogoutService;
@@ -46,10 +47,17 @@ public class AuthController {
 
             String jwt = jwtUtils.genererToken(authentication);
             
+            // Récupérer l'ID et les informations de l'utilisateur
+            Utilisateur utilisateur = (Utilisateur) authentication.getPrincipal();
+            Long userId = utilisateur.getId();
+            String nom = utilisateur.getNom();
+            String prenom = utilisateur.getPrenom();
+            
             log.info("Connexion réussie pour l'utilisateur: {}", loginRequest.getEmail());
             log.info("Rôle de l'utilisateur: {}", role);
+            log.info("ID de l'utilisateur: {}", userId);
 
-            return ResponseEntity.ok(new JwtResponse(jwt, "Bearer", loginRequest.getEmail(), role));
+            return ResponseEntity.ok(new JwtResponse(jwt, "Bearer", loginRequest.getEmail(), role, userId, nom, prenom));
             
         } catch (AccountDisabledException e) {
             log.warn("Tentative de connexion avec un compte désactivé: {}", loginRequest.getEmail());

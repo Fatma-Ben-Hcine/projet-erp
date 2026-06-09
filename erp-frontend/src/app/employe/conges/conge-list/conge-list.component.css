@@ -1,0 +1,245 @@
+/* Styles based on existing project theme */
+.page-header {
+  margin-bottom: 2rem;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: flex-start !important;
+  flex-wrap: wrap !important;
+  gap: 1rem !important;
+}
+
+.page-header .btn-primary {
+  background-color: #CCFF00 !important;
+  color: #1a1a1a !important;
+  border: none !important;
+  padding: 10px 20px !important;
+  border-radius: 10px !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  align-self: flex-start !important;
+  margin-left: auto !important;
+  margin-top: 0 !important;
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+}
+
+.page-subtitle {
+  color: #6b7280;
+  margin-bottom: 1rem;
+}
+
+.section {
+  margin-bottom: 2rem;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary:hover:not(.page-header .btn-primary) {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid #d1d5db;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.table-container {
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th {
+  background: #f9fafb;
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.data-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.data-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: inline-block;
+}
+
+.badge-warning {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.badge-success {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.badge-danger {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* Conteneur des deux boutons côte à côte */
+.action-buttons {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+/* Bouton Modifier - crayon orange */
+.btn-edit,
+button.btn-edit {
+  background: transparent !important;
+  border: none !important;
+  color: #F97316 !important;
+  font-size: 20px !important;
+  cursor: pointer !important;
+  padding: 4px 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.btn-edit:hover {
+  color: #EA580C !important;
+}
+
+/* Bouton Supprimer - poubelle grise */
+.btn-delete,
+button.btn-delete {
+  background: transparent !important;
+  border: none !important;
+  color: #9CA3AF !important;
+  font-size: 20px !important;
+  cursor: pointer !important;
+  padding: 4px 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.btn-delete:hover {
+  color: #EF4444 !important;
+}
+
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ═══════════════════════════════════════
+   RESPONSIVE — CONGE LIST
+   ═══════════════════════════════════════ */
+
+@media (max-width: 767px) {
+  .page-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  .page-title {
+    font-size: 20px !important;
+  }
+
+  .page-header .btn-primary {
+    width: 100% !important;
+    justify-content: center !important;
+    margin-left: 0 !important;
+  }
+
+  .table-container {
+    overflow-x: auto !important;
+  }
+
+  .data-table {
+    font-size: 0.875rem !important;
+    min-width: 600px !important;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 0.5rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-title {
+    font-size: 18px !important;
+  }
+
+  .section-title {
+    font-size: 1.25rem !important;
+  }
+}

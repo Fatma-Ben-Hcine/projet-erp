@@ -1,0 +1,552 @@
+.page-container {
+  padding: 0;
+  background: #f9fafb;
+  min-height: auto;
+}
+
+/* ═══════════════════════════════════════
+   1. HEADER — TITRE À GAUCHE, BOUTON À DROITE
+   ═══════════════════════════════════════ */
+.page-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: flex-start !important;
+  flex-wrap: wrap !important;
+  gap: 1rem !important;
+  margin-bottom: 1.5rem !important;
+}
+
+.page-header h1 {
+  font-size: 32px !important;
+  font-weight: 700 !important;
+  color: #111827 !important;
+  margin: 0 0 8px 0 !important;
+}
+
+.page-header p {
+  font-size: 15px !important;
+  color: #6b7280 !important;
+  margin: 0 !important;
+}
+
+.btn-primary {
+  margin-left: auto !important;
+  align-self: flex-start !important;
+  background: #1E293B !important;
+  color: #fff !important;
+  border: none !important;
+  padding: 10px 20px !important;
+  border-radius: 10px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+.btn-primary:hover {
+  background: #0F172A !important;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+}
+
+.btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #e5e7eb;
+}
+
+.error-banner {
+  background: #fee2e2;
+  color: #dc2626;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.filter-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+}
+
+/* ═══════════════════════════════════════
+   3. ONGLETS FILTRES (Tous, En Cours, Terminé...)
+   ═══════════════════════════════════════ */
+.filter-buttons {
+  display: flex !important;
+  gap: 8px !important;
+  align-items: center !important;
+  margin-bottom: 1.5rem !important;
+  flex-wrap: wrap !important;
+}
+
+.filter-buttons button {
+  padding: 7px 16px !important;
+  border-radius: 99px !important;
+  border: 1px solid #E5E7EB !important;
+  background: #fff !important;
+  color: #6B7280 !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+}
+
+.filter-buttons button.active {
+  background: #FEF9C3 !important;
+  color: #854D0E !important;
+  border-color: #FDE68A !important;
+  font-weight: 700 !important;
+}
+
+.table-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+/* ═══════════════════════════════════════
+   4. TABLEAU — ESPACEMENT ET STYLE
+   ═══════════════════════════════════════ */
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  background: #fff !important;
+  border-radius: 14px !important;
+  overflow: hidden !important;
+  border: 1px solid #E5E7EB !important;
+}
+
+th {
+  padding: 14px 20px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: #9CA3AF !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  text-align: left !important;
+  background: #F9FAFB !important;
+  border-bottom: 1px solid #E5E7EB !important;
+}
+
+td {
+  padding: 16px 20px !important;
+  font-size: 14px !important;
+  color: #1E293B !important;
+  border-bottom: 1px solid #F1F5F9 !important;
+  vertical-align: middle !important;
+}
+
+tr:hover td {
+  background: #F8FAFC !important;
+}
+
+td:first-child {
+  font-weight: 600 !important;
+  color: #111827 !important;
+}
+
+.name-cell {
+  font-weight: 600;
+  color: #111827;
+}
+
+.badge {
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.badge-success {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.badge-info {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.badge-warning {
+  background: #ffedd5;
+  color: #ea580c;
+}
+
+.badge-default {
+  background: #fef9c3;
+  color: #a16207;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-icon {
+  background: transparent;
+  border: none;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background 0.2s;
+}
+
+.btn-edit:hover {
+  background: #eff6ff;
+}
+
+.btn-delete:hover {
+  background: #fef2f2;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 48px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 32px;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* ═══════════════════════════════════════
+   MODAL "NOUVEAU CONTRAT" STYLES
+   ═══════════════════════════════════════ */
+
+/* 1. OVERLAY (fond sombre derrière le modal) */
+.modal-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(15, 23, 42, 0.45) !important;
+  backdrop-filter: blur(3px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 1000 !important;
+}
+
+/* 2. BOÎTE DU MODAL */
+.modal-content {
+  background: #FFFFFF !important;
+  border-radius: 20px !important;
+  border: 1px solid #E5E7EB !important;
+  padding: 2rem !important;
+  width: 100% !important;
+  max-width: 520px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
+  position: relative !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+}
+
+/* 3. HEADER DU MODAL (titre + bouton fermer) */
+.modal-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 1.75rem !important;
+  padding-bottom: 1rem !important;
+  border-bottom: 1px solid #F1F5F9 !important;
+}
+
+.modal-header h2 {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  color: #111827 !important;
+  margin: 0 !important;
+}
+
+/* Bouton X fermer */
+.modal-header .btn-icon {
+  background: #F3F4F6 !important;
+  border: none !important;
+  border-radius: 8px !important;
+  width: 32px !important;
+  height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  color: #6B7280 !important;
+  font-size: 18px !important;
+}
+
+.modal-header .btn-icon:hover {
+  background: #E5E7EB !important;
+  color: #111827 !important;
+}
+
+/* 4. CORPS DU MODAL — CHAMPS DE FORMULAIRE */
+form {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1.25rem !important;
+}
+
+.form-group label {
+  display: block !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #374151 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  margin-bottom: 6px !important;
+}
+
+.form-group input,
+.form-group select {
+  width: 100% !important;
+  padding: 10px 14px !important;
+  border: 1px solid #E5E7EB !important;
+  border-radius: 10px !important;
+  font-size: 14px !important;
+  color: #111827 !important;
+  background: #F9FAFB !important;
+  outline: none !important;
+  transition: border-color 0.2s !important;
+  box-sizing: border-box !important;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #3B82F6 !important;
+  background: #fff !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+.form-group select {
+  cursor: pointer !important;
+}
+
+/* Ligne avec 2 champs côte à côte */
+.form-row {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 1rem !important;
+}
+
+/* 5. FOOTER DU MODAL (boutons Annuler + Créer) */
+.modal-actions {
+  display: flex !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+  gap: 12px !important;
+  margin-top: 1.75rem !important;
+  padding-top: 1rem !important;
+  border-top: 1px solid #F1F5F9 !important;
+}
+
+/* Bouton Annuler */
+.modal-actions .btn-secondary {
+  background: #F3F4F6 !important;
+  color: #4B5563 !important;
+  border: 1px solid #E5E7EB !important;
+  padding: 10px 20px !important;
+  border-radius: 10px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+}
+
+.modal-actions .btn-secondary:hover {
+  background: #E5E7EB !important;
+}
+
+/* Bouton Créer */
+.modal-actions .btn-primary {
+  background: #2563EB !important;
+  color: #fff !important;
+  border: none !important;
+  padding: 10px 24px !important;
+  border-radius: 10px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  margin-left: 0 !important;
+}
+
+.modal-actions .btn-primary:hover {
+  background: #1D4ED8 !important;
+}
+
+/* Dark mode */
+body.dark .layout {
+  background: #111827 !important;
+}
+
+body.dark .main-content {
+  background: transparent !important;
+}
+
+body.dark .page-container {
+  background: transparent;
+}
+
+body.dark h1 {
+  color: #f9fafb;
+}
+
+body.dark p {
+  color: #9ca3af;
+}
+
+body.dark .table-card,
+body.dark .filter-card {
+  background: #1f2937;
+  border-color: #374151;
+}
+
+body.dark table {
+  background: #1f2937;
+}
+
+body.dark thead tr {
+  background: #111827;
+}
+
+body.dark th {
+  color: #9ca3af;
+  border-color: #374151;
+}
+
+body.dark td {
+  color: #f9fafb;
+  border-color: #374151;
+}
+
+body.dark tr:hover td {
+  background: #374151;
+}
+
+body.dark .name-cell {
+  color: #f9fafb;
+}
+
+body.dark .filter-buttons button {
+  background: #374151;
+  color: #d1d5db;
+}
+
+body.dark .filter-buttons button:hover {
+  background: #4b5563;
+}
+
+body.dark .filter-buttons button.active {
+  background: #713f12;
+  color: #fef3c7;
+}
+
+body.dark .modal-content {
+  background: #1f2937;
+  border-color: #374151;
+}
+
+body.dark .modal-header h2 {
+  color: #f9fafb;
+}
+
+body.dark .form-group label {
+  color: #d1d5db;
+}
+
+body.dark .form-group input:focus,
+body.dark .form-group select:focus {
+  border-color: #9ca3af;
+}
+
+body.dark .btn-primary:hover {
+  background: #e5e7eb;
+}
+
+body.dark .btn-secondary:hover {
+  background: #4b5563;
+}
+
+/* ═══════════════════════════════════════
+   RESPONSIVE — CONTRAT MANAGEMENT
+   ═══════════════════════════════════════ */
+
+@media (max-width: 767px) {
+  .page-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  .page-header h1 {
+    font-size: 20px !important;
+  }
+
+  .btn-primary {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .table-wrapper {
+    overflow-x: auto !important;
+  }
+
+  table {
+    min-width: 600px !important;
+  }
+
+  th, td {
+    padding: 10px 12px !important;
+    font-size: 12px !important;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  .modal-overlay {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+
+  .modal-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 20px 20px 0 0 !important;
+    max-height: 90vh !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header h1 {
+    font-size: 18px !important;
+  }
+}

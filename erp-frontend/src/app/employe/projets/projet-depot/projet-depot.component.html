@@ -1,0 +1,622 @@
+<div class="layout">
+  <app-employe-sidebar></app-employe-sidebar>
+
+  <div class="main-content">
+    <!-- Header -->
+    <div class="page-header">
+      <button class="back-btn" (click)="goBack()">
+        <span class="material-icons">arrow_back</span>
+        Retour au dashboard
+      </button>
+      <div class="header-text">
+        <h1 class="page-title" *ngIf="projet">Dépôt du Projet: {{ projet.nom }}</h1>
+        <p class="page-subtitle">Gérez le dépôt des tâches, activités et du projet complet</p>
+      </div>
+    </div>
+
+    <!-- Alert -->
+    <div *ngIf="errorMessage || successMessage" class="alert" [class.alert-error]="alertType === 'error'" [class.alert-success]="alertType === 'success'">
+      <span class="material-icons">{{ alertType === 'error' ? 'error' : 'check_circle' }}</span>
+      <span>{{ errorMessage || successMessage }}</span>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading" *ngIf="isLoading">
+      <div class="spinner"></div>
+      <p>Chargement...</p>
+    </div>
+
+    <!-- Content -->
+    <div class="content" *ngIf="!isLoading && projet">
+      <!-- Section 1: Détails du Projet -->
+      <section class="section project-details">
+        <div class="section-header">
+          <div class="section-header-left">
+            <div class="section-icon-wrapper amber">
+              <span class="material-icons">work</span>
+            </div>
+            <h2 class="section-title">Détails du Projet</h2>
+          </div>
+        </div>
+        <div class="details-grid">
+          <div class="details-column">
+            <div class="detail-item">
+              <span class="detail-label">Nom du Projet</span>
+              <span class="detail-value">{{ projet.nom }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Description</span>
+              <span class="detail-value">{{ projet.description }}</span>
+            </div>
+          </div>
+          <div class="details-column">
+            <div class="detail-item">
+              <span class="detail-label">Date Limite</span>
+              <span class="detail-value date-limite">{{ formatDate(projet.dateLimite) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Employés Affectés au Projet ({{ projet.employes?.length || 0 }})</span>
+              <div class="badges-container">
+                <span *ngIf="getChefDeProjet()" class="badge badge-chef">
+                  {{ getChefDeProjet().nom }} {{ getChefDeProjet().prenom }} (Chef)
+                </span>
+                <span *ngFor="let emp of getEmployesNonChef()" class="badge">
+                  {{ emp.nom }} {{ emp.prenom }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 1b: Progression du Projet -->
+      <section class="section progression-section">
+        <div class="section-header">
+          <div class="section-header-left">
+            <div class="section-icon-wrapper blue">
+              <span class="material-icons">trending_up</span>
+            </div>
+            <h2 class="section-title">Progression du Projet</h2>
+          </div>
+        </div>
+        
+        <!-- Barre de progression globale -->
+        <div class="progression-container">
+          <div class="progression-header">
+            <span>Avancement global</span>
+            <span class="progression-percent" [class.complete]="progressionProjetCalculee === 100">
+              {{ progressionProjetCalculee }}%
+            </span>
+          </div>
+          <div class="progression-bar">
+            <div class="progression-fill"
+                 [style.width.%]="progressionProjetCalculee"
+                 [class.complete]="progressionProjetCalculee === 100">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 2: Dépôt des Tâches et Activités -->
+      <section class="section">
+        <div class="section-header">
+          <div class="section-header-left">
+            <div class="section-icon-wrapper green">
+              <span class="material-icons">task_alt</span>
+            </div>
+            <h2 class="section-title">Dépôt des Tâches et Activités</h2>
+          </div>
+          <button *ngIf="isChefDeProjet" class="btn-add-activity" (click)="ouvrirModalCreerActivite()">
+            <span class="material-icons">add</span>
+            Ajouter une activité
+          </button>
+        </div>
+        
+        <!-- Aucune activité -->
+        <div *ngIf="activites.length === 0" class="warning-box">
+          <span class="material-icons warning-icon">warning</span>
+          <p>Aucune activité n'est disponible pour ce projet.</p>
+        </div>
+
+        <!-- Liste des activités -->
+        <div *ngIf="activites.length > 0" class="activities-list">
+          <div *ngFor="let activite of activites" class="activity-block">
+            <div class="activity-header">
+              <div class="activity-info">
+                <h3 class="activity-name">{{ activite.nom }}</h3>
+                <p class="activity-description">{{ activite.description }}</p>
+                <div class="activity-meta">
+                  <span class="meta-counter">{{ getActiviteStats(activite.id).deposees }} / {{ getActiviteStats(activite.id).total }} tâches déposées</span>
+                </div>
+                <div class="badges-container" *ngIf="activite.employeActivites && activite.employeActivites.length > 0">
+                  <span *ngFor="let ea of activite.employeActivites" class="badge">
+                    {{ ea.employeNom }} {{ ea.employePrenom }}
+                  </span>
+                </div>
+              </div>
+              
+              <!-- Boutons d'action sur l'activité -->
+              <div class="activity-actions" *ngIf="isChefDeProjet">
+                <button class="btn-action btn-edit" (click)="ouvrirModalModifierActivite(activite)"
+                        [disabled]="depotParActivite.has(activite.id)" title="Modifier">
+                  <span class="material-icons">edit</span>
+                </button>
+                <button class="btn-action btn-delete" (click)="supprimerActivite(activite)"
+                        [disabled]="depotParActivite.has(activite.id)" title="Supprimer">
+                  <span class="material-icons">delete</span>
+                </button>
+              </div>
+
+              <!-- Si pas encore déposé et toutes les tâches OK → bouton Déposer -->
+              <ng-container *ngIf="!depotParActivite.has(activite.id) && isChefDeProjet">
+                <button
+                  class="btn-depot-activity"
+                  [class.btn-active]="getActiviteStats(activite.id).toutesDeposees"
+                  [class.btn-disabled]="!getActiviteStats(activite.id).toutesDeposees"
+                  [disabled]="!getActiviteStats(activite.id).toutesDeposees"
+                  (click)="getActiviteStats(activite.id).toutesDeposees && deposerActivite(activite)">
+                  <span *ngIf="!getActiviteStats(activite.id).toutesDeposees">
+                    {{ getActiviteStats(activite.id).deposees }} / {{ getActiviteStats(activite.id).total }} tâches
+                  </span>
+                  <span *ngIf="getActiviteStats(activite.id).toutesDeposees">Déposer l'activité</span>
+                </button>
+              </ng-container>
+
+              <!-- Si déjà déposé → afficher la carte du dépôt cliquable -->
+              <ng-container *ngIf="depotParActivite.has(activite.id)">
+                <div class="depot-card activity-depot-card clickable"
+                     (click)="onDepotCardClick(depotParActivite.get(activite.id), $event)">
+                  <!-- Cas fichier -->
+                  <ng-container *ngIf="depotParActivite.get(activite.id)?.type === 'fichier'">
+                    <span class="material-icons depot-icon">description</span>
+                    <span class="depot-filename">{{ depotParActivite.get(activite.id)?.nomFichier || 'Fichier déposé' }}</span>
+                    <span class="depot-action">⬇ Télécharger</span>
+                  </ng-container>
+                  <!-- Cas lien -->
+                  <ng-container *ngIf="depotParActivite.get(activite.id)?.type === 'lien'">
+                    <span class="material-icons depot-icon">link</span>
+                    <span class="depot-link-text">{{ depotParActivite.get(activite.id)?.lien }}</span>
+                    <span class="depot-action">↗ Ouvrir</span>
+                  </ng-container>
+                  <span class="depot-date">{{ depotParActivite.get(activite.id)?.dateDepot | date:'dd/MM/yyyy HH:mm' }}</span>
+                  <button class="btn-modifier" (click)="$event.stopPropagation(); modifierDepotActivite(activite)">Modifier</button>
+                </div>
+              </ng-container>
+            </div>
+
+            <!-- Panneau de dépôt inline pour l'activité -->
+            <div *ngIf="selectedActiviteId === activite.id" class="depot-panel">
+              <div class="depot-panel-header">
+                <div class="depot-panel-tabs">
+                  <button
+                    type="button"
+                    class="depot-tab"
+                    [class.active]="selectedTab === 'lien'"
+                    (click)="onTabChange('lien')">
+                    Lien
+                  </button>
+                  <button
+                    type="button"
+                    class="depot-tab"
+                    [class.active]="selectedTab === 'fichier'"
+                    (click)="onTabChange('fichier')">
+                    Fichier
+                  </button>
+                </div>
+              </div>
+
+              <div *ngIf="depotErrorMessage" class="depot-error">
+                <span class="material-icons">error</span>
+                {{ depotErrorMessage }}
+              </div>
+
+              <div *ngIf="selectedTab === 'lien'" class="depot-panel-content">
+                <input
+                  type="url"
+                  [(ngModel)]="depotLien"
+                  placeholder="https://github.com/votre-projet"
+                  class="depot-input">
+              </div>
+
+              <div *ngIf="selectedTab === 'fichier'" class="depot-panel-content">
+                <div class="upload-zone" (click)="triggerFileInput()">
+                  <span class="material-icons upload-icon">cloud_upload</span>
+                  <p>Glissez votre fichier ici</p>
+                  <input
+                    #fileInput
+                    type="file"
+                    (change)="onFileSelected($event)"
+                    accept=".pdf,.zip,.docx,.png,.jpg,.jpeg"
+                    style="display: none;">
+                </div>
+                <div *ngIf="selectedFile" class="file-info">
+                  <span class="material-icons">description</span>
+                  <span>{{ selectedFile.name }}</span>
+                  <button type="button" (click)="removeFile()" class="remove-file-btn">
+                    <span class="material-icons">close</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="depot-panel-footer">
+                <button type="button" class="btn-cancel" (click)="closeDepotPanel()">Annuler</button>
+                <button type="button" class="btn-submit" (click)="submitDepot()">Valider</button>
+              </div>
+            </div>
+
+            <!-- Bouton ajouter une tâche -->
+            <div class="add-task-container" *ngIf="isChefDeProjet">
+              <button class="btn-add-task" (click)="ouvrirModalCreerTache(activite.id)">
+                <span class="material-icons">add</span>
+                Ajouter une tâche
+              </button>
+            </div>
+
+            <!-- Liste des tâches -->
+            <div class="tasks-list" *ngIf="activite.taches && activite.taches.length > 0">
+              <div *ngFor="let tache of activite.taches" class="task-card">
+                <!-- TOP ROW: task info + button -->
+                <div class="task-card-header">
+                  <div class="task-info">
+                    <h4 class="task-name">{{ tache.nom }}</h4>
+                    <p class="task-description">{{ tache.description }}</p>
+                    <div class="badges-container" *ngIf="tache.employeTaches && tache.employeTaches.length > 0">
+                      <span *ngFor="let et of tache.employeTaches" class="badge">
+                        {{ et.employeNom }} {{ et.employePrenom }}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <!-- Boutons d'action sur la tâche -->
+                  <div class="task-actions" *ngIf="isChefDeProjet">
+                    <button class="btn-action btn-edit" (click)="ouvrirModalModifierTache(tache)"
+                            [disabled]="depotParTache.has(tache.id)" title="Modifier">
+                      <span class="material-icons">edit</span>
+                    </button>
+                    <button class="btn-action btn-delete" (click)="supprimerTache(tache)"
+                            [disabled]="depotParTache.has(tache.id)" title="Supprimer">
+                      <span class="material-icons">delete</span>
+                    </button>
+                  </div>
+
+                  <!-- Si pas encore déposé → bouton Déposer -->
+                  <ng-container *ngIf="!depotParTache.has(tache.id) && isChefDeProjet">
+                    <button
+                      class="btn-depot-task"
+                      (click)="deposerTache(tache)">
+                      <span>Déposer la tâche</span>
+                    </button>
+                  </ng-container>
+
+                  <!-- Si déjà déposé → afficher la carte du dépôt cliquable -->
+                  <ng-container *ngIf="depotParTache.has(tache.id)">
+                    <div class="depot-card clickable"
+                         (click)="onDepotCardClick(depotParTache.get(tache.id), $event)">
+                      <!-- Cas fichier -->
+                      <ng-container *ngIf="depotParTache.get(tache.id)?.type === 'fichier'">
+                        <span class="material-icons depot-icon">description</span>
+                        <span class="depot-filename">{{ depotParTache.get(tache.id)?.nomFichier || 'Fichier déposé' }}</span>
+                        <span class="depot-action">⬇ Télécharger</span>
+                      </ng-container>
+                      <!-- Cas lien -->
+                      <ng-container *ngIf="depotParTache.get(tache.id)?.type === 'lien'">
+                        <span class="material-icons depot-icon">link</span>
+                        <span class="depot-link-text">{{ depotParTache.get(tache.id)?.lien }}</span>
+                        <span class="depot-action">↗ Ouvrir</span>
+                      </ng-container>
+                      <span class="depot-date">{{ depotParTache.get(tache.id)?.dateDepot | date:'dd/MM/yyyy HH:mm' }}</span>
+                      <button class="btn-modifier" (click)="$event.stopPropagation(); modifierDepotTache(tache)">Modifier</button>
+                    </div>
+                  </ng-container>
+                </div>
+
+                <!-- Panneau de dépôt inline pour la tâche (full width vertical stack) -->
+                <div *ngIf="selectedTacheId === tache.id" class="depot-panel">
+                  <!-- Tabs (full width) -->
+                  <div class="depot-panel-tabs">
+                    <button
+                      type="button"
+                      class="depot-tab"
+                      [class.active]="selectedTab === 'lien'"
+                      (click)="onTabChange('lien')">
+                      Lien
+                    </button>
+                    <button
+                      type="button"
+                      class="depot-tab"
+                      [class.active]="selectedTab === 'fichier'"
+                      (click)="onTabChange('fichier')">
+                      Fichier
+                    </button>
+                  </div>
+
+                  <!-- Error message (full width) -->
+                  <div *ngIf="depotErrorMessage" class="depot-error">
+                    <span class="material-icons">error</span>
+                    {{ depotErrorMessage }}
+                  </div>
+
+                  <!-- Lien input (full width) -->
+                  <div *ngIf="selectedTab === 'lien'" class="depot-panel-content">
+                    <input
+                      type="url"
+                      [(ngModel)]="depotLien"
+                      placeholder="https://github.com/votre-projet"
+                      class="depot-input">
+                  </div>
+
+                  <!-- File drop zone (full width) -->
+                  <div *ngIf="selectedTab === 'fichier'" class="depot-panel-content">
+                    <div class="upload-zone" (click)="triggerFileInput()">
+                      <span class="material-icons upload-icon">cloud_upload</span>
+                      <p>Glissez votre fichier ici</p>
+                      <input
+                        #fileInput
+                        type="file"
+                        (change)="onFileSelected($event)"
+                        accept=".pdf,.zip,.docx,.png,.jpg,.jpeg"
+                        style="display: none;">
+                    </div>
+                  </div>
+
+                  <!-- File preview row (full width) -->
+                  <div *ngIf="selectedFile && selectedTab === 'fichier'" class="file-info">
+                    <span class="material-icons">description</span>
+                    <span>{{ selectedFile.name }}</span>
+                    <button type="button" (click)="removeFile()" class="remove-file-btn">
+                      <span class="material-icons">close</span>
+                    </button>
+                  </div>
+
+                  <!-- Action buttons (right aligned) -->
+                  <div class="depot-panel-footer">
+                    <button type="button" class="btn-cancel" (click)="closeDepotPanel()">Annuler</button>
+                    <button type="button" class="btn-submit" (click)="submitDepot()">Valider</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 3: Dépôt du Projet -->
+      <section class="section project-depot">
+        <div class="section-header">
+          <div class="section-header-left">
+            <div class="section-icon-wrapper purple">
+              <span class="material-icons">inventory</span>
+            </div>
+            <h2 class="section-title">Dépôt du Projet</h2>
+          </div>
+        </div>
+        <div class="project-depot-content">
+          <p class="depot-description">Toutes les activités doivent être déposées avant de pouvoir déposer le projet.</p>
+          <div class="depot-counter">
+            <span class="counter-text">{{ projetStats.activitesDeposees }} / {{ projetStats.activitesTotal }} activités déposées</span>
+          </div>
+        </div>
+        <!-- Si pas encore déposé et toutes les activités OK → bouton Déposer -->
+        <ng-container *ngIf="!depotProjet && isChefDeProjet">
+          <button
+            class="btn-depot-project"
+            [class.btn-active]="projetStats.toutesDeposees"
+            [class.btn-disabled]="!projetStats.toutesDeposees"
+            [disabled]="!projetStats.toutesDeposees"
+            (click)="projetStats.toutesDeposees && deposerProjet()">
+            <span *ngIf="!projetStats.toutesDeposees">
+              {{ projetStats.activitesDeposees }} / {{ projetStats.activitesTotal }} activités
+            </span>
+            <span *ngIf="projetStats.toutesDeposees">Déposer le Projet</span>
+          </button>
+        </ng-container>
+
+        <!-- Si déjà déposé → afficher la carte du dépôt cliquable -->
+        <ng-container *ngIf="depotProjet">
+          <div class="depot-card project-depot-card clickable"
+               (click)="onDepotCardClick(depotProjet, $event)">
+            <!-- Cas fichier -->
+            <ng-container *ngIf="depotProjet?.type === 'fichier'">
+              <span class="material-icons depot-icon">description</span>
+              <span class="depot-filename">{{ depotProjet?.nomFichier || 'Fichier déposé' }}</span>
+              <span class="depot-action">⬇ Télécharger</span>
+            </ng-container>
+            <!-- Cas lien -->
+            <ng-container *ngIf="depotProjet?.type === 'lien'">
+              <span class="material-icons depot-icon">link</span>
+              <span class="depot-link-text">{{ depotProjet?.lien }}</span>
+              <span class="depot-action">↗ Ouvrir</span>
+            </ng-container>
+            <span class="depot-date">{{ depotProjet?.dateDepot | date:'dd/MM/yyyy HH:mm' }}</span>
+            <button class="btn-modifier" (click)="$event.stopPropagation(); modifierDepotProjet()">Modifier</button>
+          </div>
+        </ng-container>
+
+        <!-- Panneau de dépôt inline pour le projet -->
+        <div *ngIf="selectedProjetDepot" class="depot-panel project-depot-panel">
+          <div class="depot-panel-header">
+            <div class="depot-panel-tabs">
+              <button
+                type="button"
+                class="depot-tab"
+                [class.active]="selectedTab === 'lien'"
+                (click)="onTabChange('lien')">
+                Lien
+              </button>
+              <button
+                type="button"
+                class="depot-tab"
+                [class.active]="selectedTab === 'fichier'"
+                (click)="onTabChange('fichier')">
+                Fichier
+              </button>
+            </div>
+          </div>
+
+          <div *ngIf="depotErrorMessage" class="depot-error">
+            <span class="material-icons">error</span>
+            {{ depotErrorMessage }}
+          </div>
+
+          <div *ngIf="selectedTab === 'lien'" class="depot-panel-content">
+            <input
+              type="url"
+              [(ngModel)]="depotLien"
+              placeholder="https://github.com/votre-projet"
+              class="depot-input">
+          </div>
+
+          <div *ngIf="selectedTab === 'fichier'" class="depot-panel-content">
+            <div class="upload-zone" (click)="triggerFileInput()">
+              <span class="material-icons upload-icon">cloud_upload</span>
+              <p>Glissez votre fichier ici</p>
+              <input
+                #fileInput
+                type="file"
+                (change)="onFileSelected($event)"
+                accept=".pdf,.zip,.docx,.png,.jpg,.jpeg"
+                style="display: none;">
+            </div>
+            <div *ngIf="selectedFile" class="file-info">
+              <span class="material-icons">description</span>
+              <span>{{ selectedFile.name }}</span>
+              <button type="button" (click)="removeFile()" class="remove-file-btn">
+                <span class="material-icons">close</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="depot-panel-footer">
+            <button type="button" class="btn-cancel" (click)="closeDepotPanel()">Annuler</button>
+            <button type="button" class="btn-submit" (click)="submitDepot()">Valider</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Modal Activité -->
+    <div *ngIf="showActiviteModal" class="modal-overlay" (click)="fermerModalActivite()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>{{ activiteEnEdition ? 'Modifier l\'activité' : 'Nouvelle activité' }}</h3>
+          <button class="modal-close" (click)="fermerModalActivite()">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Nom *</label>
+            <input type="text" [(ngModel)]="activiteForm.nom" placeholder="Nom de l'activité">
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea [(ngModel)]="activiteForm.description" placeholder="Description de l'activité"></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Date de début *</label>
+              <input type="date" [(ngModel)]="activiteForm.dateDebut" [min]="getProjetDateDebut()" [max]="getProjetDateLimite()">
+              <small *ngIf="activiteForm.dateDebut && getProjetDateDebut() && activiteForm.dateDebut < getProjetDateDebut()" class="error-text">
+                La date de début doit être ≥ {{ getProjetDateDebut() }}
+              </small>
+            </div>
+            <div class="form-group">
+              <label>Date de fin</label>
+              <input type="date" [(ngModel)]="activiteForm.dateFin" [min]="activiteForm.dateDebut || getProjetDateDebut()" [max]="getProjetDateLimite()">
+              <small *ngIf="activiteForm.dateFin && getProjetDateLimite() && activiteForm.dateFin > getProjetDateLimite()" class="error-text">
+                La date de fin doit être ≤ {{ getProjetDateLimite() }}
+              </small>
+              <small *ngIf="activiteForm.dateFin && activiteForm.dateDebut && activiteForm.dateFin < activiteForm.dateDebut" class="error-text">
+                La date de fin doit être ≥ la date de début
+              </small>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Employés assignés</label>
+            <div class="employes-selection">
+              <div *ngFor="let emp of projet?.employes" class="employe-checkbox">
+                <input type="checkbox" 
+                       [id]="'emp-act-' + emp.id" 
+                       [checked]="isEmployeSelectedForActivite(emp.id)"
+                       (change)="toggleEmployeActivite(emp.id)">
+                <label [for]="'emp-act-' + emp.id">
+                  {{ emp.nom }} {{ emp.prenom }}
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancel" (click)="fermerModalActivite()">Annuler</button>
+          <button class="btn-submit" (click)="sauvegarderActivite()">
+            {{ activiteEnEdition ? 'Modifier' : 'Créer' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Tâche -->
+    <div *ngIf="showTacheModal" class="modal-overlay" (click)="fermerModalTache()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>{{ tacheEnEdition ? 'Modifier la tâche' : 'Nouvelle tâche' }}</h3>
+          <button class="modal-close" (click)="fermerModalTache()">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Nom *</label>
+            <input type="text" [(ngModel)]="tacheForm.nom" placeholder="Nom de la tâche">
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea [(ngModel)]="tacheForm.description" placeholder="Description de la tâche"></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Date de début *</label>
+              <input type="date" [(ngModel)]="tacheForm.dateDebut" [min]="getActiviteParenteDateDebut()" [max]="getActiviteParenteDateFin()">
+              <small *ngIf="tacheForm.dateDebut && getActiviteParenteDateDebut() && tacheForm.dateDebut < getActiviteParenteDateDebut()" class="error-text">
+                La date de début doit être ≥ {{ getActiviteParenteDateDebut() }}
+              </small>
+            </div>
+            <div class="form-group">
+              <label>Date de fin</label>
+              <input type="date" [(ngModel)]="tacheForm.dateFin" [min]="tacheForm.dateDebut || getActiviteParenteDateDebut()" [max]="getActiviteParenteDateFin()">
+              <small *ngIf="tacheForm.dateFin && getActiviteParenteDateFin() && tacheForm.dateFin > getActiviteParenteDateFin()" class="error-text">
+                La date de fin doit être ≤ {{ getActiviteParenteDateFin() }}
+              </small>
+              <small *ngIf="tacheForm.dateFin && tacheForm.dateDebut && tacheForm.dateFin < tacheForm.dateDebut" class="error-text">
+                La date de fin doit être ≥ la date de début
+              </small>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Employés assignés (de l'activité)</label>
+            <div class="employes-selection">
+              <div *ngFor="let emp of employesActivite" class="employe-checkbox">
+                <input type="checkbox" 
+                       [id]="'emp-tache-' + emp.id" 
+                       [checked]="isEmployeSelectedForTache(emp.id)"
+                       (change)="toggleEmployeTache(emp.id)">
+                <label [for]="'emp-tache-' + emp.id">
+                  {{ emp.nom }} {{ emp.prenom }}
+                </label>
+              </div>
+              <div *ngIf="employesActivite.length === 0" class="no-employes-message">
+                Aucun employé assigné à cette activité
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancel" (click)="fermerModalTache()">Annuler</button>
+          <button class="btn-submit" (click)="sauvegarderTache()">
+            {{ tacheEnEdition ? 'Modifier' : 'Créer' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

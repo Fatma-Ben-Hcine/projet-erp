@@ -1,0 +1,24 @@
+<div class="kanban-column">
+  <div class="column-header">
+    <div class="column-title">
+      <span class="dot" [style.background]="dotColor"></span>
+      <span class="title-text">{{ title }}</span>
+      <span class="badge">{{ projects.length }}</span>
+    </div>
+  </div>
+
+  <div class="column-body">
+    <app-project-card
+      *ngFor="let project of projects"
+      [project]="project"
+      [currentUserId]="currentUserId"
+      (viewDetails)="viewDetails.emit($event)"
+      (deposit)="deposit.emit($event)"
+      (start)="start.emit($event)">
+    </app-project-card>
+
+    <div *ngIf="projects.length === 0" class="empty-column">
+      Aucun projet
+    </div>
+  </div>
+</div>

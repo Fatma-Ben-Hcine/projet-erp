@@ -1,0 +1,138 @@
+<div class="layout">
+  <app-employe-sidebar></app-employe-sidebar>
+
+  <div class="main-content">
+    <!-- Header -->
+    <div class="page-header">
+      <div class="header-content">
+        <button class="back-btn" (click)="goBack()">
+          <span class="material-icons">arrow_back</span>
+          Retour au dashboard
+        </button>
+        <div class="header-text" *ngIf="projet">
+          <h1 class="page-title">{{ projet.nom }}</h1>
+          <p class="page-subtitle">{{ projet.description }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-state" *ngIf="isLoading">
+      <div class="spinner"></div>
+      <p>Chargement...</p>
+    </div>
+
+    <!-- Error -->
+    <div class="error-state" *ngIf="errorMessage && !isLoading">
+      <span class="material-icons">error</span>
+      <p>{{ errorMessage }}</p>
+    </div>
+
+    <!-- Content -->
+    <div class="content" *ngIf="projet && !isLoading">
+      <!-- Section 1: Informations du projet -->
+      <section class="section">
+        <h2 class="section-title">Informations du projet</h2>
+        <div class="info-grid">
+          <div class="info-card">
+            <span class="info-label">Statut</span>
+            <span class="badge" [class]="getStatutClass(projet.statut)">
+              {{ getStatutLabel(projet.statut) }}
+            </span>
+          </div>
+          <div class="info-card">
+            <span class="info-label">Date de début</span>
+            <span class="info-value">{{ formatDate(projet.dateDebut) }}</span>
+          </div>
+          <div class="info-card">
+            <span class="info-label">Date limite</span>
+            <span class="info-value">{{ formatDate(projet.dateLimite) }}</span>
+          </div>
+          <div class="info-card">
+            <span class="info-label">Progression</span>
+            <span class="info-value">{{ projet.progression }}%</span>
+          </div>
+          <div class="info-card" *ngIf="authService.isAdmin() && projet.budget">
+            <span class="info-label">Budget</span>
+            <span class="info-value">{{ projet.budget }} €</span>
+          </div>
+          <div class="info-card">
+            <span class="info-label">Chef de projet</span>
+            <span class="info-value" *ngIf="projet.chefDeProjet">
+              {{ projet.chefDeProjet.prenom }} {{ projet.chefDeProjet.nom }}
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 2: Activités -->
+      <section class="section">
+        <h2 class="section-title">
+          Activités associées
+          <span class="badge-count">{{ activites.length }}</span>
+        </h2>
+
+        <div class="empty-state" *ngIf="activites.length === 0">
+          <span class="material-icons">assignment</span>
+          <p>Aucune activité n'est associée à ce projet</p>
+        </div>
+
+        <div class="activities-grid" *ngIf="activites.length > 0">
+          <div class="activity-card" *ngFor="let activite of activites">
+            <div class="card-header">
+              <h3 class="card-title">{{ activite.nom }}</h3>
+              <span class="badge" [class.depose]="activite.estDepose">
+                {{ activite.estDepose ? 'Déposé' : 'En cours' }}
+              </span>
+            </div>
+            <p class="card-description">{{ activite.description }}</p>
+            <div class="card-meta">
+              <span class="meta-item">
+                <span class="material-icons">calendar_today</span>
+                {{ formatDate(activite.dateDebut) }} - {{ formatDate(activite.dateFin) }}
+              </span>
+              <span class="meta-item">
+                <span class="material-icons">trending_up</span>
+                {{ activite.progressionMoyenne || 0 }}%
+              </span>
+            </div>
+
+            <!-- Tâches de l'activité -->
+            <div class="tasks-section" *ngIf="activite.taches && activite.taches.length > 0">
+              <h4 class="tasks-title">
+                Tâches
+                <span class="badge-count">{{ activite.taches.length }}</span>
+              </h4>
+              <div class="tasks-list">
+                <div class="task-item" *ngFor="let tache of activite.taches">
+                  <div class="task-header">
+                    <span class="task-name">{{ tache.nom }}</span>
+                    <span class="badge" [class.depose]="tache.estDepose">
+                      {{ tache.estDepose ? 'Déposé' : 'En cours' }}
+                    </span>
+                  </div>
+                  <p class="task-description">{{ tache.description }}</p>
+                  <div class="task-meta">
+                    <span class="meta-item">
+                      <span class="material-icons">calendar_today</span>
+                      {{ formatDate(tache.dateDebut) }} - {{ formatDate(tache.dateFin) }}
+                    </span>
+                    <span class="meta-item">
+                      <span class="material-icons">trending_up</span>
+                      {{ tache.progression || 0 }}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="empty-tasks" *ngIf="!activite.taches || activite.taches.length === 0">
+              <span class="material-icons">check_circle</span>
+              <p>Aucune tâche associée</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>

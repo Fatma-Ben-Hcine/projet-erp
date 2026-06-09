@@ -1,0 +1,110 @@
+<!-- Bouton toggle pour mobile -->
+<button class="sidebar-toggle" *ngIf="!isOpen" (click)="toggleSidebar()">
+  <span class="material-icons">menu</span>
+</button>
+
+<aside class="sidebar" [class.open]="isOpen">
+  <!-- Bouton fermeture pour mobile -->
+  <button class="sidebar-close" (click)="closeSidebar()">
+    <span class="material-icons">close</span>
+  </button>
+  <div class="sidebar-header">
+    <div class="sidebar-branding">
+      <h2 class="sidebar-title">DigiLab Solutions</h2>
+      <p class="sidebar-subtitle">{{ userPrenom }} {{ userNom }}</p>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a routerLink="/admin/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-item">
+      <span class="material-icons">home</span>
+      Accueil
+    </a>
+    <a class="nav-item" 
+       routerLink="/admin/dashboard-global"
+       routerLinkActive="active"
+       [routerLinkActiveOptions]="{ exact: true }"
+       title="Dashboard">
+      <span class="material-icons nav-icon">
+        dashboard
+      </span>
+      <span class="nav-label">Dashboard</span>
+    </a>
+    <!-- Projects Dropdown -->
+    <div class="nav-dropdown">
+      <div class="dropdown-toggle" (click)="toggleDropdown('projects')" [class.open]="projectsOpen">
+        <span class="material-icons">folder_kanban</span>
+        <span class="nav-label">Projets</span>
+        <span class="material-icons dropdown-arrow">{{ projectsOpen ? 'expand_less' : 'expand_more' }}</span>
+      </div>
+      <div class="dropdown-menu" *ngIf="projectsOpen">
+        <a routerLink="/admin/ressources" routerLinkActive="active" class="dropdown-item">
+          <span class="material-icons">people</span>
+          Ressources
+        </a>
+        <a routerLink="/admin/projets/board" routerLinkActive="active" class="dropdown-item">
+          <span class="material-icons">view_kanban</span>
+          Board
+        </a>
+      </div>
+    </div>
+
+    <!-- RH Dropdown -->
+    <div class="nav-dropdown">
+      <div class="dropdown-toggle" (click)="toggleDropdown('rh')" [class.open]="rhOpen">
+        <span class="material-icons">group</span>
+        <span class="nav-label">RH</span>
+        <span class="material-icons dropdown-arrow">{{ rhOpen ? 'expand_less' : 'expand_more' }}</span>
+      </div>
+      <div class="dropdown-menu" *ngIf="rhOpen">
+        <a routerLink="/admin/rh/utilisateurs" routerLinkActive="active" class="dropdown-item">
+          <span class="material-icons">manage_accounts</span>
+          Gestion utilisateurs
+        </a>
+        <a routerLink="/admin/conges" routerLinkActive="active" class="dropdown-item">
+          <span class="material-icons">event_busy</span>
+          Gestion des Congés
+        </a>
+        <a routerLink="/admin/heures-supplementaires" routerLinkActive="active" class="dropdown-item">
+          <span class="material-icons">access_time</span>
+          Heures Supplémentaires
+        </a>
+      </div>
+    </div>
+
+    
+    <!-- Clients Dropdown -->
+    <div class="nav-dropdown">
+      <div class="dropdown-toggle" (click)="toggleDropdown('clients')" [class.open]="clientsOpen">
+        <span class="material-icons">business_center</span>
+        <span class="nav-label">Clients</span>
+        <span class="material-icons dropdown-arrow">{{ clientsOpen ? 'expand_less' : 'expand_more' }}</span>
+      </div>
+      <div class="dropdown-menu" *ngIf="clientsOpen">
+        <a routerLink="/admin/clients/gestion" routerLinkActive="active" class="dropdown-item">
+          <span class="material-icons">business</span>
+          Gestion clients
+        </a>
+        <a routerLink="/admin/clients/contrats" routerLinkActive="active" class="dropdown-item">
+          <span class="material-icons">description</span>
+          Gestion contrats
+        </a>
+      </div>
+    </div>
+    <a routerLink="/admin/profile" routerLinkActive="active" class="nav-item">
+      <span class="material-icons">person</span>
+      Profile
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <button class="nav-item dark-toggle" (click)="toggleDarkMode()">
+      <span class="material-icons">{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</span>
+      {{ isDarkMode ? 'Mode Clair' : 'Mode Sombre' }}
+    </button>
+    <button class="nav-item logout-btn" (click)="logout()">
+      <span class="material-icons">logout</span>
+      Déconnexion
+    </button>
+  </div>
+</aside>
