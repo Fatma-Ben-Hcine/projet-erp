@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { HeureSupplementaire, HeureSupplementaireRequest, StatutHeureSupplementaire } from '../models/heure-supplementaire.model';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class HeureSupplementaireService {
-  private readonly apiUrl = 'http://localhost:8080/api/heures-supplementaires';
+  private readonly apiUrl = environment.apiUrl + '/heures-supplementaires';
 
   constructor(private http: HttpClient) {}
 

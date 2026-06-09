@@ -7,6 +7,8 @@ import { ProjetService } from '../../core/services/projet.service';
 import { EmployeeService } from '../../admin/rh/services/employee.service';
 import { forkJoin } from 'rxjs';
 
+import { environment } from '../../../environments/environment';
+
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
@@ -51,7 +53,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   }
 
   chargerStats(): void {
-    this.http.get<any>('http://localhost:8080/api/dashboard/stats').subscribe({
+    this.http.get<any>(environment.apiUrl + '/dashboard/stats').subscribe({
       next: (data) => {
         console.log('Stats from API:', data);
         this.stats = data;

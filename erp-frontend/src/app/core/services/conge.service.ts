@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Conge, CongeRequest, StatutConge, TypeConge } from '../models/conge.model';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CongeService {
-  private readonly apiUrl = 'http://localhost:8080/api/conges';
+  private readonly apiUrl = environment.apiUrl + '/conges';
 
   constructor(private http: HttpClient) {}
 

@@ -8,6 +8,8 @@ import { StringToArrayPipe } from '../../../shared/pipes/string-to-array.pipe';
 import { AdminSidebarComponent } from '../../shared/sidebar/sidebar.component';
 import { UtilisateurResponse, CreateUtilisateurRequest, UpdateUtilisateurRequest } from '../../../core/models/utilisateur.model';
 
+import { environment } from '../../../../environments/environment';
+
 @Component({
   selector: 'app-user-management',
   standalone: true,
@@ -276,7 +278,7 @@ export class UserManagementComponent implements OnInit {
   }
 
   getPhotoFullUrl(photoUrl: string): string {
-    return photoUrl ? `http://localhost:8080${photoUrl}` : '';
+    return photoUrl ? `${environment.apiUrl}${photoUrl}` : '';
   }
 
   getInitials(prenom: string, nom: string): string {

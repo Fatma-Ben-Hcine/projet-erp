@@ -9,6 +9,8 @@ import { ProjetResponse } from '../../../core/models/projet.model';
 import { ActiviteResponse, TacheResponse } from '../../../core/models/activite.model';
 import { AdminSidebarComponent } from '../../shared/sidebar/sidebar.component';
 
+import { environment } from '../../../../environments/environment';
+
 @Component({
   selector: 'app-projet-depot',
   standalone: true,
@@ -490,7 +492,7 @@ export class ProjetDepotComponent implements OnInit {
   telechargerDepot(depot: any): void {
     if (!depot?.id) return;
     
-    const url = `http://localhost:8080/api/admin/depots/${depot.id}/telecharger`;
+    const url = environment.apiUrl + `/admin/depots/${depot.id}/telecharger`;
     const token = localStorage.getItem('token') || '';
     
     fetch(url, {

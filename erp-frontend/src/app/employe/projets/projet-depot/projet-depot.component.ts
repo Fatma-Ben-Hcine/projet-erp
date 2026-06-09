@@ -10,6 +10,8 @@ import { AuthService } from '../../../auth/auth.service';
 import { ProjetResponse } from '../../../core/models/projet.model';
 import { ActiviteResponse, TacheResponse } from '../../../core/models/activite.model';
 
+import { environment } from '../../../../environments/environment';
+
 @Component({
   selector: 'app-employe-projet-depot',
   standalone: true,
@@ -560,7 +562,7 @@ export class EmployeProjetDepotComponent implements OnInit {
   telechargerDepot(depot: any): void {
     if (!depot?.id) return;
 
-    const url = `http://localhost:8080/api/employe/depots/${depot.id}/telecharger`;
+    const url = environment.apiUrl + `/employe/depots/${depot.id}/telecharger`;
     const token = localStorage.getItem('token') || '';
 
     fetch(url, {

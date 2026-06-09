@@ -5,6 +5,7 @@ import { ProfileService, UserProfile } from '../services/profile.service';
 import { AuthService } from '../../auth/auth.service';
 import { AdminSidebarComponent } from '../../admin/shared/sidebar/sidebar.component';
 import { EmployeSidebarComponent } from '../../employe/shared/sidebar/sidebar.component';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-profile',
@@ -87,7 +88,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   getPhotoUrl(): string {
     if (this.profile?.photo) {
-      return `http://localhost:8080${this.profile.photo}`;
+      return `${environment.apiUrl}${this.profile.photo}`;
     }
     return '';
   }

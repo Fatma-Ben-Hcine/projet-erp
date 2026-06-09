@@ -7,6 +7,7 @@ import { DemandeRessourceService } from '../../../core/services/demande-ressourc
 import { AuthService } from '../../../auth/auth.service';
 import { EmployeSidebarComponent } from '../../shared/sidebar/sidebar.component';
 import { RessourceDisponible, DemandeRessourceRequest, DemandeMultipleRequest } from '../../../core/models/ressource.model';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-demande-ressources',
@@ -37,7 +38,7 @@ export class DemandeRessourcesComponent implements OnInit {
 
   loadRessources(): void {
     this.isLoading = true;
-    this.http.get<any[]>(`http://localhost:8080/api/employe/ressources`).subscribe({
+    this.http.get<any[]>(environment.apiUrl + '/employe/ressources').subscribe({
       next: (data) => { 
         this.ressources = data; 
         this.isLoading = false; 
@@ -58,7 +59,7 @@ export class DemandeRessourcesComponent implements OnInit {
   }
 
   demanderRessource(ressource: any): void {
-    this.http.post(`http://localhost:8080/api/employe/ressources/${ressource.id}/demander`, {})
+    this.http.post(environment.apiUrl + `/employe/ressources/${ressource.id}/demander`, {})
       .subscribe({
         next: (res: any) => {
           ressource.dejaDemandeParMoi = true;
@@ -70,7 +71,7 @@ export class DemandeRessourcesComponent implements OnInit {
   }
 
   annulerDemande(ressource: any): void {
-    this.http.delete(`http://localhost:8080/api/employe/ressources/${ressource.id}/annuler`)
+    this.http.delete(environment.apiUrl + `/employe/ressources/${ressource.id}/annuler`)
       .subscribe({
         next: (res: any) => {
           ressource.dejaDemandeParMoi = false;
