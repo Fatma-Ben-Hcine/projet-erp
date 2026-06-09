@@ -811,9 +811,10 @@ public class ProjetService {
         }
         depot.setNomFichier(depotRequest.getNomFichier());
 
-        // Si c'est un fichier, le stocker physiquement
+        // Si c'est un fichier, le stocker physiquement avec hiérarchie par projet (pas d'activité ni tâche)
         if ("fichier".equals(depotRequest.getType()) && file != null && !file.isEmpty()) {
-            String filePath = fileUploadService.uploadDepotFile(file);
+            // Utiliser la nouvelle méthode avec hiérarchie (pas d'activité ni tâche ID pour dépôt de projet)
+            String filePath = fileUploadService.uploadDepotFileHierarchical(file, id, null, null);
             depot.setCheminFichier(filePath);
         } else {
             depot.setCheminFichier(depotRequest.getCheminFichier());
@@ -826,7 +827,7 @@ public class ProjetService {
         depotRepository.save(depot);
 
 
-        log.info("Projet {} déposé et marqué comme terminé avec dépôt {}", id, depot.getId());
+        log.info("Projet {} déposé et marqué comme terminé avec dépôt {} - Chemin hiérarchisé", id, depot.getId());
         return mapToResponse(projet);
     }
 

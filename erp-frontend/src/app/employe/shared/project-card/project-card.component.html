@@ -33,9 +33,11 @@
   </div>
 
   <div class="card-actions">
-    <!-- Start button: only for new projects + project manager -->
+    <!-- Start button: for new or late projects + project manager can restart -->
     <button
-      *ngIf="project.status === 'new' && isProjectManager"
+      *ngIf="isProjectManager &&
+             (project.status === 'new' ||
+              project.status === 'late')"
       class="btn btn-start"
       (click)="start.emit(project.id)">
       <span class="material-icons">play_circle</span>
@@ -45,7 +47,8 @@
     <!-- Deposit button: only for project manager + in-progress, late, completed -->
     <button
       *ngIf="isProjectManager &&
-             (project.status === 'in-progress' ||
+             (project.status === 'new' ||
+              project.status === 'in-progress' ||
               project.status === 'late' ||
               project.status === 'completed')"
       class="btn btn-deposit"

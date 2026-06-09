@@ -352,9 +352,21 @@ public class TacheService {
         }
         depot.setNomFichier(depotRequest.getNomFichier());
 
-        // Si c'est un fichier, le stocker physiquement
+        // Si c'est un fichier, le stocker physiquement avec hiérarchie par projet/activité/tâche
         if ("fichier".equals(depotRequest.getType()) && file != null && !file.isEmpty()) {
-            String filePath = fileUploadService.uploadDepotFile(file);
+            // Récupérer les IDs du projet et de l'activité
+            Long projetId = null;
+            Long activiteId = null;
+            
+            if (tache.getActivite() != null) {
+                activiteId = tache.getActivite().getId();
+                if (tache.getActivite().getProjet() != null) {
+                    projetId = tache.getActivite().getProjet().getId();
+                }
+            }
+            
+            // Utiliser la nouvelle méthode avec hiérarchie
+            String filePath = fileUploadService.uploadDepotFileHierarchical(file, projetId, activiteId, id);
             depot.setCheminFichier(filePath);
         } else {
             depot.setCheminFichier(depotRequest.getCheminFichier());
@@ -375,7 +387,7 @@ public class TacheService {
         tache = tacheRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Tâche non trouvée avec l'id: " + id));
 
-        log.info("Tâche {} déposée avec dépôt {}", id, depot.getId());
+        log.info("Tâche {} déposée avec dépôt {} - Chemin hiérarchisé", id, depot.getId());
         return mapToResponse(tache);
     }
 

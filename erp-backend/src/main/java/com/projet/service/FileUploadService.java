@@ -108,6 +108,10 @@ public class FileUploadService {
         return uploadDir;
     }
 
+    /**
+     * DEPRECATED: Use uploadDepotFileHierarchical instead for organized storage
+     * Uploads depot file to the old flat structure (kept for backward compatibility)
+     */
     public String uploadDepotFile(MultipartFile file) throws IOException {
         String baseDir = System.getProperty("user.dir");
         Path uploadPath = Paths.get(baseDir, "uploads", "depots");
@@ -133,12 +137,83 @@ public class FileUploadService {
             StandardCopyOption.REPLACE_EXISTING
         );
 
-        System.out.println("=== DEPOT FILE SAVED ===");
+        System.out.println("=== DEPOT FILE SAVED (FLAT) ===");
         System.out.println("Directory : " + uploadPath.toAbsolutePath());
         System.out.println("Filename  : " + cleanFilename);
         System.out.println("Full path : " + targetPath.toAbsolutePath());
         System.out.println("Exists    : " + Files.exists(targetPath));
-        System.out.println("========================");
+        System.out.println("================================");
+
+        return targetPath.toAbsolutePath().toString();
+    }
+
+    /**
+     * NEW: Uploads depot file with hierarchical folder structure
+     * Organizes files by project/activity/task for better organization
+     * 
+     * Folder structure:
+     * uploads/depots/projet_{projetId}/activite_{activiteId}/tache_{tacheId}/file.pdf
+     * uploads/depots/projet_{projetId}/activite_{activiteId}/file.pdf
+     * uploads/depots/projet_{projetId}/file.pdf
+     * 
+     * @param file The file to upload
+     * @param projetId Project ID (required)
+     * @param activiteId Activity ID (optional, can be null)
+     * @param tacheId Task ID (optional, can be null)
+     * @return The absolute path to the saved file
+     */
+    public String uploadDepotFileHierarchical(MultipartFile file, Long projetId, Long activiteId, Long tacheId) throws IOException {
+        String baseDir = System.getProperty("user.dir");
+        
+        // Build hierarchical path
+        StringBuilder pathBuilder = new StringBuilder("uploads" + File.separator + "depots" + File.separator);
+        pathBuilder.append("projet_").append(projetId);
+        
+        if (activiteId != null) {
+            pathBuilder.append(File.separator).append("activite_").append(activiteId);
+        }
+        
+        if (tacheId != null) {
+            pathBuilder.append(File.separator).append("tache_").append(tacheId);
+        }
+        
+        Path uploadPath = Paths.get(baseDir, pathBuilder.toString());
+        
+        // Create directory structure if it doesn't exist
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+
+        // Get file extension
+        String originalFilename = file.getOriginalFilename();
+        String extension = "";
+        if (originalFilename != null && originalFilename.contains(".")) {
+            extension = originalFilename
+                .substring(originalFilename.lastIndexOf("."))
+                .toLowerCase()
+                .replaceAll("[^.a-zA-Z0-9]", "");
+        }
+
+        // Generate clean filename with UUID
+        String cleanFilename = UUID.randomUUID().toString() + extension;
+        Path targetPath = uploadPath.resolve(cleanFilename);
+        
+        // Copy file to target location
+        Files.copy(
+            file.getInputStream(),
+            targetPath,
+            StandardCopyOption.REPLACE_EXISTING
+        );
+
+        System.out.println("=== DEPOT FILE SAVED (HIERARCHICAL) ===");
+        System.out.println("Projet ID     : " + projetId);
+        System.out.println("Activite ID   : " + activiteId);
+        System.out.println("Tache ID      : " + tacheId);
+        System.out.println("Directory     : " + uploadPath.toAbsolutePath());
+        System.out.println("Filename      : " + cleanFilename);
+        System.out.println("Full path     : " + targetPath.toAbsolutePath());
+        System.out.println("Exists        : " + Files.exists(targetPath));
+        System.out.println("=========================================");
 
         return targetPath.toAbsolutePath().toString();
     }
