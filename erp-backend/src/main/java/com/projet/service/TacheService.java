@@ -32,6 +32,7 @@ public class TacheService {
     private final TravaillerTacheRepository travaillerTacheRepository;
     private final DepotRepository depotRepository;
     private final FileUploadService fileUploadService;
+    private final ProjetRepository projetRepository;
 
     // CRUD de base
     public List<TacheResponse> getAllTaches() {
@@ -386,6 +387,47 @@ public class TacheService {
         // Rafraîchir la tâche depuis la base pour charger les dépôts associés
         tache = tacheRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Tâche non trouvée avec l'id: " + id));
+
+        // Vérifier si toutes les tâches de l'activité sont déposées
+        if (tache.getActivite() != null) {
+            Activite activite = tache.getActivite();
+            List<Tache> toutesTaches = tacheRepository.findByActiviteId(activite.getId());
+            boolean toutesTachesDeposees = toutesTaches.stream()
+                    .allMatch(t -> {
+                        List<Depot> depots = depotRepository.findByTacheId(t.getId());
+                        return !depots.isEmpty();
+                    });
+
+            // Si toutes les tâches de l'activité sont déposées, vérifier si toutes les activités du projet sont déposées
+            if (toutesTachesDeposees) {
+                Projet projet = activite.getProjet();
+                if (projet != null) {
+                    List<Activite> toutesActivites = activiteRepository.findByProjetId(projet.getId());
+                    boolean toutesActivitesDeposees = toutesActivites.stream()
+                            .allMatch(a -> {
+                                List<Tache> tachesActivite = tacheRepository.findByActiviteId(a.getId());
+                                if (tachesActivite.isEmpty()) {
+                                    // Si l'activité n'a pas de tâches, vérifier si elle a un dépôt direct
+                                    List<Depot> depots = depotRepository.findDepotsByActiviteIdSeulement(a.getId());
+                                    return !depots.isEmpty();
+                                }
+                                // Si l'activité a des tâches, vérifier si toutes sont déposées
+                                return tachesActivite.stream()
+                                        .allMatch(t -> {
+                                            List<Depot> depots = depotRepository.findByTacheId(t.getId());
+                                            return !depots.isEmpty();
+                                        });
+                            });
+
+                    // Si toutes les activités sont complètes (toutes leurs tâches déposées), mettre le projet à TERMINE
+                    if (toutesActivitesDeposees && projet.getStatut() != com.projet.enums.StatutProjet.TERMINE) {
+                        projet.setStatut(com.projet.enums.StatutProjet.TERMINE);
+                        projetRepository.save(projet);
+                        log.info("Toutes les activités du projet {} sont complètes - statut passé à TERMINE", projet.getId());
+                    }
+                }
+            }
+        }
 
         log.info("Tâche {} déposée avec dépôt {} - Chemin hiérarchisé", id, depot.getId());
         return mapToResponse(tache);

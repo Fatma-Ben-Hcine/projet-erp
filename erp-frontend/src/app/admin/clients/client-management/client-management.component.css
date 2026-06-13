@@ -381,6 +381,34 @@ body.dark .modal-overlay {
   background: rgba(15, 23, 42, 0.8);
 }
 
+body.dark .modal-header {
+  border-bottom-color: #374151;
+}
+
+body.dark .modal-actions {
+  border-top-color: #374151;
+}
+
+body.dark .badge-info {
+  background: #1e3a8a;
+  color: #93c5fd;
+}
+
+body.dark .badge-success {
+  background: #065f46;
+  color: #6ee7b7;
+}
+
+body.dark .badge-warning {
+  background: #9a3412;
+  color: #fdba74;
+}
+
+body.dark .badge-default {
+  background: #713f12;
+  color: #fde68a;
+}
+
 /* ═══════════════════════════════════════
    RESPONSIVE — CLIENT MANAGEMENT
    ═══════════════════════════════════════ */

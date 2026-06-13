@@ -369,3 +369,133 @@
   color: #9ca3af;
   font-style: italic;
 }
+
+/* Dark mode */
+body.dark .page-title {
+  color: #f9fafb;
+}
+
+body.dark .page-subtitle {
+  color: #9ca3af;
+}
+
+body.dark .back-btn {
+  background: transparent;
+  border-color: #374151;
+  color: #9ca3af;
+}
+
+body.dark .back-btn:hover {
+  background: #374151;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+
+body.dark .section {
+  background: rgba(31, 41, 55, 0.7);
+  border-color: rgba(55, 65, 81, 0.5);
+}
+
+body.dark .section-title {
+  color: #f9fafb;
+}
+
+body.dark .info-card {
+  background: #111827;
+  border-color: #374151;
+}
+
+body.dark .info-label {
+  color: #9ca3af;
+}
+
+body.dark .info-value {
+  color: #f9fafb;
+}
+
+body.dark .activity-card {
+  background: #1f2937;
+  border-color: #374151;
+}
+
+body.dark .card-title {
+  color: #f9fafb;
+}
+
+body.dark .card-badge {
+  background: #374151;
+  color: #9ca3af;
+}
+
+body.dark .card-badge.depose {
+  background: #065f46;
+  color: #6ee7b7;
+}
+
+body.dark .card-description {
+  color: #9ca3af;
+}
+
+body.dark .meta-item {
+  color: #9ca3af;
+}
+
+body.dark .action-btn {
+  background: transparent;
+  border-color: #374151;
+  color: #9ca3af;
+}
+
+body.dark .action-btn:hover {
+  background: #374151;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+
+body.dark .tasks-section {
+  border-color: #374151;
+}
+
+body.dark .tasks-title {
+  color: #d1d5db;
+}
+
+body.dark .task-item {
+  background: #111827;
+  border-color: #374151;
+}
+
+body.dark .task-name {
+  color: #f9fafb;
+}
+
+body.dark .task-badge {
+  background: #374151;
+  color: #9ca3af;
+}
+
+body.dark .task-badge.deposé {
+  background: #065f46;
+  color: #6ee7b7;
+}
+
+body.dark .task-description {
+  color: #9ca3af;
+}
+
+body.dark .task-action-btn {
+  background: transparent;
+  border-color: #374151;
+  color: #9ca3af;
+}
+
+body.dark .task-action-btn:hover {
+  background: #374151;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+
+body.dark .error-message {
+  background: #7f1d1d;
+  color: #fca5a5;
+}

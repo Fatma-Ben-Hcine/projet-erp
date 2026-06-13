@@ -452,6 +452,22 @@ public class ActiviteService {
         activite = activiteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Activité non trouvée avec l'id: " + id));
 
+        // Vérifier si toutes les activités du projet sont déposées
+        Projet projet = activite.getProjet();
+        List<Activite> toutesActivites = activiteRepository.findByProjetId(projet.getId());
+        boolean toutesActivitesDeposees = toutesActivites.stream()
+                .allMatch(a -> {
+                    List<Depot> depots = depotRepository.findDepotsByActiviteIdSeulement(a.getId());
+                    return !depots.isEmpty();
+                });
+
+        // Si toutes les activités sont déposées, mettre le projet à TERMINE
+        if (toutesActivitesDeposees && projet.getStatut() != com.projet.enums.StatutProjet.TERMINE) {
+            projet.setStatut(com.projet.enums.StatutProjet.TERMINE);
+            projetRepository.save(projet);
+            log.info("Toutes les activités du projet {} sont déposées - statut passé à TERMINE", projet.getId());
+        }
+
         log.info("Activité {} déposée avec dépôt {} - Chemin hiérarchisé", id, depot.getId());
         return mapToResponse(activite);
     }

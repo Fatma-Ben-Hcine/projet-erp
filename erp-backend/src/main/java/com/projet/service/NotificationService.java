@@ -109,7 +109,95 @@ public class NotificationService {
     }
 
     /**
-     * Cron job : vérifier les projets dont la date limite est dans 3 jours
+     * Notifier quand un projet passe en retard
+     */
+    @Transactional
+    public void notifierProjetEnRetard(Projet projet) {
+        String message = "🚨 Le projet \"" + projet.getNom()
+                + "\" est en retard (date limite dépassée: "
+                + projet.getDateLimite().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + ")";
+
+        // Récupérer les employés assignés au projet via TravaillerProjet
+        Set<Long> employeIdsNotifies = new HashSet<>();
+
+        // Notifier tous les membres
+        for (TravaillerProjet tp : projet.getTravaillerProjets()) {
+            Employe membre = tp.getEmploye();
+            if (membre != null && employeIdsNotifies.add(membre.getId())) {
+                creerNotification(membre, message,
+                        "PROJET_EN_RETARD",
+                        projet.getId());
+            }
+        }
+
+        // Notifier le chef de projet s'il n'est pas déjà notifié
+        if (projet.getChefProjet() != null) {
+            if (employeIdsNotifies.add(projet.getChefProjet().getId())) {
+                creerNotification(projet.getChefProjet(), message,
+                        "PROJET_EN_RETARD",
+                        projet.getId());
+            }
+        }
+
+        // Notifier tous les admins
+        List<Employe> admins = employeRepository.findByRoleAndActif(Role.ROLE_ADMIN);
+        for (Employe admin : admins) {
+            if (employeIdsNotifies.add(admin.getId())) {
+                creerNotification(admin, message,
+                        "PROJET_EN_RETARD",
+                        projet.getId());
+            }
+        }
+
+        log.info("Notifications PROJET_EN_RETARD envoyées pour projet {}", projet.getId());
+    }
+
+    /**
+     * Notifier quand il reste 2 jours avant la date limite du projet
+     */
+    @Transactional
+    public void notifier2JoursRestants(Projet projet) {
+        String message = "⏰ Il reste 2 jours avant la date limite du projet \"" + projet.getNom()
+                + "\" (date limite: "
+                + projet.getDateLimite().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + ")";
+
+        // Récupérer les employés assignés au projet via TravaillerProjet
+        Set<Long> employeIdsNotifies = new HashSet<>();
+
+        // Notifier tous les membres
+        for (TravaillerProjet tp : projet.getTravaillerProjets()) {
+            Employe membre = tp.getEmploye();
+            if (membre != null && employeIdsNotifies.add(membre.getId())) {
+                creerNotification(membre, message,
+                        "DEUX_JOURS_RESTANTS",
+                        projet.getId());
+            }
+        }
+
+        // Notifier le chef de projet s'il n'est pas déjà notifié
+        if (projet.getChefProjet() != null) {
+            if (employeIdsNotifies.add(projet.getChefProjet().getId())) {
+                creerNotification(projet.getChefProjet(), message,
+                        "DEUX_JOURS_RESTANTS",
+                        projet.getId());
+            }
+        }
+
+        // Notifier tous les admins
+        List<Employe> admins = employeRepository.findByRoleAndActif(Role.ROLE_ADMIN);
+        for (Employe admin : admins) {
+            if (employeIdsNotifies.add(admin.getId())) {
+                creerNotification(admin, message,
+                        "DEUX_JOURS_RESTANTS",
+                        projet.getId());
+            }
+        }
+
+        log.info("Notifications DEUX_JOURS_RESTANTS envoyées pour projet {}", projet.getId());
+    }
+
+    /**
+     * Cron job : vérifier les projets dont la date limite est dans 3 jours ou 2 jours
      * Exécuté tous les jours à 8h du matin
      */
     @Scheduled(cron = "0 0 8 * * *")
@@ -118,12 +206,14 @@ public class NotificationService {
         log.info("Exécution du cron job: vérification des dates limites");
 
         LocalDate dans3Jours = LocalDate.now().plusDays(3);
-        List<Projet> projets = projetRepository.findByDateLimiteAndStatutNot(
+        LocalDate dans2Jours = LocalDate.now().plusDays(2);
+
+        // Vérifier les projets avec 3 jours restants
+        List<Projet> projets3Jours = projetRepository.findByDateLimiteAndStatutNot(
                 dans3Jours, StatutProjet.TERMINE);
+        log.info("{} projets trouvés avec date limite dans 3 jours", projets3Jours.size());
 
-        log.info("{} projets trouvés avec date limite dans 3 jours", projets.size());
-
-        for (Projet projet : projets) {
+        for (Projet projet : projets3Jours) {
             String message = "⚠️ Le projet \"" + projet.getNom()
                     + "\" arrive à échéance le "
                     + projet.getDateLimite().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -159,6 +249,15 @@ public class NotificationService {
                             projet.getId());
                 }
             }
+        }
+
+        // Vérifier les projets avec 2 jours restants
+        List<Projet> projets2Jours = projetRepository.findByDateLimiteAndStatutNot(
+                dans2Jours, StatutProjet.TERMINE);
+        log.info("{} projets trouvés avec date limite dans 2 jours", projets2Jours.size());
+
+        for (Projet projet : projets2Jours) {
+            notifier2JoursRestants(projet);
         }
     }
 

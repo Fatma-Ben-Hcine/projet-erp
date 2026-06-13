@@ -495,6 +495,51 @@ body.dark .btn-secondary:hover {
   background: #4b5563;
 }
 
+body.dark .form-group input,
+body.dark .form-group select {
+  background: #111827;
+  border-color: #374151;
+  color: #f9fafb;
+}
+
+body.dark .modal-header {
+  border-bottom-color: #374151;
+}
+
+body.dark .modal-header .btn-icon {
+  background: #374151;
+  color: #d1d5db;
+}
+
+body.dark .modal-header .btn-icon:hover {
+  background: #4b5563;
+  color: #f9fafb;
+}
+
+body.dark .modal-actions {
+  border-top-color: #374151;
+}
+
+body.dark .badge-success {
+  background: #065f46;
+  color: #6ee7b7;
+}
+
+body.dark .badge-info {
+  background: #1e3a8a;
+  color: #93c5fd;
+}
+
+body.dark .badge-warning {
+  background: #9a3412;
+  color: #fdba74;
+}
+
+body.dark .badge-default {
+  background: #713f12;
+  color: #fde68a;
+}
+
 /* ═══════════════════════════════════════
    RESPONSIVE — CONTRAT MANAGEMENT
    ═══════════════════════════════════════ */

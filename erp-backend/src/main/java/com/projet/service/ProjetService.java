@@ -875,14 +875,17 @@ public class ProjetService {
         
         for (Projet projet : projets) {
             // Si la date limite est dépassée et le statut n'est pas TERMINE
-            if (aujourdHui.isAfter(projet.getDateLimite()) && 
-                projet.getStatut() != StatutProjet.TERMINE && 
+            if (aujourdHui.isAfter(projet.getDateLimite()) &&
+                projet.getStatut() != StatutProjet.TERMINE &&
                 projet.getStatut() != StatutProjet.EN_RETARD) {
                 projet.setStatut(StatutProjet.EN_RETARD);
                 projetRepository.save(projet);
                 count++;
-                log.info("Projet {} marqué comme EN_RETARD (date limite: {})", 
+                log.info("Projet {} marqué comme EN_RETARD (date limite: {})",
                     projet.getNom(), projet.getDateLimite());
+
+                // Notifier les employés et admins
+                notificationService.notifierProjetEnRetard(projet);
             }
         }
         
